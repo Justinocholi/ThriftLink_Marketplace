@@ -1,0 +1,119 @@
+import React, { useState, useEffect } from 'react';
+import { admin } from '../../services/api';
+
+const STATUS_STYLE = {
+  approved:  { background: '#dcfce7', color: '#15803d' },
+  pending:   { background: '#fef3c7', color: '#b45309' },
+  rejected:  { background: '#fee2e2', color: '#dc2626' },
+  suspended: { background: '#f1f5f9', color: '#64748b' },
+};
+
+const AdminVendors = () => {
+  const [vendors, setVendors] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [filter, setFilter] = useState('all');
+  const [acting, setActing] = useState(null);
+
+  const load = () => {
+    setLoading(true);
+    admin.vendors()
+      .then(data => setVendors(data.vendors || data))
+      .catch(e => setError(e.message))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const handleVerify = async (id, status) => {
+    setActing(id);
+    try {
+      await admin.verifyVendor(id, status);
+      setVendors(prev => prev.map(v => v.id === id ? { ...v, verification_status: status, is_verified: status === 'approved' ? 1 : 0 } : v));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setActing(null);
+    }
+  };
+
+  const filtered = filter === 'all' ? vendors : vendors.filter(v => v.verification_status === filter);
+
+  return (
+    <div>
+      <div style={{ background: 'white', borderRadius: '16px', padding: '2rem', marginBottom: '2rem', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+        <h1 style={{ fontSize: '2rem', color: '#0f172a', marginBottom: '0.5rem', fontWeight: 'bold' }}>Vendor Management</h1>
+        <p style={{ color: '#64748b', fontSize: '1rem' }}>Approve, reject, or manage vendor verifications</p>
+      </div>
+
+      {error && <div style={{ background: '#fee2e2', color: '#dc2626', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem', fontSize: '0.875rem' }}>{error}</div>}
+
+      <div style={{ background: 'white', borderRadius: '16px', padding: '2rem', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', paddingBottom: '1rem', borderBottom: '1px solid #f1f5f9', flexWrap: 'wrap', gap: '1rem' }}>
+          <h2 style={{ fontSize: '1.5rem', color: '#0f172a', fontWeight: '700' }}>All Vendors</h2>
+          <select value={filter} onChange={e => setFilter(e.target.value)} style={{ padding: '0.625rem 1rem', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '0.9rem', background: 'white', cursor: 'pointer' }}>
+            <option value="all">All Vendors</option>
+            <option value="approved">Approved</option>
+            <option value="pending">Pending</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>Loading vendors...</div>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ background: '#f8fafc', textAlign: 'left' }}>
+                  {['Shop Name', 'Category', 'State', 'Status', 'Plan', 'Actions'].map(h => (
+                    <th key={h} style={{ padding: '1rem', borderBottom: '1px solid #e2e8f0', color: '#64748b', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map(vendor => {
+                  const st = STATUS_STYLE[vendor.verification_status] || STATUS_STYLE.pending;
+                  return (
+                    <tr key={vendor.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: '1rem', color: '#0f172a', fontWeight: '600' }}>{vendor.shop_name}</td>
+                      <td style={{ padding: '1rem', color: '#475569' }}>{vendor.category || '—'}</td>
+                      <td style={{ padding: '1rem', color: '#475569' }}>{vendor.state || '—'}</td>
+                      <td style={{ padding: '1rem' }}>
+                        <span style={{ ...st, padding: '0.375rem 0.75rem', borderRadius: '6px', fontSize: '0.8rem', fontWeight: '600', display: 'inline-block' }}>
+                          {vendor.verification_status || 'pending'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '1rem', color: '#475569' }}>{vendor.subscription_plan || 'free'}</td>
+                      <td style={{ padding: '1rem' }}>
+                        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                          {vendor.verification_status !== 'approved' && (
+                            <button disabled={acting === vendor.id} onClick={() => handleVerify(vendor.id, 'approved')}
+                              style={{ padding: '0.4rem 0.8rem', border: 'none', borderRadius: '6px', cursor: 'pointer', background: '#dcfce7', color: '#15803d', fontWeight: '600', fontSize: '0.8rem' }}>
+                              Approve
+                            </button>
+                          )}
+                          {vendor.verification_status !== 'rejected' && (
+                            <button disabled={acting === vendor.id} onClick={() => handleVerify(vendor.id, 'rejected')}
+                              style={{ padding: '0.4rem 0.8rem', border: 'none', borderRadius: '6px', cursor: 'pointer', background: '#fee2e2', color: '#dc2626', fontWeight: '600', fontSize: '0.8rem' }}>
+                              Reject
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            {filtered.length === 0 && (
+              <div style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>No vendors found</div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default AdminVendors;

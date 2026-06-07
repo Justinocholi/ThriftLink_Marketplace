@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Support</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: #f5f7fa;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 260px;
+      background: #1e293b;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      padding: 2rem 0;
+      position: fixed;
+      height: 100vh;
+      left: 0;
+      top: 0;
+    }
+
+    .logo {
+      padding: 0 1.5rem 2rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 2rem;
+    }
+
+    .logo img {
+      max-width: 140px;
+      height: auto;
+    }
+
+    .nav {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .nav a {
+      color: #94a3b8;
+      text-decoration: none;
+      padding: 0.875rem 1.5rem;
+      transition: all 0.2s;
+      font-weight: 500;
+      font-size: 0.95rem;
+      border-left: 3px solid transparent;
+    }
+
+    .nav a:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: white;
+    }
+
+    .nav a.active {
+      background: rgba(59, 130, 246, 0.1);
+      color: #60a5fa;
+      border-left-color: #3b82f6;
+    }
+
+    .nav a.logout {
+      margin-top: auto;
+      color: #f87171;
+    }
+
+    .nav a.logout:hover {
+      background: rgba(248, 113, 113, 0.1);
+      color: #ef4444;
+    }
+
+    /* Main Content */
+    .main-content {
+      margin-left: 260px;
+      flex: 1;
+      padding: 2.5rem;
+      max-width: 1200px;
+    }
+
+    .section {
+      background: white;
+      border-radius: 16px;
+      padding: 2.5rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      margin-bottom: 2rem;
+    }
+
+    .section-header {
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .section-header h2 {
+      font-size: 1.75rem;
+      color: #0f172a;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .section-header p {
+      color: #64748b;
+      font-size: 1rem;
+    }
+
+    /* Support Cards Grid */
+    .support-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .support-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 16px;
+      padding: 2rem;
+      text-decoration: none;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .support-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.1);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .support-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+    }
+
+    .support-card:hover::before {
+      opacity: 1;
+    }
+
+    .support-card.green {
+      background: linear-gradient(135deg, #25D366 0%, #20ba5a 100%);
+      box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+    }
+
+    .support-card.green:hover {
+      box-shadow: 0 8px 24px rgba(37, 211, 102, 0.4);
+    }
+
+    .support-card.red {
+      background: linear-gradient(135deg, #f43f5e 0%, #dc2626 100%);
+      box-shadow: 0 4px 12px rgba(244, 63, 94, 0.3);
+    }
+
+    .support-card.red:hover {
+      box-shadow: 0 8px 24px rgba(244, 63, 94, 0.4);
+    }
+
+    .support-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    .support-card h3 {
+      color: white;
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .support-card p {
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 0.95rem;
+      line-height: 1.5;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* FAQ Section */
+    .faq-section {
+      background: white;
+      border-radius: 16px;
+      padding: 2.5rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .faq-section h3 {
+      font-size: 1.5rem;
+      color: #0f172a;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+    }
+
+    .faq-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .faq-item {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.2s;
+    }
+
+    .faq-item:hover {
+      border-color: #cbd5e1;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .faq-question {
+      padding: 1.25rem 1.5rem;
+      background: #f8fafc;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+      color: #0f172a;
+      transition: all 0.2s;
+    }
+
+    .faq-question:hover {
+      background: #f1f5f9;
+    }
+
+    .faq-question::after {
+      content: '▼';
+      font-size: 0.8rem;
+      color: #64748b;
+      transition: transform 0.3s;
+    }
+
+    .faq-answer {
+      padding: 0 1.5rem 1.25rem;
+      color: #64748b;
+      line-height: 1.6;
+      display: none;
+    }
+
+    .faq-item.active .faq-answer {
+      display: block;
+    }
+
+    .faq-item.active .faq-question::after {
+      transform: rotate(180deg);
+    }
+
+    /* Contact Info */
+    .contact-info {
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      border-radius: 12px;
+      padding: 2rem;
+      margin-top: 2rem;
+      border: 1px solid #bae6fd;
+    }
+
+    .contact-info h4 {
+      color: #0c4a6e;
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+
+    .contact-details {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: #0369a1;
+      font-size: 0.95rem;
+    }
+
+    .contact-item::before {
+      font-size: 1.25rem;
+    }
+
+    .contact-item.email::before {
+      content: '📧';
+    }
+
+    .contact-item.phone::before {
+      content: '📞';
+    }
+
+    .contact-item.hours::before {
+      content: '🕒';
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 70px;
+        padding: 1rem 0;
+      }
+
+      .logo img {
+        max-width: 40px;
+      }
+
+      .nav a {
+        padding: 1rem;
+        font-size: 0;
+        text-align: center;
+      }
+
+      .nav a::before {
+        content: '●';
+        font-size: 1.2rem;
+      }
+
+      .main-content {
+        margin-left: 70px;
+        padding: 1.5rem;
+      }
+
+      .section, .faq-section {
+        padding: 1.5rem;
+      }
+
+      .support-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .sidebar {
+        display: none;
+      }
+
+      .main-content {
+        margin-left: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="logo">
+    <img src="../images/thriftlink-logo-.png" alt="Thrift Link">
+  </div>
+  <nav class="nav">
+    <a href="dashboard.html">Dashboard</a>
+    <a href="profile.html">My Profile</a>
+    <a href="saved.html">Saved Vendors</a>
+    <a href="orders.html">My Orders</a>
+    <a href="support.html" class="active">Support</a>
+    <a href="#" class="logout" onclick="logout()">Logout</a>
+  </nav>
+</aside>
+<main class="main-content">
+  <section class="section">
+    <div class="section-header">
+      <h2>Support & Help Center</h2>
+      <p>We're here to help you with any questions or concerns</p>
+    </div>
+
+    <div class="support-grid">
+      <a href="#faq" class="support-card">
+        <span class="support-icon">❓</span>
+        <h3>FAQs</h3>
+        <p>Find quick answers to commonly asked questions about ThriftLink</p>
+      </a>
+
+      <a href="https://wa.me/2348000000000" class="support-card green">
+        <span class="support-icon">💬</span>
+        <h3>Contact Support</h3>
+        <p>Get in touch with our support team via WhatsApp for immediate assistance</p>
+      </a>
+
+      <a href="#report" class="support-card red">
+        <span class="support-icon">🚨</span>
+        <h3>Report a Vendor</h3>
+        <p>Report suspicious activity or fraudulent vendors to keep our platform safe</p>
+      </a>
+    </div>
+
+    <div class="contact-info">
+      <h4>Contact Information</h4>
+      <div class="contact-details">
+        <div class="contact-item email">support@thriftlink.ng</div>
+        <div class="contact-item phone">+234 800 000 0000</div>
+        <div class="contact-item hours">Monday - Friday: 9:00 AM - 6:00 PM WAT</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="faq-section" id="faq">
+    <h3>Frequently Asked Questions</h3>
+    <div class="faq-list">
+      <div class="faq-item">
+        <div class="faq-question">How do I save a vendor to my favorites?</div>
+        <div class="faq-answer">
+          When browsing vendors, simply click the "Save" or heart icon on any vendor's profile. You can view all your saved vendors in the "Saved Vendors" section of your dashboard.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">How do I contact a vendor?</div>
+        <div class="faq-answer">
+          Each verified vendor has a WhatsApp button on their profile. Click it to start a conversation directly on WhatsApp. Make sure you have WhatsApp installed on your device.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">What if I have an issue with a vendor?</div>
+        <div class="faq-answer">
+          If you experience any problems with a vendor, you can report them using the "Report a Vendor" option above. Our team will investigate and take appropriate action to ensure platform safety.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">How are vendors verified on ThriftLink?</div>
+        <div class="faq-answer">
+          All vendors go through a thorough verification process including identity verification, business legitimacy checks, and customer review analysis. Only trusted vendors receive our verification badge.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">Can I track my orders?</div>
+        <div class="faq-answer">
+          Yes! Visit the "My Orders" section in your dashboard to view all your order history and current order statuses. You can also contact vendors directly via WhatsApp for real-time updates.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">Is my personal information secure?</div>
+        <div class="faq-answer">
+          Absolutely. We take data security seriously and use industry-standard encryption to protect your personal information. We never share your data with third parties without your consent.
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+  // Auth & Logout
+  document.addEventListener('DOMContentLoaded', function() {
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (!currentUser) {
+      window.location.href = '../Vendor dashboard/signin.html';
+    }
+  });
+
+  function logout() {
+    localStorage.removeItem('currentUser');
+    window.location.href = '../Vendor dashboard/signin.html';
+  }
+
+  // FAQ accordion functionality
+  document.querySelectorAll('.faq-question').forEach(question => {
+    question.addEventListener('click', () => {
+      const faqItem = question.parentElement;
+      const wasActive = faqItem.classList.contains('active');
+      
+      // Close all FAQ items
+      document.querySelectorAll('.faq-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      
+      // Open clicked item if it wasn't active
+      if (!wasActive) {
+        faqItem.classList.add('active');
+      }
+    });
+  });
+
+  // Smooth scroll to FAQ section
+  document.querySelector('a[href="#faq"]').addEventListener('click', (e) => {
+    e.preventDefault();
+    document.getElementById('faq').scrollIntoView({ behavior: 'smooth' });
+  });
+</script>
+</body>
+</html>

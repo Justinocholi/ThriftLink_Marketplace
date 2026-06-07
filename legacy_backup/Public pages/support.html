@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support Center - Thrift Link | Get Help & Support</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f9fafb;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            border-bottom: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+        }
+
+.logo-img {
+  height: 100px;       /* adjust to your navbar height */
+  width: auto;
+  display: block;
+}
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: #25D366;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        
+    .location-selector {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.location-icon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+
+        .btn {
+            padding: 0.7rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-size: 0.9rem;
+            gap: 0.5rem;
+        }
+
+        .btn-outline {
+            border: 1px solid #25D366;
+            color: #25D366;
+            background: transparent;
+        }
+
+        .btn-outline:hover {
+            background: #25D366;
+            color: white;
+        }
+
+        .btn-primary {
+            background: #25D366;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1FAD5C;
+        }
+
+        .post-ad-btn {
+            background: #ff6b35;
+            color: white;
+            font-weight: 700;
+            padding: 0.8rem 2rem;
+        }
+
+        .post-ad-btn:hover {
+            background: #e55a2e;
+        }
+
+        /* Page Header */
+        .page-header {
+            background: linear-gradient(135deg, #25D366, #128C7E);
+            color: white;
+            padding: 8rem 2rem 4rem;
+            text-align: center;
+        }
+
+        .page-header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+
+        .page-header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+
+        .search-support {
+            max-width: 500px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 1rem 1.5rem 1rem 3rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6b7280;
+        }
+
+        /* Main Content */
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* Quick Help Section */
+        .quick-help-section {
+            background: white;
+            border-radius: 12px;
+            padding: 3rem;
+            margin: -2rem 0 3rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #1f2937;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .help-categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .help-category {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .help-category:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            border-color: #25D366;
+        }
+
+        .help-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #25D366;
+        }
+
+        .help-category h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 0.8rem;
+        }
+
+        .help-category p {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        /* Contact Options */
+        .contact-section {
+            background: white;
+            border-radius: 12px;
+            padding: 3rem;
+            margin: 3rem 0;
+        }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .contact-method {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .contact-icon {
+            width: 60px;
+            height: 60px;
+            background: #25D366;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            margin: 0 auto 1rem;
+        }
+
+        .contact-method h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+
+        .contact-method p {
+            color: #6b7280;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .contact-info {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-weight: 600;
+            color: #25D366;
+        }
+
+        .response-time {
+            font-size: 0.8rem;
+            color: #9ca3af;
+        }
+
+        /* Contact Form */
+        .contact-form {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 2rem;
+        }
+
+        .form-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #25D366;
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        /* FAQ Section */
+        .faq-section {
+            background: white;
+            border-radius: 12px;
+            padding: 3rem;
+            margin: 3rem 0;
+        }
+
+        .faq-categories {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .faq-tab {
+            padding: 0.7rem 1.5rem;
+            background: #f3f4f6;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #6b7280;
+            transition: all 0.3s ease;
+        }
+
+        .faq-tab.active {
+            background: #25D366;
+            color: white;
+        }
+
+        .faq-content {
+            display: none;
+        }
+
+        .faq-content.active {
+            display: block;
+        }
+
+        .faq-item {
+            border-bottom: 1px solid #e5e7eb;
+            padding: 1.5rem 0;
+        }
+
+        .faq-item:last-child {
+            border-bottom: none;
+        }
+
+        .faq-question {
+            font-weight: 600;
+            color: #1f2937;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.1rem;
+        }
+
+        .faq-question:hover {
+            color: #25D366;
+        }
+
+        .faq-answer {
+            color: #6b7280;
+            margin-top: 1rem;
+            line-height: 1.6;
+            display: none;
+        }
+
+        .faq-answer.active {
+            display: block;
+        }
+
+        .faq-icon {
+            transition: transform 0.3s ease;
+        }
+
+        .faq-icon.rotated {
+            transform: rotate(180deg);
+        }
+
+        /* Status Section */
+        .status-section {
+            background: white;
+            border-radius: 12px;
+            padding: 3rem;
+            margin: 3rem 0;
+            text-align: center;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .status-text {
+            font-weight: 600;
+            color: #10b981;
+        }
+
+        .status-details {
+            color: #6b7280;
+            margin-bottom: 2rem;
+        }
+
+        .system-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .stat-card {
+            background: #f9fafb;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #6b7280;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #10b981;
+        }
+
+        /* Footer */
+        .footer {
+            background: white;
+            color: #6b7280;
+            padding: 3rem 2rem 1rem;
+            border-top: 1px solid #e5e7eb;
+            margin-top: 4rem;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-section h4 {
+            color: #1f2937;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .footer-links {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .footer-logo img {
+  height: 94px;        /* slightly smaller than navbar */
+  width: auto;
+  margin-bottom: 1rem;
+}
+
+        .footer-links a {
+            color: #6b7280;
+            text-decoration: none;
+            transition: color 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .footer-links a:hover {
+            color: #25D366;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid #e5e7eb;
+            padding-top: 1rem;
+            text-align: center;
+            color: #9ca3af;
+            font-size: 0.85rem;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .page-header h1 {
+                font-size: 2rem;
+            }
+
+            .quick-help-section {
+                padding: 2rem;
+                margin: -1rem 0 2rem;
+            }
+
+            .help-categories {
+                grid-template-columns: 1fr;
+            }
+
+            .contact-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .faq-categories {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .system-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="nav-container">
+    <a href="homepage.html" class="logo">
+                <img src="../images/thriftlink-logo-.png" alt="Thrift Link Logo" class="logo-img">
+            </a>
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="categories.html">Categories</a></li>
+                    <li><a href="verifiedvendors.html">Verified Vendors</a></li>
+                    <li><a href="howitworks.html">How It Works</a></li>
+                    <li><a href="support.html" class="active">Support</a></li>
+                </ul>
+            </nav>
+            <div class="header-actions">
+<div class="location-selector">
+                <img src="../images/gps.png" alt="Location" class="location-icon">
+                    <span>Abuja, NG</span>
+            </div>
+                <a href="../Vendor dashboard/signin.html" class="btn btn-outline" id="signInBtn">Sign In</a>
+                <a href="#" class="btn btn-outline" id="profileBtn" style="display: none; border: none; padding: 0;">
+                    <img src="../images/user.png" alt="Profile" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #25D366;">
+                </a>
+                <a href="#post" class="btn post-ad-btn">Get Started</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Page Header -->
+    <section class="page-header">
+        <h1>Support Center</h1>
+        <p>Get help with your Thrift Link experience. Our support team is here to help you shop and sell safely.</p>
+        <div class="search-support">
+            <div class="search-icon">🔍</div>
+            <input type="text" class="search-input" placeholder="Search for help articles, guides, or FAQs...">
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Quick Help Section -->
+        <section class="quick-help-section">
+            <h2 class="section-title">How Can We Help You?</h2>
+            <div class="help-categories">
+                <div class="help-category" data-category="buyer">
+                  <div class="help-icon">
+  <img src="../images/shopping-cart.png" alt="Cart" style="width: 40px; height: 40px;">
+</div>
+
+                    <h3>Buyer Support</h3>
+                    <p>Find vendors, make purchases, resolve order issues, and shop safely on Thrift Link</p>
+                </div>
+                
+                <div class="help-category" data-category="seller">
+                    <div class="help-icon">
+                        <img src="../images/briefcase.png" alt="briefcase" style="width: 40px; height: 40px;">
+                    </div>
+                    <h3>Seller Support</h3>
+                    <p>Get verified, manage your profile, handle customers, and grow your business</p>
+                </div>
+                
+                <div class="help-category" data-category="account">
+                    <div class="help-icon">
+                        <img src="../images/boy.png" alt="boy" style="width: 40px; height: 40px;">
+                    </div>
+                    <h3>Account & Profile</h3>
+                    <p>Login issues, profile settings, verification status, and account management</p>
+                </div>
+                
+                <div class="help-category" data-category="safety">
+                    <div class="help-icon">
+                        <img src="../images/shield.png" alt="shield" style="width: 40px; height: 40px;">
+                    </div>
+                    <h3>Safety & Security</h3>
+                    <p>Report suspicious activity, safety guidelines, and fraud prevention tips</p>
+                </div>
+                
+                <div class="help-category" data-category="technical">
+                    <div class="help-icon">
+                        <img src="../images/settings.png" alt="Settings" style="width: 40px; height: 40px;">
+                    </div>
+                    <h3>Technical Issues</h3>
+                    <p>Website problems, WhatsApp integration, mobile app issues, and bugs</p>
+                </div>
+                
+                <div class="help-category" data-category="payment">
+                    <div class="help-icon">
+                        <img src="../images/credit-card.png" alt="Card" style="width: 40px; height: 40px;">
+                    </div>
+                    <h3>Payments & Billing</h3>
+                    <p>Payment methods, transaction issues, refunds, and billing questions</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section class="contact-section">
+            <h2 class="section-title">Get In Touch</h2>
+            <div class="contact-grid">
+                <div class="contact-method">
+                    <div class="contact-icon">
+                        <img src="../images/whatsapp (1).png" alt="whatsapp" style="width: 40px; height: 40px;">
+                    </div>
+                    <h3>WhatsApp Support</h3>
+                    <p>Get instant help from our support team via WhatsApp chat</p>
+                    <div class="contact-info">+234 901 234 5678</div>
+                    <div class="response-time">⏱️ Response time: 5-15 minutes</div>
+                    <a href="#" class="btn btn-primary">Chat Now</a>
+                </div>
+                
+                <div class="contact-method">
+                    <div class="contact-icon">
+                        <img src="../images/message.png" alt="message" style="width: 40px; height: 40px;">
+                    </div>
+                    <h3>Email Support</h3>
+                    <p>Send us detailed questions and we'll respond with comprehensive help</p>
+                    <div class="contact-info">support@thriftlink.ng</div>
+                    <div class="response-time">⏱️ Response time: 2-6 hours</div>
+                    <a href="#" class="btn btn-primary">Send Email</a>
+                </div>
+                
+                <div class="contact-method">
+                    <div class="contact-icon">
+                        <img src="../images/phone.png" alt="phone" style="width: 40px; height: 40px;">
+                    </div>
+                    <h3>Phone Support</h3>
+                    <p>Speak directly with our support team for urgent issues</p>
+                    <div class="contact-info">+234 700 THRIFT (847438)</div>
+                    <div class="response-time">⏱️ Available: Mon-Fri 8AM-6PM</div>
+                    <a href="#" class="btn btn-primary">Call Now</a>
+                </div>
+            </div>
+
+            <!-- Contact Form -->
+            <div class="contact-form">
+                <h3 class="form-title">Send us a Message</h3>
+                <form>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" class="form-input" placeholder="Enter your full name">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" class="form-input" placeholder="your@email.com">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Phone Number</label>
+                            <input type="tel" class="form-input" placeholder="+234 800 000 0000">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Issue Category</label>
+                            <select class="form-select">
+                                <option>Select category</option>
+                                <option>Buyer Support</option>
+                                <option>Seller Support</option>
+                                <option>Account Issues</option>
+                                <option>Safety Concern</option>
+                                <option>Technical Problem</option>
+                                <option>Payment Issue</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Subject</label>
+                        <input type="text" class="form-input" placeholder="Brief description of your issue">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Message</label>
+                        <textarea class="form-textarea" placeholder="Please provide detailed information about your issue, including any error messages or steps you've already taken..."></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Send Message</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- FAQ Section -->
+        <section class="faq-section">
+            <h2 class="section-title">Frequently Asked Questions</h2>
+            
+            <div class="faq-categories">
+                <button class="faq-tab active" data-faq="general">General</button>
+                <button class="faq-tab" data-faq="buyers">For Buyers</button>
+                <button class="faq-tab" data-faq="sellers">For Sellers</button>
+                <button class="faq-tab" data-faq="safety">Safety</button>
+            </div>
+            
+            <div class="faq-content active" id="general">
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>What is Thrift Link?</span>
+                        <span class="faq-icon">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        Thrift Link is Nigeria's largest WhatsApp vendor marketplace that connects buyers with verified sellers across the country. We help you discover trusted vendors, chat directly via WhatsApp, and shop safely without any middleman fees.
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>Is Thrift Link free to use?</span>
+                        <span class="faq-icon">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        Yes, browsing vendors and connecting via WhatsApp is completely free for buyers. Sellers pay a small fee only when they complete transactions through our platform.
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>How do I know if a vendor is trustworthy?</span>
+                        <span class="faq-icon">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        Look for verified badges, check ratings and reviews, see their response time, and review their order history. All our vendors go through strict verification including ID checks and business validation.
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>What if I have a problem with my order?</span>
+                        <span class="faq-icon">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        First, try resolving the issue directly with the vendor. If that doesn't work, contact our support team with your order details and chat records. We'll help mediate and find a fair solution.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="faq-content" id="buyers">
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>How do I find vendors in my area?</span>
+                        <span class="faq-icon">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        Use our location filter when browsing categories or searching. You can set your preferred delivery radius and see vendors who can serve your location.
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>What payment methods are accepted?</span>
+                        <span class="faq-icon">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        Payment is arranged directly with vendors. Most accept bank transfers, mobile money (PalmPay, Opay), and cash on delivery. Always use traceable payment methods for your security.
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>Can I return items I'm not satisfied with?</span>
+                        <span class="faq-icon">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        Return policies vary by vendor. Always discuss return conditions before purchasing. Most verified vendors offer reasonable return policies for defective or misrepresented items.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="faq-content" id="sellers">
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>How do I become a verified vendor?</span>
+                        <span class="faq-icon">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        Submit your application with valid ID, business registration (if applicable), bank account details, and product samples. Our verification process takes 24-48 hours and includes background checks.
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>What are the fees for selling on Thrift Link?</span>
+                        <span class="faq-icon">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        Basic listing is free. We charge a small transaction fee (2-5%) only when you complete sales through our platform. Premium features like featured listings have additional costs.
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>How do I improve my vendor rating?</span>
+                        <span class="faq-icon">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        Respond quickly to messages, provide accurate product descriptions, deliver on time, offer excellent customer service, and encourage satisfied customers to leave reviews.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="faq-content" id="safety">
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>How do I report suspicious vendors?</span>
+                        <span class="faq-icon">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        Use the report button on vendor profiles, contact our support team immediately, or send details to our safety hotline. Include screenshots of suspicious conversations and any evidence.
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>What should I do if I'm asked to pay upfront?</span>
+                        <span class="faq-icon">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        Be very cautious with upfront payments. Only pay in advance for established vendors with excellent ratings. For new vendors, prefer cash on delivery or secure payment methods.
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>How do I ensure safe meetups for pickup?</span>
+                        <span class="faq-icon">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        Meet in public places during daylight hours, bring a friend if possible, verify the vendor's identity, inspect items before paying, and trust your instincts if something feels wrong.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- System Status Section -->
+        <section class="status-section">
+            <h2 class="section-title">System Status</h2>
+            <div class="status-indicator">
+                <div class="status-dot"></div>
+                <span class="status-text">All Systems Operational</span>
+            </div>
+            <p class="status-details">All Thrift Link services are running normally with no reported issues</p>
+            
+            <div class="system-stats">
+                <div class="stat-card">
+                    <div class="stat-label">Uptime</div>
+                    <div class="stat-value">99.9%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Response Time</div>
+                    <div class="stat-value">1.2s</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Active Vendors</div>
+                    <div class="stat-value">5,248</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Support Tickets</div>
+                    <div class="stat-value">12</div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+<div class="logo footer-logo">
+                        <img src="../images/thriftlink-logo-.png" alt="Thrift Link Logo">
+                    </div>
+                <p style="margin-bottom: 1rem;">Nigeria's most trusted WhatsApp vendor marketplace. Connecting buyers with verified sellers since 2024.</p>
+            <div class="trust-indicators" style="justify-content: flex-start; margin: 0;">
+                        <div class="trust-item" style="font-size: 0.8rem;">
+                            <span>
+                              <img src="../images/shield.png" alt="Shield" class="icon-sm" style="width: 20px; height: 20px;">
+                            </span>
+                            <span>Secure Platform</span>
+                        </div>
+                        <div class="trust-item" style="font-size: 0.8rem;">
+                            <span>
+                              <img src="../images/checklist.png" alt="Check" style="width: 20px; height: 20px;">
+                            </span>
+                            <span>Verified Vendors</span>
+                        </div>
+                    </div>
+            </div>
+            <div class="footer-section">
+                <h4>For Buyers</h4>
+                <div class="footer-links">
+                    <a href="#browse">Browse Vendors</a>
+                    <a href="categories.html">Shop by Category</a>
+                    <a href="#safety">Safety Tips</a>
+                    <a href="#reviews">Vendor Reviews</a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h4>For Vendors</h4>
+                <div class="footer-links">
+                    <a href="signin.html">Register as Vendor</a>
+                    <a href="#verification">Get Verified</a>
+                    <a href="#pricing">Pricing Plans</a>
+                    <a href="#vendor-guide">Vendor Guide</a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h4>Support</h4>
+                <div class="footer-links">
+                    <a href="#help">Help Center</a>
+                    <a href="support.html">Contact Us</a>
+                    <a href="#faq">FAQ</a>
+                    <a href="#report">Report Issues</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2025 Thrift Link Nigeria. All rights reserved. | Made with ❤️ in Nigeria</p>
+        </div>
+    </footer>
+
+    <script>
+        // Help category clicks
+        document.querySelectorAll('.help-category').forEach(category => {
+            category.addEventListener('click', function() {
+                const categoryType = this.getAttribute('data-category');
+                alert(`Opening ${categoryType} help section...`);
+            });
+        });
+
+        // FAQ tab functionality
+        document.querySelectorAll('.faq-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const faqId = this.getAttribute('data-faq');
+                
+                // Remove active class from all tabs and contents
+                document.querySelectorAll('.faq-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.faq-content').forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding content
+                this.classList.add('active');
+                document.getElementById(faqId).classList.add('active');
+            });
+        });
+
+        // FAQ question functionality
+        document.querySelectorAll('.faq-question').forEach(question => {
+            question.addEventListener('click', function() {
+                const answer = this.nextElementSibling;
+                const icon = this.querySelector('.faq-icon');
+                
+                // Toggle answer visibility
+                answer.classList.toggle('active');
+                icon.classList.toggle('rotated');
+                
+                // Close other open answers in the same section
+                const parentContent = this.closest('.faq-content');
+                parentContent.querySelectorAll('.faq-answer').forEach(a => {
+                    if (a !== answer && a.classList.contains('active')) {
+                        a.classList.remove('active');
+                        a.previousElementSibling.querySelector('.faq-icon').classList.remove('rotated');
+                    }
+                });
+            });
+        });
+
+        // Contact form submission
+        document.querySelector('form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const name = document.querySelector('input[placeholder="Enter your full name"]').value;
+            const email = document.querySelector('input[placeholder="your@email.com"]').value;
+            const subject = document.querySelector('input[placeholder="Brief description of your issue"]').value;
+            
+            if (!name || !email || !subject) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            alert('Thank you! Your message has been sent. We\'ll respond within 2-6 hours.');
+            this.reset();
+        });
+
+        // Search functionality
+        document.querySelector('.search-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const query = this.value.trim();
+                if (query) {
+                    alert(`Searching help articles for: "${query}"`);
+                }
+            }
+        });
+
+        // Contact buttons
+        document.querySelectorAll('.contact-method .btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const method = this.textContent.trim();
+                alert(`${method} functionality would open here`);
+            });
+        });
+
+        console.log('Support Center page loaded - Thrift Link');
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // AUTH CHECK
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            const signInBtn = document.getElementById('signInBtn');
+            const profileBtn = document.getElementById('profileBtn');
+
+            if (currentUser) {
+                if(signInBtn) signInBtn.style.display = 'none';
+                if(profileBtn) {
+                    profileBtn.style.display = 'inline-block';
+                    if (currentUser.type === 'seller') {
+                        profileBtn.href = '../Vendor dashboard/dashboard.html';
+                    } else {
+                        profileBtn.href = '../User dashboard/dashboard.html';
+                    }
+                }
+            } else {
+                if(signInBtn) signInBtn.style.display = 'inline-flex';
+                if(profileBtn) profileBtn.style.display = 'none';
+            }
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // AUTH CHECK
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            const signInBtn = document.getElementById('signInBtn');
+            const profileBtn = document.getElementById('profileBtn');
+
+            if (currentUser) {
+                if(signInBtn) signInBtn.style.display = 'none';
+                if(profileBtn) {
+                    profileBtn.style.display = 'inline-block';
+                    if (currentUser.type === 'seller') {
+                        profileBtn.href = '../Vendor dashboard/dashboard.html';
+                    } else {
+                        profileBtn.href = '../User dashboard/dashboard.html';
+                    }
+                }
+            } else {
+                if(signInBtn) signInBtn.style.display = 'inline-flex';
+                if(profileBtn) profileBtn.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+node_modules
+backend/node_modules
+backend/database/thriftlink.db
+backend/database/*.db-shm
+backend/database/*.db-wal
+backend/uploads/*
+!backend/uploads/.gitkeep
+backend/.env
+dist

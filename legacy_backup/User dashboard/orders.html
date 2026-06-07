@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>My Orders</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: #f5f7fa;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 260px;
+      background: #1e293b;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      padding: 2rem 0;
+      position: fixed;
+      height: 100vh;
+      left: 0;
+      top: 0;
+    }
+
+    .logo {
+      padding: 0 1.5rem 2rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 2rem;
+    }
+
+    .logo img {
+      max-width: 140px;
+      height: auto;
+    }
+
+    .nav {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .nav a {
+      color: #94a3b8;
+      text-decoration: none;
+      padding: 0.875rem 1.5rem;
+      transition: all 0.2s;
+      font-weight: 500;
+      font-size: 0.95rem;
+      border-left: 3px solid transparent;
+    }
+
+    .nav a:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: white;
+    }
+
+    .nav a.active {
+      background: rgba(59, 130, 246, 0.1);
+      color: #60a5fa;
+      border-left-color: #3b82f6;
+    }
+
+    .nav a.logout {
+      margin-top: auto;
+      color: #f87171;
+    }
+
+    .nav a.logout:hover {
+      background: rgba(248, 113, 113, 0.1);
+      color: #ef4444;
+    }
+
+    /* Main Content */
+    .main-content {
+      margin-left: 260px;
+      flex: 1;
+      padding: 2.5rem;
+      max-width: 1200px;
+    }
+
+    .section {
+      background: white;
+      border-radius: 16px;
+      padding: 2.5rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .section-header h2 {
+      font-size: 1.75rem;
+      color: #0f172a;
+      font-weight: 700;
+    }
+
+    .filter-tabs {
+      display: flex;
+      gap: 0.5rem;
+      background: #f8fafc;
+      padding: 0.375rem;
+      border-radius: 10px;
+    }
+
+    .filter-tab {
+      padding: 0.5rem 1rem;
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-tab:hover {
+      color: #475569;
+    }
+
+    .filter-tab.active {
+      background: white;
+      color: #3b82f6;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Orders List */
+    .orders-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .order {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.75rem;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      transition: all 0.2s;
+    }
+
+    .order:hover {
+      background: white;
+      border-color: #cbd5e1;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      transform: translateY(-2px);
+    }
+
+    .order-left {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      flex: 1;
+    }
+
+    .order-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.75rem;
+      flex-shrink: 0;
+    }
+
+    .order-details {
+      flex: 1;
+    }
+
+    .order-details h4 {
+      font-size: 1.1rem;
+      color: #0f172a;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+    }
+
+    .order-meta {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-size: 0.875rem;
+      color: #64748b;
+    }
+
+    .order-date {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .order-date::before {
+      content: '📅';
+    }
+
+    .order-id {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      color: #94a3b8;
+      font-family: monospace;
+    }
+
+    .order-id::before {
+      content: '#';
+    }
+
+    .order-right {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    /* Status Badges */
+    .status {
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.875rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .status::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .status.completed {
+      background: #dcfce7;
+      color: #15803d;
+    }
+
+    .status.completed::before {
+      background: #22c55e;
+    }
+
+    .status.pending {
+      background: #fef3c7;
+      color: #b45309;
+    }
+
+    .status.pending::before {
+      background: #f59e0b;
+    }
+
+    .status.cancelled {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    .status.cancelled::before {
+      background: #ef4444;
+    }
+
+    .status.processing {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .status.processing::before {
+      background: #3b82f6;
+    }
+
+    /* Action Button */
+    .order-action {
+      padding: 0.625rem 1.25rem;
+      background: #f1f5f9;
+      color: #475569;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.875rem;
+      transition: all 0.2s;
+      border: 1px solid #e2e8f0;
+      white-space: nowrap;
+    }
+
+    .order-action:hover {
+      background: #e2e8f0;
+      border-color: #cbd5e1;
+      color: #334155;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+    }
+
+    .empty-state-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+    }
+
+    .empty-state h3 {
+      color: #475569;
+      font-size: 1.25rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .empty-state p {
+      color: #94a3b8;
+      margin-bottom: 1.5rem;
+    }
+
+    .browse-btn {
+      padding: 0.875rem 1.75rem;
+      background: #3b82f6;
+      color: white;
+      text-decoration: none;
+      border-radius: 10px;
+      font-weight: 600;
+      display: inline-block;
+      transition: all 0.2s;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    .browse-btn:hover {
+      background: #2563eb;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 70px;
+        padding: 1rem 0;
+      }
+
+      .logo img {
+        max-width: 40px;
+      }
+
+      .nav a {
+        padding: 1rem;
+        font-size: 0;
+        text-align: center;
+      }
+
+      .nav a::before {
+        content: '●';
+        font-size: 1.2rem;
+      }
+
+      .main-content {
+        margin-left: 70px;
+        padding: 1.5rem;
+      }
+
+      .section {
+        padding: 1.5rem;
+      }
+
+      .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+
+      .filter-tabs {
+        width: 100%;
+        overflow-x: auto;
+      }
+
+      .order {
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .order-left {
+        width: 100%;
+      }
+
+      .order-right {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .order-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.4rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .sidebar {
+        display: none;
+      }
+
+      .main-content {
+        margin-left: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="logo">
+    <img src="../images/thriftlink-logo-.png" alt="Thrift Link">
+  </div>
+  <nav class="nav">
+    <a href="dashboard.html">Dashboard</a>
+    <a href="profile.html">My Profile</a>
+    <a href="saved.html">Saved Vendors</a>
+    <a href="orders.html" class="active">My Orders</a>
+    <a href="support.html">Support</a>
+    <a href="#" class="logout" onclick="logout()">Logout</a>
+  </nav>
+</aside>
+<main class="main-content">
+  <section class="section">
+    <div class="section-header">
+      <h2>Orders & Interactions</h2>
+      <div class="filter-tabs">
+        <button class="filter-tab active">All</button>
+        <button class="filter-tab">Completed</button>
+        <button class="filter-tab">Pending</button>
+        <button class="filter-tab">Cancelled</button>
+      </div>
+    </div>
+
+    <div class="orders-list">
+      <div class="order">
+        <div class="order-left">
+          <div class="order-icon">📦</div>
+          <div class="order-details">
+            <h4>TechPlug NG</h4>
+            <div class="order-meta">
+              <span class="order-date">Dec 20, 2024</span>
+              <span class="order-id">ORD-10234</span>
+            </div>
+          </div>
+        </div>
+        <div class="order-right">
+          <span class="status completed">Completed</span>
+          <a href="#" class="order-action">View Details</a>
+        </div>
+      </div>
+
+      <div class="order">
+        <div class="order-left">
+          <div class="order-icon">✨</div>
+          <div class="order-details">
+            <h4>Glow Skincare</h4>
+            <div class="order-meta">
+              <span class="order-date">Dec 24, 2024</span>
+              <span class="order-id">ORD-10238</span>
+            </div>
+          </div>
+        </div>
+        <div class="order-right">
+          <span class="status pending">Pending</span>
+          <a href="#" class="order-action">View Details</a>
+        </div>
+      </div>
+
+      <div class="order">
+        <div class="order-left">
+          <div class="order-icon">👕</div>
+          <div class="order-details">
+            <h4>Fashion Forward Hub</h4>
+            <div class="order-meta">
+              <span class="order-date">Dec 18, 2024</span>
+              <span class="order-id">ORD-10229</span>
+            </div>
+          </div>
+        </div>
+        <div class="order-right">
+          <span class="status completed">Completed</span>
+          <a href="#" class="order-action">View Details</a>
+        </div>
+      </div>
+
+      <div class="order">
+        <div class="order-left">
+          <div class="order-icon">🏠</div>
+          <div class="order-details">
+            <h4>Home Essentials NG</h4>
+            <div class="order-meta">
+              <span class="order-date">Dec 15, 2024</span>
+              <span class="order-id">ORD-10221</span>
+            </div>
+          </div>
+        </div>
+        <div class="order-right">
+          <span class="status processing">Processing</span>
+          <a href="#" class="order-action">View Details</a>
+        </div>
+      </div>
+
+      <div class="order">
+        <div class="order-left">
+          <div class="order-icon">📱</div>
+          <div class="order-details">
+            <h4>Gadget World Lagos</h4>
+            <div class="order-meta">
+              <span class="order-date">Dec 12, 2024</span>
+              <span class="order-id">ORD-10215</span>
+            </div>
+          </div>
+        </div>
+        <div class="order-right">
+          <span class="status cancelled">Cancelled</span>
+          <a href="#" class="order-action">View Details</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Uncomment this section if there are no orders -->
+    <!--
+    <div class="empty-state">
+      <div class="empty-state-icon">📦</div>
+      <h3>No Orders Yet</h3>
+      <p>Start shopping with verified vendors on ThriftLink</p>
+      <a href="../Public pages/verifiedvendors.html" class="browse-btn">Browse Vendors</a>
+    </div>
+    -->
+  </section>
+</main>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (!currentUser) {
+      window.location.href = '../Vendor dashboard/signin.html';
+    }
+  });
+
+  function logout() {
+    localStorage.removeItem('currentUser');
+    window.location.href = '../Vendor dashboard/signin.html';
+  }
+</script>
+</body>
+</html>

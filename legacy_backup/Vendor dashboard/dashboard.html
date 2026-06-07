@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Vendor Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: #f5f7fa;
+      padding: 2rem;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      background: white;
+      padding: 1.5rem 2rem;
+      border-radius: 16px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .header h3 {
+      font-size: 1.75rem;
+      color: #0f172a;
+      font-weight: 700;
+    }
+
+    .view-page-btn {
+      padding: 0.75rem 1.5rem;
+      background: #3b82f6;
+      color: white;
+      text-decoration: none;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: all 0.2s;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+    }
+
+    .view-page-btn:hover {
+      background: #2563eb;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    }
+
+    /* Analytics Grid */
+    .analytics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .analytics .stat-card {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      transition: all 0.2s;
+      border: 1px solid #f1f5f9;
+    }
+
+    .analytics .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .stat-card h4 {
+      color: #64748b;
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.75rem;
+    }
+
+    .stat-card p {
+      color: #0f172a;
+      font-size: 2.5rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .stat-card.views {
+      background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+      border-color: #93c5fd;
+    }
+
+    .stat-card.clicks {
+      background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+      border-color: #86efac;
+    }
+
+    .stat-card.conversion {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      border-color: #fcd34d;
+    }
+
+    /* Sections */
+    section {
+      background: white;
+      padding: 2rem;
+      border-radius: 16px;
+      margin-bottom: 2rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    section h4 {
+      font-size: 1.25rem;
+      color: #0f172a;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    /* Upload Section */
+    .upload-form {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .upload-form input[type="file"] {
+      padding: 1rem;
+      border: 2px dashed #cbd5e1;
+      border-radius: 10px;
+      background: #f8fafc;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .upload-form input[type="file"]:hover {
+      border-color: #94a3b8;
+      background: #f1f5f9;
+    }
+
+    .upload-form input[type="text"] {
+      padding: 0.875rem 1rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      transition: all 0.2s;
+    }
+
+    .upload-form input[type="text"]:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .upload-form button {
+      padding: 0.875rem 1.5rem;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+    }
+
+    .upload-form button:hover {
+      background: #2563eb;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    }
+
+    /* Items Grid */
+    #itemsGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 1rem;
+    }
+
+    #itemsGrid img {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    #itemsGrid img:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: #94a3b8;
+    }
+
+    .empty-state-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    /* Reviews */
+    #reviewsList {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .review {
+      padding: 1.25rem;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+    }
+
+    .review-stars {
+      color: #fbbf24;
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .review p {
+      color: #475569;
+      line-height: 1.6;
+      margin-top: 0.5rem;
+    }
+
+    .review-empty {
+      text-align: center;
+      padding: 2rem;
+      color: #94a3b8;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      body {
+        padding: 1rem;
+      }
+
+      .header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+      }
+
+      .header h3 {
+        font-size: 1.5rem;
+      }
+
+      section {
+        padding: 1.5rem;
+      }
+
+      .analytics {
+        grid-template-columns: 1fr;
+      }
+
+      #itemsGrid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-header">
+    <img src="../images/thriftlink-logo-.png" alt="Logo">
+    <h2>ThriftLink</h2>
+  </div>
+  <nav class="nav-links">
+    <a class="nav-item active" onclick="showSection('dashboard')">
+      <i class="fas fa-home"></i> <span>Dashboard</span>
+    </a>
+    <a class="nav-item" onclick="showSection('profile')">
+      <i class="fas fa-user"></i> <span>Vendor Profile</span>
+    </a>
+    <a class="nav-item" onclick="showSection('products')">
+      <i class="fas fa-box"></i> <span>Product Listing</span>
+    </a>
+    <a class="nav-item" onclick="showSection('analytics')">
+      <i class="fas fa-chart-line"></i> <span>Click Analytics</span>
+    </a>
+    <a class="nav-item" onclick="showSection('orders')">
+      <i class="fas fa-shopping-cart"></i> <span>Orders Received</span>
+    </a>
+    <a class="nav-item" onclick="showSection('messages')">
+      <i class="fas fa-comment-alt"></i> <span>Messages</span>
+    </a>
+    <a class="nav-item" onclick="showSection('settings')">
+      <i class="fas fa-cog"></i> <span>Settings</span>
+    </a>
+    <a class="nav-item" onclick="showSection('subscription')">
+      <i class="fas fa-crown"></i> <span>Subscription</span>
+    </a>
+    <a class="nav-item logout-btn" onclick="logout()">
+      <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
+    </a>
+  </nav>
+</div>
+
+<div class="main-content">
+  <header class="header">
+    <h3 id="pageTitle">Vendor Dashboard</h3>
+    <a href="vendor.html" class="view-page-btn" target="_blank">View Public Page</a>
+  </header>
+
+  <!-- DASHBOARD SECTION (Overview) -->
+  <div id="dashboard" class="dashboard-section active">
+    <div class="analytics">
+      <div class="stat-card views">
+        <h4>Profile Views</h4>
+        <p id="views">0</p>
+      </div>
+      <div class="stat-card clicks">
+        <h4>WhatsApp Clicks</h4>
+        <p id="clicks">0</p>
+      </div>
+      <div class="stat-card conversion">
+        <h4>Conversion Rate</h4>
+        <p id="conversion">0%</p>
+      </div>
+    </div>
+    
+    <div class="content-card">
+      <h4>Recent Activity</h4>
+      <div id="reviewsList">
+        <div class="review-empty">No reviews yet</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VENDOR PROFILE SECTION -->
+  <div id="profile" class="dashboard-section">
+    <div class="content-card">
+      <h4>Vendor Profile</h4>
+      <form class="upload-form">
+        <label>Store Name</label>
+        <input type="text" value="Zara Thrift Store" class="form-input">
+        
+        <label>Description</label>
+        <textarea rows="4" class="form-input">Premium thrift clothing store in Lagos. We sell high-quality vintage wears.</textarea>
+        
+        <label>Location</label>
+        <select class="form-input">
+          <option>Lagos</option>
+          <option>Abuja</option>
+          <option>Port Harcourt</option>
+        </select>
+        
+        <label>WhatsApp Number</label>
+        <input type="text" value="+234 801 234 5678" class="form-input">
+        
+        <button type="button" class="btn-primary">Save Changes</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- PRODUCT LISTING SECTION -->
+  <div id="products" class="dashboard-section">
+    <div class="content-card">
+      <h4>Add New Product</h4>
+      <div class="upload-form" style="margin-bottom: 2rem;">
+        <input type="file" id="itemImage" accept="image/*" />
+        <input type="text" id="itemName" placeholder="Item name (e.g., Vintage Denim Jacket)" />
+        <input type="number" id="itemPrice" placeholder="Price (₦)" class="form-input" />
+        <button onclick="uploadItem()" class="btn-primary">Upload Item</button>
+      </div>
+
+      <h4>Your Inventory</h4>
+      <div id="itemsGrid">
+        <div class="empty-state">
+          <div class="empty-state-icon">📦</div>
+          <p>No items uploaded yet</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLICK ANALYTICS SECTION -->
+  <div id="analytics" class="dashboard-section">
+    <div class="content-card">
+      <h4>Detailed Analytics</h4>
+      <p>Detailed breakdown of your traffic sources and user engagement.</p>
+      <div class="analytics" style="margin-top: 1rem;">
+         <div class="stat-card views">
+            <h4>Total Views</h4>
+            <p id="analytics-views">0</p>
+          </div>
+          <div class="stat-card clicks">
+            <h4>Total Clicks</h4>
+            <p id="analytics-clicks">0</p>
+          </div>
+      </div>
+      <!-- Placeholder for chart -->
+      <div style="height: 300px; background: #f8fafc; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #94a3b8;">
+        Chart Visualization Placeholder
+      </div>
+    </div>
+  </div>
+
+  <!-- ORDERS RECEIVED SECTION -->
+  <div id="orders" class="dashboard-section">
+    <div class="content-card">
+      <h4>Orders Received</h4>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Customer</th>
+              <th>Item</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>#ORD-001</td>
+              <td>Chioma Okeke</td>
+              <td>Vintage Denim Jacket</td>
+              <td>Oct 24, 2023</td>
+              <td><span class="status-badge status-completed">Completed</span></td>
+              <td>₦15,000</td>
+            </tr>
+            <tr>
+              <td>#ORD-002</td>
+              <td>Emmanuel T.</td>
+              <td>Nike Air Max</td>
+              <td>Oct 25, 2023</td>
+              <td><span class="status-badge status-pending">Pending</span></td>
+              <td>₦25,000</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MESSAGES SECTION -->
+  <div id="messages" class="dashboard-section">
+    <div class="content-card">
+      <h4>Messages</h4>
+      <div class="empty-state">
+        <div class="empty-state-icon">💬</div>
+        <p>No new messages</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS SECTION -->
+  <div id="settings" class="dashboard-section">
+    <div class="content-card">
+      <h4>Account Settings</h4>
+      <form class="upload-form">
+        <label>Change Password</label>
+        <input type="password" placeholder="Current Password" class="form-input">
+        <input type="password" placeholder="New Password" class="form-input">
+        <input type="password" placeholder="Confirm New Password" class="form-input">
+        <button type="button" class="btn-primary">Update Password</button>
+        
+        <hr style="margin: 2rem 0; border: 0; border-top: 1px solid #e2e8f0;">
+        
+        <label>Notification Preferences</label>
+        <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem;">
+          <input type="checkbox" checked> <label>Email Notifications</label>
+        </div>
+        <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem;">
+          <input type="checkbox" checked> <label>SMS Notifications</label>
+        </div>
+        
+        <button type="button" class="btn-primary" style="margin-top: 1rem;">Save Preferences</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- SUBSCRIPTION SECTION -->
+  <div id="subscription" class="dashboard-section">
+    <div class="content-card">
+      <h4>Current Plan</h4>
+      <div style="background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); color: white; padding: 2rem; border-radius: 12px; margin-bottom: 2rem;">
+        <h3 style="font-size: 2rem; margin-bottom: 0.5rem;">Premium Vendor</h3>
+        <p style="opacity: 0.9;">Next billing date: Nov 24, 2023</p>
+      </div>
+      
+      <h4>Plan Features</h4>
+      <ul style="list-style: none; display: grid; gap: 1rem;">
+        <li>✅ Unlimited Product Listings</li>
+        <li>✅ Verified Badge</li>
+        <li>✅ Advanced Analytics</li>
+        <li>✅ Priority Support</li>
+      </ul>
+      
+      <button class="btn-primary" style="margin-top: 2rem;">Manage Subscription</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// NAVIGATION
+function showSection(sectionId) {
+  // Hide all sections
+  document.querySelectorAll('.dashboard-section').forEach(sec => {
+    sec.classList.remove('active');
+  });
+  
+  // Show selected section
+  document.getElementById(sectionId).classList.add('active');
+  
+  // Update sidebar active state
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.classList.remove('active');
+  });
+  event.currentTarget.classList.add('active'); // This assumes click event
+  
+  // Update Header Title
+  const titles = {
+    'dashboard': 'Vendor Dashboard',
+    'profile': 'Vendor Profile',
+    'products': 'Product Listing',
+    'analytics': 'Click Analytics',
+    'orders': 'Orders Received',
+    'messages': 'Messages',
+    'settings': 'Account Settings',
+    'subscription': 'Subscription'
+  };
+  document.getElementById('pageTitle').innerText = titles[sectionId];
+}
+
+// LOGOUT
+function logout() {
+  localStorage.removeItem('currentUser');
+  window.location.href = 'signin.html';
+}
+
+// ANALYTICS DATA
+const views = Number(localStorage.getItem("views")) || 0;
+const clicks = Number(localStorage.getItem("clicks")) || 0;
+
+function updateAnalytics() {
+  document.getElementById("views").innerText = views;
+  document.getElementById("clicks").innerText = clicks;
+  document.getElementById("conversion").innerText =
+    views === 0 ? "0%" : ((clicks / views) * 100).toFixed(1) + "%";
+    
+  // Update the detailed analytics section too
+  document.getElementById("analytics-views").innerText = views;
+  document.getElementById("analytics-clicks").innerText = clicks;
+}
+
+updateAnalytics();
+
+// ITEM UPLOAD
+const items = JSON.parse(localStorage.getItem("items")) || [];
+const grid = document.getElementById("itemsGrid");
+
+function renderItems() {
+  if (items.length === 0) {
+    grid.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">📦</div>
+        <p>No items uploaded yet</p>
+      </div>
+    `;
+    return;
+  }
+  
+  grid.innerHTML = "";
+  items.forEach(item => {
+    const div = document.createElement("div");
+    div.className = "item-card";
+    div.innerHTML = `
+      <img src="${item.image}" alt="${item.name}">
+      <div class="item-details">
+        <div class="item-name">${item.name || "Product"}</div>
+        <div class="item-price">${item.price ? '₦' + Number(item.price).toLocaleString() : 'Price hidden'}</div>
+      </div>
+    `;
+    grid.appendChild(div);
+  });
+}
+
+renderItems();
+
+function uploadItem() {
+  const file = document.getElementById("itemImage").files[0];
+  const name = document.getElementById("itemName").value.trim();
+  const price = document.getElementById("itemPrice").value.trim();
+  
+  if (!file) {
+    alert("Please select an image to upload");
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function () {
+    items.push({ image: reader.result, name: name, price: price });
+    localStorage.setItem("items", JSON.stringify(items));
+    
+    // Clear inputs
+    document.getElementById("itemImage").value = "";
+    document.getElementById("itemName").value = "";
+    document.getElementById("itemPrice").value = "";
+    
+    renderItems();
+    alert("Item uploaded successfully!");
+  };
+  reader.readAsDataURL(file);
+}
+
+// REVIEWS (READ-ONLY)
+const reviews = JSON.parse(localStorage.getItem("reviews")) || [];
+const reviewsList = document.getElementById("reviewsList");
+
+function renderReviews() {
+  if (reviews.length === 0) {
+    reviewsList.innerHTML = '<div class="review-empty">No reviews yet</div>';
+    return;
+  }
+  
+  reviewsList.innerHTML = "";
+  reviews.forEach(r => {
+    const div = document.createElement("div");
+    div.className = "review";
+    div.innerHTML = `
+      <div class="review-stars">${"⭐".repeat(r.rating)}</div>
+      <p>${r.text}</p>
+    `;
+    reviewsList.appendChild(div);
+  });
+}
+
+renderReviews();
+
+// Check Auth
+document.addEventListener('DOMContentLoaded', function() {
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (!currentUser || currentUser.type !== 'seller') {
+       // Redirect if not logged in or not a seller
+       // For dev purposes, we might skip this or make it strict
+       // window.location.href = 'signin.html';
+    }
+});
+</script>
+</body>
+</html>

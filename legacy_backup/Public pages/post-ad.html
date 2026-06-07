@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post an Ad - Thrift Link</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f9fafb;
+            color: #333;
+        }
+        .container {
+            text-align: center;
+            background: white;
+            padding: 3rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            max-width: 500px;
+        }
+        h1 {
+            color: #25D366;
+            margin-bottom: 1rem;
+        }
+        p {
+            margin-bottom: 2rem;
+            color: #6b7280;
+        }
+        .btn {
+            display: inline-block;
+            padding: 0.8rem 2rem;
+            background: #25D366;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background: #1FAD5C;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Start Selling on Thrift Link</h1>
+        <p>You need to be signed in as a vendor to post an ad.</p>
+        <a href="../Vendor dashboard/signin.html" class="btn">Sign In / Register</a>
+    </div>
+
+    <script>
+        // Check if user is already logged in
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            if (currentUser) {
+                if (currentUser.type === 'seller') {
+                    // Redirect to dashboard to post ad (assuming there's a post ad section there)
+                    window.location.href = '../Vendor dashboard/dashboard.html'; 
+                } else {
+                    // If buyer, maybe ask them to become a seller? 
+                    // For now, just stay here or redirect to dashboard
+                     window.location.href = '../User dashboard/dashboard.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

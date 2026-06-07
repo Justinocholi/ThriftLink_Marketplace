@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>User Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: #f5f7fa;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 260px;
+      background: #1e293b;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      padding: 2rem 0;
+      position: fixed;
+      height: 100vh;
+      left: 0;
+      top: 0;
+    }
+
+    .logo {
+      padding: 0 1.5rem 2rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 2rem;
+    }
+
+    .logo img {
+      max-width: 140px;
+      height: auto;
+    }
+
+    .nav {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .nav a {
+      color: #94a3b8;
+      text-decoration: none;
+      padding: 0.875rem 1.5rem;
+      transition: all 0.2s;
+      font-weight: 500;
+      font-size: 0.95rem;
+      border-left: 3px solid transparent;
+    }
+
+    .nav a:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: white;
+    }
+
+    .nav a.active {
+      background: rgba(59, 130, 246, 0.1);
+      color: #60a5fa;
+      border-left-color: #3b82f6;
+    }
+
+    .nav a.logout {
+      margin-top: auto;
+      color: #f87171;
+    }
+
+    .nav a.logout:hover {
+      background: rgba(248, 113, 113, 0.1);
+      color: #ef4444;
+    }
+
+    /* Main Content */
+    .main-content {
+      margin-left: 260px;
+      flex: 1;
+      padding: 2.5rem;
+      max-width: 1400px;
+    }
+
+    .header {
+      background: white;
+      border-radius: 16px;
+      padding: 2.5rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .header h1 {
+      font-size: 2rem;
+      color: #0f172a;
+      margin-bottom: 0.5rem;
+      font-weight: 700;
+    }
+
+    .header p {
+      color: #64748b;
+      font-size: 1.05rem;
+      margin-bottom: 1.75rem;
+    }
+
+    .cta-buttons {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 0.875rem 1.75rem;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn.primary {
+      background: #3b82f6;
+      color: white;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    .btn.primary:hover {
+      background: #2563eb;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+    }
+
+    .btn.secondary {
+      background: #f1f5f9;
+      color: #475569;
+      border: 1px solid #e2e8f0;
+    }
+
+    .btn.secondary:hover {
+      background: #e2e8f0;
+      border-color: #cbd5e1;
+    }
+
+    /* Stats Section */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      transition: all 0.2s;
+      border: 1px solid #f1f5f9;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .stat-card h3 {
+      color: #64748b;
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.75rem;
+    }
+
+    .stat-card p {
+      color: #0f172a;
+      font-size: 2.5rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 70px;
+        padding: 1rem 0;
+      }
+
+      .logo img {
+        max-width: 40px;
+      }
+
+      .nav a {
+        padding: 1rem;
+        font-size: 0;
+        text-align: center;
+      }
+
+      .nav a::before {
+        content: '●';
+        font-size: 1.2rem;
+      }
+
+      .main-content {
+        margin-left: 70px;
+        padding: 1.5rem;
+      }
+
+      .header {
+        padding: 1.5rem;
+      }
+
+      .header h1 {
+        font-size: 1.5rem;
+      }
+
+      .stats {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .sidebar {
+        display: none;
+      }
+
+      .main-content {
+        margin-left: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="logo">
+    <img src="../images/thriftlink-logo-.png" alt="Thrift Link">
+  </div>
+  <nav class="nav">
+    <a href="dashboard.html" class="active">Dashboard</a>
+    <a href="profile.html">My Profile</a>
+    <a href="saved.html">Saved Vendors</a>
+    <a href="orders.html">My Orders</a>
+    <a href="support.html">Support</a>
+    <a href="#" class="logout" onclick="logout()">Logout</a>
+  </nav>
+</aside>
+<!-- Main -->
+<main class="main-content">
+  <section class="header">
+    <h1 id="welcomeMsg">Welcome back, Justin 👋</h1>
+    <p>Find trusted vendors and shop directly on WhatsApp</p>
+    <div class="cta-buttons">
+      <a href="../Public pages/verifiedvendors.html" class="btn primary">Browse Vendors</a>
+      <a href="../Public pages/categories.html" class="btn secondary">View Categories</a>
+    </div>
+  </section>
+  <section class="stats">
+    <div class="stat-card">
+      <h3>Saved Vendors</h3>
+      <p>12</p>
+    </div>
+    <div class="stat-card">
+      <h3>Vendors Contacted</h3>
+      <p>21</p>
+    </div>
+    <div class="stat-card">
+      <h3>Orders Made</h3>
+      <p>8</p>
+    </div>
+  </section>
+</main>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (!currentUser) {
+      window.location.href = '../Vendor dashboard/signin.html';
+      return;
+    }
+    
+    if (currentUser.name) {
+      document.getElementById('welcomeMsg').textContent = `Welcome back, ${currentUser.name} 👋`;
+    }
+  });
+
+  function logout() {
+    localStorage.removeItem('currentUser');
+    window.location.href = '../Vendor dashboard/signin.html';
+  }
+</script>
+</body>
+</html>

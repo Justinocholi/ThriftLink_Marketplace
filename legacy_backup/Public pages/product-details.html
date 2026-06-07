@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Details - Thrift Link</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f9fafb;
+        }
+
+        /* Header (Consistent with Homepage) */
+        .header {
+            background: white;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            border-bottom: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+        }
+
+        .logo-img {
+            height: 50px;
+            width: auto;
+            display: block;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #25D366;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.7rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background: #25D366;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1FAD5C;
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            border: 1px solid #25D366;
+            color: #25D366;
+            background: transparent;
+        }
+
+        .btn-outline:hover {
+            background: #25D366;
+            color: white;
+        }
+
+        /* Product Details Section */
+        .product-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+        }
+
+        .product-gallery {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .main-image {
+            width: 100%;
+            height: 500px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .thumbnail-list {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .thumbnail {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: border-color 0.2s;
+        }
+
+        .thumbnail:hover, .thumbnail.active {
+            border-color: #25D366;
+        }
+
+        .product-info {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .breadcrumb {
+            color: #6b7280;
+            font-size: 0.9rem;
+            margin-bottom: -1rem;
+        }
+
+        .product-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #1f2937;
+            line-height: 1.2;
+        }
+
+        .product-price {
+            font-size: 2rem;
+            color: #25D366;
+            font-weight: 700;
+        }
+
+        .vendor-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .vendor-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .vendor-details h4 {
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .vendor-location {
+            color: #6b7280;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .product-description {
+            color: #4b5563;
+            line-height: 1.8;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .whatsapp-btn {
+            flex: 1;
+            padding: 1rem;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .product-container {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            
+            .main-image {
+                height: 350px;
+            }
+
+            .product-title {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="nav-container">
+            <a href="homepage.html" class="logo">
+                <img src="../images/thriftlink-logo-.png" alt="ThriftLink" class="logo-img">
+            </a>
+            
+            <ul class="nav-links">
+                <li><a href="homepage.html">Home</a></li>
+                <li><a href="categories.html">Categories</a></li>
+                <li><a href="verifiedvendors.html">Verified Vendors</a></li>
+                <li><a href="howitworks.html">How it Works</a></li>
+            </ul>
+
+            <div class="header-actions">
+                <a href="../Vendor dashboard/signin.html" class="btn btn-outline" id="signInBtn">Log In</a>
+                <a href="post-ad.html" class="btn btn-primary" id="getStartedBtn">Get Started</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Product Details -->
+    <main class="product-container">
+        <!-- Gallery -->
+        <div class="product-gallery">
+            <img src="../images/denim-jacket.jpg" alt="Vintage Denim Jacket" class="main-image" id="mainImage">
+            <div class="thumbnail-list">
+                <img src="../images/denim-jacket.jpg" class="thumbnail active" onclick="changeImage(this)">
+                <!-- Placeholders for other angles -->
+                <div class="thumbnail" style="background: #eee;"></div>
+                <div class="thumbnail" style="background: #eee;"></div>
+            </div>
+        </div>
+
+        <!-- Info -->
+        <div class="product-info">
+            <div class="breadcrumb">Home > Fashion > Vintage Denim Jacket</div>
+            
+            <h1 class="product-title">Vintage Denim Jacket</h1>
+            <div class="product-price">₦15,000</div>
+
+            <div class="vendor-card">
+                <div class="vendor-avatar">Z</div>
+                <div class="vendor-details">
+                    <h4>Zara Thrift Store</h4>
+                    <div class="vendor-location">📍 Lagos, Nigeria</div>
+                    <div style="font-size: 0.8rem; color: #25D366; margin-top: 0.25rem;">✓ Verified Vendor</div>
+                </div>
+            </div>
+
+            <div class="product-description">
+                <h3>Description</h3>
+                <p>High-quality vintage denim jacket. Unisex. Available in size M and L. Slightly used but in excellent condition. Perfect for casual outings.</p>
+                <ul style="margin-top: 1rem; padding-left: 1.5rem; color: #4b5563;">
+                    <li>Material: 100% Denim</li>
+                    <li>Condition: Grade A UK Used</li>
+                    <li>Color: Blue</li>
+                </ul>
+            </div>
+
+            <div class="action-buttons">
+                <a href="https://wa.me/2348012345678?text=Hi, I am interested in the Vintage Denim Jacket listed on ThriftLink" target="_blank" class="btn btn-primary whatsapp-btn">
+                    <span>💬</span> Chat on WhatsApp
+                </a>
+                <button class="btn btn-outline" onclick="saveItem()">❤️ Save</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Image Gallery Logic
+        function changeImage(el) {
+            document.getElementById('mainImage').src = el.src;
+            document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        // Save Item Logic (Mock)
+        function saveItem() {
+            alert('Item saved to your wishlist!');
+        }
+
+        // Auth Logic
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            const authButtons = document.querySelector('.header-actions');
+
+            if (currentUser) {
+                authButtons.innerHTML = `
+                    <a href="${currentUser.type === 'seller' ? '../Vendor dashboard/dashboard.html' : '../User dashboard/dashboard.html'}" class="btn-primary" style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-size: 1.2rem;">👤</span> ${currentUser.name || 'Profile'}
+                    </a>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>

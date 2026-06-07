@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Dashboard - ThriftLink</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: #f5f7fa;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 260px;
+      background: #0f172a;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      padding: 2rem 0;
+      position: fixed;
+      height: 100vh;
+      left: 0;
+      top: 0;
+    }
+
+    .logo {
+      padding: 0 1.5rem 2rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 2rem;
+    }
+
+    .logo h2 {
+      color: #3b82f6;
+      font-size: 1.5rem;
+    }
+
+    .nav {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .nav a {
+      color: #94a3b8;
+      text-decoration: none;
+      padding: 0.875rem 1.5rem;
+      transition: all 0.2s;
+      font-weight: 500;
+      font-size: 0.95rem;
+      border-left: 3px solid transparent;
+    }
+
+    .nav a:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: white;
+    }
+
+    .nav a.active {
+      background: rgba(59, 130, 246, 0.1);
+      color: #60a5fa;
+      border-left-color: #3b82f6;
+    }
+
+    .nav a.logout {
+      margin-top: auto;
+      color: #f87171;
+    }
+
+    .nav a.logout:hover {
+      background: rgba(248, 113, 113, 0.1);
+      color: #ef4444;
+    }
+
+    /* Main Content */
+    .main-content {
+      margin-left: 260px;
+      flex: 1;
+      padding: 2.5rem;
+    }
+
+    .header {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .header h1 {
+      font-size: 2rem;
+      color: #0f172a;
+      margin-bottom: 0.5rem;
+    }
+
+    .header p {
+      color: #64748b;
+      font-size: 1rem;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      transition: all 0.2s;
+      border: 1px solid #f1f5f9;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .stat-card h4 {
+      color: #64748b;
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.75rem;
+    }
+
+    .stat-card p {
+      color: #0f172a;
+      font-size: 2.5rem;
+      font-weight: 700;
+    }
+
+    /* Sections */
+    .section {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .section-header h2 {
+      font-size: 1.5rem;
+      color: #0f172a;
+      font-weight: 700;
+    }
+
+    .filter-select {
+      padding: 0.625rem 1rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      background: white;
+      cursor: pointer;
+    }
+
+    /* Tables */
+    .table-container {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead {
+      background: #f8fafc;
+    }
+
+    th {
+      padding: 1rem;
+      text-align: left;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    td {
+      padding: 1rem;
+      border-bottom: 1px solid #f1f5f9;
+      color: #475569;
+    }
+
+    tbody tr:hover {
+      background: #f8fafc;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.375rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .badge.verified {
+      background: #dcfce7;
+      color: #15803d;
+    }
+
+    .badge.pending {
+      background: #fef3c7;
+      color: #b45309;
+    }
+
+    .badge.rejected {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    /* Action Buttons */
+    .action-btn {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-right: 0.5rem;
+    }
+
+    .action-btn.approve {
+      background: #dcfce7;
+      color: #15803d;
+    }
+
+    .action-btn.approve:hover {
+      background: #bbf7d0;
+    }
+
+    .action-btn.reject {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    .action-btn.reject:hover {
+      background: #fecaca;
+    }
+
+    .action-btn.delete {
+      background: #fef3c7;
+      color: #b45309;
+    }
+
+    .action-btn.delete:hover {
+      background: #fde68a;
+    }
+
+    .action-btn.view {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .action-btn.view:hover {
+      background: #bfdbfe;
+    }
+
+    /* Review Card */
+    .review-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+    }
+
+    .review-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.75rem;
+    }
+
+    .review-stars {
+      color: #fbbf24;
+      font-size: 1rem;
+    }
+
+    .review-text {
+      color: #475569;
+      line-height: 1.6;
+      margin-bottom: 0.75rem;
+    }
+
+    .review-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.875rem;
+      color: #94a3b8;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: #94a3b8;
+    }
+
+    .empty-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-header {
+      margin-bottom: 1.5rem;
+    }
+
+    .modal-header h3 {
+      font-size: 1.5rem;
+      color: #0f172a;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .modal-btn {
+      flex: 1;
+      padding: 0.875rem;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .modal-btn.confirm {
+      background: #3b82f6;
+      color: white;
+    }
+
+    .modal-btn.confirm:hover {
+      background: #2563eb;
+    }
+
+    .modal-btn.cancel {
+      background: #f1f5f9;
+      color: #475569;
+    }
+
+    .modal-btn.cancel:hover {
+      background: #e2e8f0;
+    }
+
+    /* Notification */
+    .notification {
+      position: fixed;
+      top: 2rem;
+      right: 2rem;
+      background: white;
+      padding: 1.25rem 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      display: none;
+      align-items: center;
+      gap: 0.75rem;
+      z-index: 2000;
+      border-left: 4px solid #22c55e;
+    }
+
+    .notification.show {
+      display: flex;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    .notification-icon {
+      font-size: 1.5rem;
+    }
+
+    .notification-text {
+      color: #0f172a;
+      font-weight: 600;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 70px;
+      }
+
+      .logo h2 {
+        font-size: 1rem;
+      }
+
+      .nav a span {
+        display: none;
+      }
+
+      .main-content {
+        margin-left: 70px;
+        padding: 1.5rem;
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .table-container {
+        font-size: 0.875rem;
+      }
+
+      th, td {
+        padding: 0.75rem 0.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">
+      <h2>ThriftLink Admin</h2>
+    </div>
+    <nav class="nav">
+      <a href="#overview" class="active" onclick="showSection('overview')"><span>📊 Overview</span></a>
+      <a href="#vendors" onclick="showSection('vendors')"><span>🏪 Vendors</span></a>
+      <a href="#reviews" onclick="showSection('reviews')"><span>⭐ Reviews</span></a>
+      <a href="#users" onclick="showSection('users')"><span>👥 Users</span></a>
+      <a href="#" class="logout"><span>🚪 Logout</span></a>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Overview Section -->
+    <div id="overview-section" class="content-section">
+      <div class="header">
+        <h1>Admin Dashboard</h1>
+        <p>Manage vendors, reviews, and users across ThriftLink</p>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <h4>Total Vendors</h4>
+          <p id="totalVendors">0</p>
+        </div>
+        <div class="stat-card">
+          <h4>Pending Verifications</h4>
+          <p id="pendingVendors">0</p>
+        </div>
+        <div class="stat-card">
+          <h4>Total Reviews</h4>
+          <p id="totalReviews">0</p>
+        </div>
+        <div class="stat-card">
+          <h4>Total Users</h4>
+          <p id="totalUsers">0</p>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <h2>Recent Activity</h2>
+        </div>
+        <div id="recentActivity"></div>
+      </div>
+    </div>
+
+    <!-- Vendors Section -->
+    <div id="vendors-section" class="content-section" style="display: none;">
+      <div class="header">
+        <h1>Vendor Management</h1>
+        <p>Approve, reject, or manage vendor verifications</p>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <h2>All Vendors</h2>
+          <select class="filter-select" id="vendorFilter" onchange="filterVendors()">
+            <option value="all">All Vendors</option>
+            <option value="verified">Verified</option>
+            <option value="pending">Pending</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+        <div class="table-container">
+          <table id="vendorsTable">
+            <thead>
+              <tr>
+                <th>Vendor Name</th>
+                <th>Category</th>
+                <th>Location</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="vendorsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reviews Section -->
+    <div id="reviews-section" class="content-section" style="display: none;">
+      <div class="header">
+        <h1>Review Management</h1>
+        <p>Moderate and manage customer reviews</p>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <h2>All Reviews</h2>
+        </div>
+        <div id="reviewsList"></div>
+      </div>
+    </div>
+
+    <!-- Users Section -->
+    <div id="users-section" class="content-section" style="display: none;">
+      <div class="header">
+        <h1>User Management</h1>
+        <p>View and manage registered users</p>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <h2>All Users</h2>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Location</th>
+                <th>Joined</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Confirmation Modal -->
+  <div id="confirmModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalTitle">Confirm Action</h3>
+      </div>
+      <p id="modalMessage">Are you sure you want to proceed?</p>
+      <div class="modal-buttons">
+        <button class="modal-btn cancel" onclick="closeModal()">Cancel</button>
+        <button class="modal-btn confirm" id="confirmBtn">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification -->
+  <div id="notification" class="notification">
+    <span class="notification-icon">✓</span>
+    <span class="notification-text" id="notificationText">Action completed successfully</span>
+  </div>
+
+  <script>
+    // Mock DataManager
+    const DataManager = {
+        getVendors: function() {
+            return [
+                { id: 1, name: 'Zara Thrift Store', category: 'Fashion', location: 'Lagos', status: 'verified' },
+                { id: 2, name: 'Retro Kicks', category: 'Sneakers', location: 'Abuja', status: 'pending' },
+                { id: 3, name: 'Vintage Vault', category: 'Accessories', location: 'Lagos', status: 'rejected' }
+            ];
+        },
+        getUsers: function() {
+            return [
+                { id: 1, name: 'Chioma Okeke', email: 'chioma@example.com', location: 'Lagos', joined: 'Oct 20, 2023' },
+                { id: 2, name: 'Emmanuel T.', email: 'emmanuel@example.com', location: 'Abuja', joined: 'Oct 22, 2023' }
+            ];
+        },
+        getAllReviews: function() {
+            const stored = localStorage.getItem('reviews');
+            return stored ? JSON.parse(stored) : [
+                { rating: 5, text: 'Great service!', time: new Date().toISOString() },
+                { rating: 4, text: 'Good quality items.', time: new Date().toISOString() }
+            ];
+        }
+    };
+
+    // Auth Check
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser) {
+            window.location.href = '../Vendor dashboard/signin.html';
+            return;
+        }
+
+        // Logout functionality
+        const logoutBtn = document.querySelector('.logout');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                localStorage.removeItem('currentUser');
+                window.location.href = '../Vendor dashboard/signin.html';
+            });
+        }
+    });
+
+    let vendors = DataManager.getVendors();
+    let users = DataManager.getUsers();
+    const reviews = DataManager.getAllReviews();
+
+    // Navigation
+    function showSection(section) {
+      document.querySelectorAll('.content-section').forEach(s => s.style.display = 'none');
+      document.getElementById(section + '-section').style.display = 'block';
+      
+      document.querySelectorAll('.nav a').forEach(a => a.classList.remove('active'));
+      event.target.classList.add('active');
+      
+      if (section === 'overview') updateStats();
+      if (section === 'vendors') renderVendors();
+      if (section === 'reviews') renderReviews();
+      if (section === 'users') renderUsers();
+    }
+
+    // Update Stats
+    function updateStats() {
+      document.getElementById('totalVendors').textContent = vendors.length;
+      document.getElementById('pendingVendors').textContent = vendors.filter(v => v.status === 'pending').length;
+      document.getElementById('totalReviews').textContent = reviews.length;
+      document.getElementById('totalUsers').textContent = users.length;
+      
+      renderRecentActivity();
+    }
+
+    function renderRecentActivity() {
+      const container = document.getElementById('recentActivity');
+      const recent = reviews.slice(-5).reverse();
+      
+      if (recent.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><p>No recent activity</p></div>';
+        return;
+      }
+      
+      container.innerHTML = recent.map((r, i) => `
+        <div class="review-card">
+          <div class="review-stars">${"⭐".repeat(r.rating)}</div>
+          <div class="review-text">${r.text}</div>
+          <div class="review-meta">
+            <span>${new Date(r.time).toLocaleDateString()}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Render Vendors
+    function renderVendors() {
+      const filter = document.getElementById('vendorFilter').value;
+      const filtered = filter === 'all' ? vendors : vendors.filter(v => v.status === filter);
+      
+      const tbody = document.getElementById('vendorsTableBody');
+      
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">🏪</div><p>No vendors found</p></div></td></tr>';
+        return;
+      }
+      
+      tbody.innerHTML = filtered.map(v => `
+        <tr>
+          <td><strong>${v.name}</strong></td>
+          <td>${v.category}</td>
+          <td>${v.location}</td>
+          <td><span class="badge ${v.status}">${v.status}</span></td>
+          <td>
+            ${v.status === 'pending' ? `
+              <button class="action-btn approve" onclick="approveVendor(${v.id})">Approve</button>
+              <button class="action-btn reject" onclick="rejectVendor(${v.id})">Reject</button>
+            ` : v.status === 'verified' ? `
+              <button class="action-btn view" onclick="alert('View vendor details')">View</button>
+              <button class="action-btn reject" onclick="revokeVendor(${v.id})">Revoke</button>
+            ` : `
+              <button class="action-btn approve" onclick="approveVendor(${v.id})">Approve</button>
+              <button class="action-btn delete" onclick="deleteVendor(${v.id})">Delete</button>
+            `}
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function filterVendors() {
+      renderVendors();
+    }
+
+    // Vendor Actions
+    function approveVendor(id) {
+      showConfirmModal('Approve Vendor', 'Are you sure you want to verify this vendor?', () => {
+        const vendor = vendors.find(v => v.id === id);
+        vendor.status = 'verified';
+        renderVendors();
+        showNotification('Vendor approved successfully');
+      });
+    }
+
+    function rejectVendor(id) {
+      showConfirmModal('Reject Vendor', 'Are you sure you want to reject this vendor?', () => {
+        const vendor = vendors.find(v => v.id === id);
+        vendor.status = 'rejected';
+        renderVendors();
+        showNotification('Vendor rejected');
+      });
+    }
+
+    function revokeVendor(id) {
+      showConfirmModal('Revoke Verification', 'Are you sure you want to revoke this vendor\'s verification?', () => {
+        const vendor = vendors.find(v => v.id === id);
+        vendor.status = 'pending';
+        renderVendors();
+        showNotification('Verification revoked');
+      });
+    }
+
+    function deleteVendor(id) {
+      showConfirmModal('Delete Vendor', 'Are you sure you want to permanently delete this vendor?', () => {
+        vendors = vendors.filter(v => v.id !== id);
+        renderVendors();
+        showNotification('Vendor deleted');
+      });
+    }
+
+    // Render Reviews
+    function renderReviews() {
+      const container = document.getElementById('reviewsList');
+      
+      if (reviews.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-icon">⭐</div><p>No reviews to moderate</p></div>';
+        return;
+      }
+      
+      container.innerHTML = reviews.map((r, index) => `
+        <div class="review-card">
+          <div class="review-header">
+            <div class="review-stars">${"⭐".repeat(r.rating)}</div>
+            <button class="action-btn delete" onclick="deleteReview(${index})">Delete</button>
+          </div>
+          <div class="review-text">${r.text}</div>
+          <div class="review-meta">
+            <span>${new Date(r.time).toLocaleDateString()}</span>
+            <span>Vendor: Zara Thrift Store</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function deleteReview(index) {
+      showConfirmModal('Delete Review', 'Are you sure you want to delete this review?', () => {
+        reviews.splice(index, 1);
+        localStorage.setItem('reviews', JSON.stringify(reviews));
+        renderReviews();
+        showNotification('Review deleted');
+      });
+    }
+
+    // Render Users
+    function renderUsers() {
+      const tbody = document.getElementById('usersTableBody');
+      
+      if (users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">👥</div><p>No users found</p></div></td></tr>';
+        return;
+      }
+      
+      tbody.innerHTML = users.map(u => `
+        <tr>
+          <td><strong>${u.name}</strong></td>
+          <td>${u.email}</td>
+          <td>${u.location}</td>
+          <td>${u.joined}</td>
+          <td>
+            <button class="action-btn view" onclick="alert('View user details')">View</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // Modal Functions
+    function showConfirmModal(title, message, onConfirm) {
+      document.getElementById('modalTitle').textContent = title;
+      document.getElementById('modalMessage').textContent = message;
+      document.getElementById('confirmModal').classList.add('show');
+      
+      document.getElementById('confirmBtn').onclick = () => {
+        onConfirm();
+        closeModal();
+      };
+    }
+
+    function closeModal() {
+      document.getElementById('confirmModal').classList.remove('show');
+    }
+
+    function logout() {
+      localStorage.removeItem('currentUser');
+      window.location.href = '../Vendor dashboard/signin.html';
+    }
+  </script>
+
+    function showNotification(message) {
+      const notification = document.getElementById('notification');
+      document.getElementById('notificationText').textContent = message;
+      notification.classList.add('show');
+      
+      setTimeout(() => {
+        notification.classList.remove('show');
+      }, 3000);
+    }
+
+    // Initialize
+    updateStats();
+  </script>
+</body>
+</html>

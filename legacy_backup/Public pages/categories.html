@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thrift Link - Categories</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #f9fafb; color: #333; }
+
+    /* Header/Navbar */
+    .header {
+      background: white;
+      top: 0;
+      width: 100%;
+      z-index: 1000;
+      border-bottom: 1px solid #e5e7eb;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+    }
+
+            .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .location-selector {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.location-icon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+
+        .location-selector {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #666;
+            font-size: 0.9rem;
+            padding: 0.5rem;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .location-selector:hover {
+            background: #f3f4f6;
+        }
+
+.btn {
+            padding: 0.7rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-size: 0.9rem;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: #25D366;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1FAD5C;
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            border: 1px solid #25D366;
+            color: #25D366;
+            background: transparent;
+        }
+
+        .btn-outline:hover {
+            background: #25D366;
+            color: white;
+        }
+
+        .post-ad-btn {
+            background: #ff6b35;
+            color: white;
+            font-weight: 700;
+            padding: 0.8rem 2rem;
+        }
+
+        .post-ad-btn:hover {
+            background: #e55a2e;
+        }
+
+    .logo-img {
+  height: 100px;       /* adjust to your navbar height */
+  width: auto;
+  display: block;
+}
+
+    .nav-links { display: flex; list-style: none; gap: 2rem; }
+    .nav-links a { text-decoration: none; color: #333; font-weight: 500; transition: color 0.3s ease; }
+    .nav-links a:hover { color: #25D366; }
+
+    /* Categories Section */
+    .section-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 7rem 2rem 4rem;
+    }
+    .section-title {
+      text-align: center;
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 2.5rem;
+    }
+    .categories-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 2rem;
+    }
+    .category-card {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem 1rem;
+      text-align: center;
+      border: 1px solid #e5e7eb;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.3s ease;
+    }
+    .category-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+      border-color: #25D366;
+    }
+    .category-icon {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1rem;
+      font-size: 2rem;
+      color: white;
+      font-weight: bold;
+    }
+
+    .category-icon img.category-img {
+  width: 50%;  /* Adjust so it fits well inside the circle */
+  height: 50%;
+  object-fit: contain; /* Keeps aspect ratio */
+}
+
+    /* Icon Colors (like Jiji random vibrant) */
+    .electronics { background: #3b82f6; }
+    .fashion { background: #ec4899; }
+    .food { background: #f97316; }
+    .home { background: #10b981; }
+    .services { background: #8b5cf6; }
+    .business { background: #f59e0b; }
+    .education { background: #06b6d4; }
+    .automobiles { background: #ef4444; }
+
+    .category-name {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 0.3rem;
+    }
+    .category-count {
+      font-size: 0.85rem;
+      color: #6b7280;
+    }
+
+        /* Footer - Simplified */
+        .footer {
+            background: #f9fafb;
+            color: #6b7280;
+            padding: 3rem 2rem 1rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+.footer-logo img {
+  height: 94px;        /* slightly smaller than navbar */
+  width: auto;
+  margin-bottom: 1rem;
+}
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-section h4 {
+            color: #1f2937;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .footer-links {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .footer-links a {
+            color: #6b7280;
+            text-decoration: none;
+            transition: color 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .footer-links a:hover {
+            color: #25D366;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid #e5e7eb;
+            padding-top: 1rem;
+            text-align: center;
+            color: #9ca3af;
+            font-size: 0.85rem;
+        }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .categories-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="nav-container">
+                  <a href="homepage.html" class="logo">
+        <img src="../images/thriftlink-logo-.png" alt="Thrift Link Logo" class="logo-img">
+      </a>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="categories.html" class="active">Categories</a></li>
+          <li><a href="verifiedvendors.html">Verified Vendors</a></li>
+          <li><a href="howitworks.html">How It Works</a></li>
+          <li><a href="support.html">Support</a></li>
+        </ul>
+      </nav>
+      <div class="header-actions">
+                <div class="location-selector">
+                <img src="../images/gps.png" alt="Location" class="location-icon">
+                    <span>Abuja, NG</span>
+            </div>
+                <a href="../Vendor dashboard/signin.html" class="btn btn-outline" id="signInBtn">Sign In</a>
+                <a href="#" class="btn btn-outline" id="profileBtn" style="display: none; border: none; padding: 0;">
+                    <img src="../images/user.png" alt="Profile" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #25D366;">
+                </a>
+                <a href="post-ad.html" class="btn post-ad-btn">Get Started</a>
+            </div>
+    </div>
+  </header>
+
+  <!-- Categories Section -->
+  <section class="section-container">
+    <h2 class="section-title">Browse by Category</h2>
+    <div class="categories-grid">
+      <a href="verifiedvendors.html?category=Electronics" class="category-card">
+<div class="category-icon electronics">
+  <img src="../images/smartphone.png" alt="Electronics" class="category-img">
+</div>
+
+        <div class="category-name">Electronics</div>
+        <div class="category-count">12,450 vendors</div>
+      </a>
+      <a href="verifiedvendors.html?category=Fashion" class="category-card">
+        <div class="category-icon fashion">
+  <img src="../images/woman.png" alt="Fashion" class="category-img">
+</div>
+
+        <div class="category-name">Fashion & Beauty</div>
+        <div class="category-count">8,920 vendors</div>
+      </a>
+      <a href="verifiedvendors.html?category=Food" class="category-card">
+        <div class="category-icon food">
+          <img src="../images/fast-food.png" alt="Food" class="category-img">
+        </div>
+        <div class="category-name">Food & Drinks</div>
+        <div class="category-count">6,780 vendors</div>
+      </a>
+      <a href="verifiedvendors.html?category=Home" class="category-card">
+        <div class="category-icon home">
+          <img src="../images/mansion.png" alt="Home" class="category-img">
+        </div>
+        <div class="category-name">Home & Living</div>
+        <div class="category-count">4,320 vendors</div>
+      </a>
+      <a href="verifiedvendors.html?category=Services" class="category-card">
+        <div class="category-icon services">
+          <img src="../images/customer-service.png" alt="Service" class="category-img">
+        </div>
+        <div class="category-name">Services</div>
+        <div class="category-count">3,650 vendors</div>
+      </a>
+      <a href="verifiedvendors.html?category=Business" class="category-card">
+        <div class="category-icon business">
+          <img src="../images/briefcase.png" alt="Business" class="category-img">
+        </div>
+        <div class="category-name">Business</div>
+        <div class="category-count">2,890 vendors</div>
+      </a>
+      <a href="verifiedvendors.html?category=Education" class="category-card">
+        <div class="category-icon education">
+          <img src="../images/education.png" alt="Education" class="category-img">
+        </div>
+        <div class="category-name">Education</div>
+        <div class="category-count">1,560 vendors</div>
+      </a>
+      <a href="verifiedvendors.html?category=Automobiles" class="category-card">
+        <div class="category-icon automobiles">
+          <img src="../images/sport-car.png" alt="Cars" class="category-img">
+        </div>
+        <div class="category-name">Automobiles</div>
+        <div class="category-count">2,340 vendors</div>
+      </a>
+    </div>
+  </section>
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="section-container">
+            <div class="footer-content">
+                <div class="footer-section">
+<div class="logo footer-logo">
+            <img src="../images/thriftlink-logo-.png" alt="Thrift Link Logo">
+          </div>
+                    <p style="margin-bottom: 1rem;">Nigeria's most trusted WhatsApp vendor marketplace. Connecting buyers with verified sellers since 2024.</p>
+                    <div class="trust-indicators" style="justify-content: flex-start; margin: 0;">
+                        <div class="trust-item" style="font-size: 0.8rem;">
+                            <span>
+                              <img src="../images/shield.png" alt="Shield" class="icon-sm" style="width: 20px; height: 20px;">
+                            </span>
+                            <span>Secure Platform</span>
+                        </div>
+                        <div class="trust-item" style="font-size: 0.8rem;">
+                            <span>
+                              <img src="../images/checklist.png" alt="Check" style="width: 20px; height: 20px;">
+                            </span>
+                            <span>Verified Vendors</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h4>For Buyers</h4>
+                    <div class="footer-links">
+                        <a href="verifiedvendors.html">Browse Vendors</a>
+                        <a href="categories.html">Shop by Category</a>
+                        <a href="#safety">Safety Tips</a>
+                        <a href="#reviews">Vendor Reviews</a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h4>For Vendors</h4>
+                    <div class="footer-links">
+                        <a href="">Register as Vendor</a>
+                        <a href="#verification">Get Verified</a>
+                        <a href="#pricing">Pricing Plans</a>
+                        <a href="#vendor-guide">Vendor Guide</a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h4>Support</h4>
+                    <div class="footer-links">
+                        <a href="#help">Help Center</a>
+                        <a href="support.html">Contact Us</a>
+                        <a href="#faq">FAQ</a>
+                        <a href="#report">Report Issues</a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h4>Legal</h4>
+                    <div class="footer-links">
+                        <a href="#privacy">Privacy Policy</a>
+                        <a href="#terms">Terms of Service</a>
+                        <a href="#vendor-policy">Vendor Policy</a>
+                        <a href="#cookies">Cookie Policy</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2025 Thrift Link Nigeria. All rights reserved. | Made with ❤️ in Nigeria</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // AUTH CHECK
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            const signInBtn = document.getElementById('signInBtn');
+            const profileBtn = document.getElementById('profileBtn');
+
+            if (currentUser) {
+                if(signInBtn) signInBtn.style.display = 'none';
+                if(profileBtn) {
+                    profileBtn.style.display = 'inline-block';
+                    if (currentUser.type === 'seller') {
+                        profileBtn.href = '../Vendor dashboard/dashboard.html';
+                    } else {
+                        profileBtn.href = '../User dashboard/dashboard.html';
+                    }
+                }
+            } else {
+                if(signInBtn) signInBtn.style.display = 'inline-flex';
+                if(profileBtn) profileBtn.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

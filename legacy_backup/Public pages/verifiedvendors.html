@@ -1,0 +1,1399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verified Vendors - Thrift Link | Trusted WhatsApp Sellers</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f9fafb;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            border-bottom: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+        }
+
+.logo-img {
+  height: 100px;       /* adjust to your navbar height */
+  width: auto;
+  display: block;
+}
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: #25D366;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        
+    .location-selector {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.location-icon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+
+                .location-selector {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #666;
+            font-size: 0.9rem;
+            padding: 0.5rem;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .location-selector:hover {
+            background: #f3f4f6;
+        }
+
+        .btn {
+            padding: 0.7rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-size: 0.9rem;
+            gap: 0.5rem;
+        }
+
+        .btn-outline {
+            border: 1px solid #25D366;
+            color: #25D366;
+            background: transparent;
+        }
+
+        .btn-outline:hover {
+            background: #25D366;
+            color: white;
+        }
+
+        .post-ad-btn {
+            background: #ff6b35;
+            color: white;
+            font-weight: 700;
+            padding: 0.8rem 2rem;
+        }
+
+        .post-ad-btn:hover {
+            background: #e55a2e;
+        }
+
+        /* Page Header */
+        .page-header {
+            background: linear-gradient(135deg, #25D366, #128C7E);
+            color: white;
+            padding: 8rem 2rem 3rem;
+            text-align: center;
+        }
+
+        .page-header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+
+        .page-header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+
+        .verification-stats {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            display: block;
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 0.3rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        /* Main Content */
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .filters-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            margin: -2rem 0 2rem;
+            border: 1px solid #e5e7eb;
+        }
+
+        .filters-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .filters-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .results-count {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-label {
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.9rem;
+        }
+
+        .filter-select, .filter-input {
+            padding: 0.7rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: white;
+            font-size: 0.9rem;
+        }
+
+        .filter-select:focus, .filter-input:focus {
+            outline: none;
+            border-color: #25D366;
+        }
+
+        .filter-chips {
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .filter-chip {
+            padding: 0.5rem 1rem;
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-chip:hover, .filter-chip.active {
+            background: #25D366;
+            color: white;
+            border-color: #25D366;
+        }
+
+        .clear-filters {
+            color: #25D366;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .clear-filters:hover {
+            text-decoration: underline;
+        }
+
+        /* Vendors Grid */
+        .vendors-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .vendors-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .sort-dropdown {
+            padding: 0.7rem 1rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            background: white;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .vendors-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .vendor-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 1.8rem;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .vendor-card:hover {
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+            border-color: #25D366;
+        }
+
+        .vendor-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .vendor-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #25D366, #128C7E);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.3rem;
+            flex-shrink: 0;
+        }
+
+        .vendor-info {
+            flex: 1;
+        }
+
+        .vendor-info h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 0.3rem;
+        }
+
+        .verification-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            background: #dcfce7;
+            color: #166534;
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .vendor-rating {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: #6b7280;
+        }
+
+        .rating-stars {
+            color: #fbbf24;
+        }
+
+        .vendor-specialties {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .specialty-tag {
+            background: #f3f4f6;
+            color: #6b7280;
+            padding: 0.3rem 0.8rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .vendor-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1.2rem;
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+
+        .stat-group {
+            text-align: center;
+        }
+
+        .stat-group .number {
+            display: block;
+            font-weight: 700;
+            color: #1f2937;
+            font-size: 1rem;
+        }
+
+        .vendor-description {
+            color: #6b7280;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 1.2rem;
+        }
+
+        .vendor-actions {
+            display: flex;
+            gap: 0.8rem;
+        }
+        .verification-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.icon-sm {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+}
+        .btn-whatsapp {
+            background: #25D366;
+            color: white;
+            flex: 1;
+            justify-content: center;
+            font-size: 0.85rem;
+        }
+
+        .btn-whatsapp:hover {
+            background: #1FAD5C;
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #6b7280;
+            border: 1px solid #e5e7eb;
+            padding: 0.7rem;
+            min-width: 40px;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .premium-badge {
+            position: absolute;
+            top: -8px;
+            right: 15px;
+            background: #ff6b35;
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+        .rating-stars {
+  display: inline-flex;
+  gap: 2px;
+  vertical-align: middle;
+}
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 3rem;
+        }
+
+        .page-btn {
+            padding: 0.7rem 1rem;
+            border: 1px solid #e5e7eb;
+            background: white;
+            color: #6b7280;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .page-btn:hover, .page-btn.active {
+            background: #25D366;
+            color: white;
+            border-color: #25D366;
+        }
+
+        .page-btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Footer */
+        .footer {
+            background: white;
+            color: #6b7280;
+            padding: 3rem 2rem 1rem;
+            border-top: 1px solid #e5e7eb;
+            margin-top: 4rem;
+        }
+
+        .footer-logo img {
+  height: 94px;        /* slightly smaller than navbar */
+  width: auto;
+  margin-bottom: 1rem;
+}
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-section h4 {
+            color: #1f2937;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .footer-links {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .footer-links a {
+            color: #6b7280;
+            text-decoration: none;
+            transition: color 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .footer-links a:hover {
+            color: #25D366;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid #e5e7eb;
+            padding-top: 1rem;
+            text-align: center;
+            color: #9ca3af;
+            font-size: 0.85rem;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .page-header h1 {
+                font-size: 2rem;
+            }
+
+            .verification-stats {
+                gap: 2rem;
+            }
+
+            .vendors-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .vendor-actions {
+                flex-direction: column;
+            }
+
+            .filters-section {
+                margin: -1rem 0 1rem;
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="nav-container">
+                         <a href="homepage.html" class="logo">
+                <img src="../images/thriftlink-logo-.png" alt="Thrift Link Logo" class="logo-img">
+            </a>
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="categories.html">Categories</a></li>
+                    <li><a href="verifiedvendors.html" class="active">Verified Vendors</a></li>
+                    <li><a href="howitworks.html">How It Works</a></li>
+                    <li><a href="support.html">Support</a></li>
+                </ul>
+            </nav>
+      <div class="header-actions">
+                <div class="location-selector">
+                <img src="../images/gps.png" alt="Location" class="location-icon">
+                    <span>Abuja, NG</span>
+            </div>
+                <a href="../Vendor dashboard/signin.html" class="btn btn-outline" id="signInBtn">Sign In</a>
+                <a href="#" class="btn btn-outline" id="profileBtn" style="display: none; border: none; padding: 0;">
+                    <img src="../images/user.png" alt="Profile" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #25D366;">
+                </a>
+                <a href="post-ad.html" class="btn post-ad-btn">Get Started</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Page Header -->
+    <section class="page-header">
+        <h1>Verified Vendors</h1>
+        <p>Browse 5,000+ trusted sellers who have been verified by our team for reliability and quality service</p>
+        <div class="verification-stats">
+            <div class="stat-item">
+                <span class="stat-number">5,248</span>
+                <span class="stat-label">Verified Vendors</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">98.5%</span>
+                <span class="stat-label">Customer Satisfaction</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">4.8★</span>
+                <span class="stat-label">Average Rating</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Filters Section -->
+        <section class="filters-section">
+            <div class="filters-header">
+                <h3 class="filters-title">Find Your Perfect Vendor</h3>
+                <span class="results-count">Showing 1-20 of 5,248 verified vendors</span>
+            </div>
+            
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label class="filter-label">Category</label>
+                    <select class="filter-select">
+                        <option>All Categories</option>
+                        <option>Electronics</option>
+                        <option>Fashion & Beauty</option>
+                        <option>Food & Drinks</option>
+                        <option>Home & Living</option>
+                        <option>Services</option>
+                        <option>Business</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Location</label>
+                    <select class="filter-select" id="locationFilter">
+                        <option value="">All Locations</option>
+                        <option value="Abia">Abia</option>
+                        <option value="Adamawa">Adamawa</option>
+                        <option value="Akwa Ibom">Akwa Ibom</option>
+                        <option value="Anambra">Anambra</option>
+                        <option value="Bauchi">Bauchi</option>
+                        <option value="Bayelsa">Bayelsa</option>
+                        <option value="Benue">Benue</option>
+                        <option value="Borno">Borno</option>
+                        <option value="Cross River">Cross River</option>
+                        <option value="Delta">Delta</option>
+                        <option value="Ebonyi">Ebonyi</option>
+                        <option value="Edo">Edo</option>
+                        <option value="Ekiti">Ekiti</option>
+                        <option value="Enugu">Enugu</option>
+                        <option value="Gombe">Gombe</option>
+                        <option value="Imo">Imo</option>
+                        <option value="Jigawa">Jigawa</option>
+                        <option value="Kaduna">Kaduna</option>
+                        <option value="Kano">Kano</option>
+                        <option value="Katsina">Katsina</option>
+                        <option value="Kebbi">Kebbi</option>
+                        <option value="Kogi">Kogi</option>
+                        <option value="Kwara">Kwara</option>
+                        <option value="Lagos">Lagos</option>
+                        <option value="Nasarawa">Nasarawa</option>
+                        <option value="Niger">Niger</option>
+                        <option value="Ogun">Ogun</option>
+                        <option value="Ondo">Ondo</option>
+                        <option value="Osun">Osun</option>
+                        <option value="Oyo">Oyo</option>
+                        <option value="Plateau">Plateau</option>
+                        <option value="Rivers">Rivers</option>
+                        <option value="Sokoto">Sokoto</option>
+                        <option value="Taraba">Taraba</option>
+                        <option value="Yobe">Yobe</option>
+                        <option value="Zamfara">Zamfara</option>
+                        <option value="FCT">Federal Capital Territory</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Rating</label>
+                    <select class="filter-select" id="ratingFilter">
+                        <option value="">All Ratings</option>
+                        <option value="4.5">4.5+ Stars</option>
+                        <option value="4.0">4.0+ Stars</option>
+                        <option value="3.5">3.5+ Stars</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Search Vendor</label>
+                    <input type="text" class="filter-input" id="searchFilter" placeholder="Search by name...">
+                </div>
+            </div>
+
+            <div class="filter-chips">
+                <span class="filter-chip active">All</span>
+                <span class="filter-chip">Premium</span>
+                <span class="filter-chip">New This Week</span>
+                <span class="filter-chip">Most Orders</span>
+                <span class="filter-chip">Highest Rated</span>
+                <span class="filter-chip">Fast Response</span>
+                <a href="#" class="clear-filters">Clear all filters</a>
+            </div>
+        </section>
+
+        <!-- Vendors Header -->
+        <div class="vendors-header">
+            <h2 class="vendors-title">All Verified Vendors</h2>
+            <select class="sort-dropdown">
+                <option>Sort by: Relevance</option>
+                <option>Highest Rated</option>
+                <option>Most Reviews</option>
+                <option>Newest First</option>
+                <option>Most Orders</option>
+            </select>
+        </div>
+
+        <!-- Vendors Grid -->
+        <div class="vendors-grid">
+            <div class="vendor-card">
+                <div class="premium-badge">
+  <img src="../images/star.png" alt="Premium" class="icon-sm" style="margin-right: 6px;">
+  PREMIUM
+</div>
+
+                <div class="vendor-header">
+                    <div class="vendor-avatar">JF</div>
+                    <div class="vendor-info">
+                        <h3>Jane's Fashion Hub</h3>
+                        <span class="verification-badge">
+                            <img src="../images/checklist.png" alt="Verified" class="icon-sm">
+                        <span>Verified Seller</span>
+                        </span>
+                        <div class="vendor-rating">
+                            <span class="rating-stars">
+  <img src="../images/star.png" alt="Star" class="icon-sm">
+  <img src="../images/star.png" alt="Star" class="icon-sm">
+  <img src="../images/star.png" alt="Star" class="icon-sm">
+  <img src="../images/star.png" alt="Star" class="icon-sm">
+  <img src="../images/star.png" alt="Star" class="icon-sm">
+</span>
+
+                            <span>4.9 (324 reviews)</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="vendor-specialties">
+                    <span class="specialty-tag">Women's Fashion</span>
+                    <span class="specialty-tag">Accessories</span>
+                    <span class="specialty-tag">Bags</span>
+                </div>
+                <div class="vendor-stats">
+                    <div class="stat-group">
+                        <span class="number">2,450</span>
+                        <span>Orders</span>
+                    </div>
+                    <div class="stat-group">
+                        <span class="number">Lagos</span>
+                        <span>Location</span>
+                    </div>
+                    <div class="stat-group">
+                        <span class="number">2 hrs</span>
+                        <span>Response</span>
+                    </div>
+                </div>
+                <p class="vendor-description">Premium fashion vendor specializing in trendy women's clothing, accessories, and handbags. Fast shipping nationwide.</p>
+                <div class="vendor-actions">
+                     <a href="#" class="btn btn-whatsapp">
+  <img src="../images/whatsapp (1).png" alt="Chat" class="icon-sm" style="margin-right: 8px;">
+  Chat on WhatsApp
+</a>
+                   <button class="btn btn-secondary">
+  <img src="../images/heart.png" alt="Favorite" class="icon-sm">
+</button>
+
+                    <button class="btn btn-secondary">
+  <img src="../images/share.png" alt="Share" class="icon-sm">
+</button>
+
+                </div>
+            </div>
+
+            <div class="vendor-card">
+                <div class="vendor-header">
+                    <div class="vendor-avatar">TE</div>
+                    <div class="vendor-info">
+                        <h3>TechWorld Lagos</h3>
+                        <span class="verification-badge">
+                            <img src="../images/checklist.png" alt="Verified" class="icon-sm">
+                        <span>Verified Seller</span>
+                        </span>
+                        <div class="vendor-rating">
+                            <span class="rating-stars">
+  <img src="../images/star.png" alt="Star" class="icon-sm">
+  <img src="../images/star.png" alt="Star" class="icon-sm">
+  <img src="../images/star.png" alt="Star" class="icon-sm">
+  <img src="../images/star.png" alt="Star" class="icon-sm">
+  <img src="../images/star.png" alt="Star" class="icon-sm">
+</span>
+
+                            <span>4.8 (189 reviews)</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="vendor-specialties">
+                    <span class="specialty-tag">Phones</span>
+                    <span class="specialty-tag">Laptops</span>
+                    <span class="specialty-tag">Accessories</span>
+                </div>
+                <div class="vendor-stats">
+                    <div class="stat-group">
+                        <span class="number">1,890</span>
+                        <span>Orders</span>
+                    </div>
+                    <div class="stat-group">
+                        <span class="number">Lagos</span>
+                        <span>Location</span>
+                    </div>
+                    <div class="stat-group">
+                        <span class="number">1 hr</span>
+                        <span>Response</span>
+                    </div>
+                </div>
+                <p class="vendor-description">Reliable electronics vendor with authentic products. Specializing in latest smartphones, laptops, and tech accessories.</p>
+                <div class="vendor-actions">
+                     <a href="#" class="btn btn-whatsapp">
+  <img src="../images/whatsapp (1).png" alt="Chat" class="icon-sm" style="margin-right: 8px;">
+  Chat on WhatsApp
+</a>
+                       <button class="btn btn-secondary">
+  <img src="../images/heart.png" alt="Favorite" class="icon-sm">
+</button>
+                    <button class="btn btn-secondary">
+  <img src="../images/share.png" alt="Share" class="icon-sm">
+</button>
+
+                </div>
+            </div>
+
+            <div class="vendor-card">
+                <div class="vendor-header">
+                    <div class="vendor-avatar">FD</div>
+                    <div class="vendor-info">
+                        <h3>FoodieDelight NG</h3>
+                        <span class="verification-badge">
+                            <img src="../images/checklist.png" alt="Verified" class="icon-sm">
+                        <span>Verified Seller</span>
+                        </span>
+                        <div class="vendor-rating">
+                            <span class="rating-stars">
+  <img src="../images/star.png" alt="Star" class="icon-sm">
+  <img src="../images/star.png" alt="Star" class="icon-sm">
+  <img src="../images/star.png" alt="Star" class="icon-sm">
+  <img src="../images/star.png" alt="Star" class="icon-sm">
+  <img src="../images/star.png" alt="Star" class="icon-sm">
+</span>
+
+                            <span>4.9 (567 reviews)</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="vendor-specialties">
+                    <span class="specialty-tag">Local Dishes</span>
+                    <span class="specialty-tag">Catering</span>
+                    <span class="specialty-tag">Snacks</span>
+                </div>
+                <div class="vendor-stats">
+                    <div class="stat-group">
+                        <span class="number">3,200</span>
+                        <span>Orders</span>
+                    </div>
+                    <div class="stat-group">
+                        <span class="number">Abuja</span>
+                        <span>Location</span>
+                    </div>
+                    <div class="stat-group">
+                        <span class="number">30 min</span>
+                        <span>Response</span>
+                    </div>
+                </div>
+                <p class="vendor-description">Authentic Nigerian food vendor offering delicious local dishes, snacks, and catering services with home delivery.</p>
+                <div class="vendor-actions">
+                     <a href="#" class="btn btn-whatsapp">
+  <img src="../images/whatsapp (1).png" alt="Chat" class="icon-sm" style="margin-right: 8px;">
+  Chat on WhatsApp
+</a>
+                       <button class="btn btn-secondary">
+  <img src="../images/heart.png" alt="Favorite" class="icon-sm">
+</button>
+                    <button class="btn btn-secondary">
+  <img src="../images/share.png" alt="Share" class="icon-sm">
+</button>
+
+                </div>
+            </div>
+
+            <div class="vendor-card">
+               <div class="premium-badge">
+  <img src="../images/star.png" alt="Premium" class="icon-sm" style="margin-right: 6px;">
+  PREMIUM
+</div>
+
+                <div class="vendor-header">
+                    <div class="vendor-avatar">HL</div>
+                    <div class="vendor-info">
+                        <h3>Home Essentials</h3>
+                       <span class="verification-badge">
+                            <img src="../images/checklist.png" alt="Verified" class="icon-sm">
+                        <span>Verified Seller</span>
+                        </span>
+                        <div class="vendor-rating">
+                            <span class="rating-stars">
+  <img src="../images/star.png" alt="Star" class="icon-sm">
+  <img src="../images/star.png" alt="Star" class="icon-sm">
+  <img src="../images/star.png" alt="Star" class="icon-sm">
+  <img src="../images/star.png" alt="Star" class="icon-sm">
+  <img src="../images/star.png" alt="Star" class="icon-sm">
+</span>
+
+                            <span>4.7 (412 reviews)</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="vendor-specialties">
+                    <span class="specialty-tag">Furniture</span>
+                    <span class="specialty-tag">Decor</span>
+                    <span class="specialty-tag">Kitchen</span>
+                </div>
+                <div class="vendor-stats">
+                    <div class="stat-group">
+                        <span class="number">1,560</span>
+                        <span>Orders</span>
+                    </div>
+                    <div class="stat-group">
+                        <span class="number">Port Harcourt</span>
+                        <span>Location</span>
+                    </div>
+                    <div class="stat-group">
+                        <span class="number">3 hrs</span>
+                        <span>Response</span>
+                    </div>
+                </div>
+                <p class="vendor-description">Quality home furniture and decor specialist. From modern furniture to kitchen essentials, we make homes beautiful.</p>
+                <div class="vendor-actions">
+                    <a href="#" class="btn btn-whatsapp">
+  <img src="../images/whatsapp (1).png" alt="Chat" class="icon-sm" style="margin-right: 8px;">
+  Chat on WhatsApp
+</a>
+                       <button class="btn btn-secondary">
+  <img src="../images/heart.png" alt="Favorite" class="icon-sm">
+</button>
+                    <button class="btn btn-secondary">
+  <img src="../images/share.png" alt="Share" class="icon-sm">
+</button>
+
+                </div>
+            </div>
+
+            <div class="vendor-card">
+                <div class="vendor-header">
+                    <div class="vendor-avatar">SS</div>
+                    <div class="vendor-info">
+                        <h3>SmartFix Services</h3>
+                        <span class="verification-badge">
+                            <img src="../images/checklist.png" alt="Verified" class="icon-sm">
+                        <span>Verified Seller</span>
+                        </span>
+                        <div class="vendor-rating">
+                            <span class="rating-stars">
+  <img src="../images/star.png" alt="Star" class="icon-sm">
+  <img src="../images/star.png" alt="Star" class="icon-sm">
+  <img src="../images/star.png" alt="Star" class="icon-sm">
+  <img src="../images/star.png" alt="Star" class="icon-sm">
+  <img src="../images/star.png" alt="Star" class="icon-sm">
+</span>
+
+                            <span>4.8 (298 reviews)</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="vendor-specialties">
+                    <span class="specialty-tag">Phone Repair</span>
+                    <span class="specialty-tag">Laptop Fix</span>
+                    <span class="specialty-tag">Home Service</span>
+                </div>
+                <div class="vendor-stats">
+                    <div class="stat-group">
+                        <span class="number">890</span>
+                        <span>Services</span>
+                    </div>
+                    <div class="stat-group">
+                        <span class="number">Lagos</span>
+                        <span>Location</span>
+                    </div>
+                    <div class="stat-group">
+                        <span class="number">15 min</span>
+                        <span>Response</span>
+                    </div>
+                </div>
+                <p class="vendor-description">Professional repair services for phones, laptops, and electronics. Fast, reliable, and affordable with warranty.</p>
+                <div class="vendor-actions">
+                    <a href="#" class="btn btn-whatsapp">
+  <img src="../images/whatsapp (1).png" alt="Chat" class="icon-sm" style="margin-right: 8px;">
+  Chat on WhatsApp
+</a>
+                       <button class="btn btn-secondary">
+  <img src="../images/heart.png" alt="Favorite" class="icon-sm">
+</button>
+                    <button class="btn btn-secondary">
+  <img src="../images/share.png" alt="Share" class="icon-sm">
+</button>
+
+                </div>
+            </div>
+
+            <div class="vendor-card">
+                <div class="vendor-header">
+                    <div class="vendor-avatar">BW</div>
+                    <div class="vendor-info">
+                        <h3>Beauty World</h3>
+                        <span class="verification-badge">
+                            <img src="../images/checklist.png" alt="Verified" class="icon-sm">
+                        <span>Verified Seller</span>
+                        </span>
+                        <div class="vendor-rating">
+                            <span class="rating-stars">
+  <img src="../images/star.png" alt="Star" class="icon-sm">
+  <img src="../images/star.png" alt="Star" class="icon-sm">
+  <img src="../images/star.png" alt="Star" class="icon-sm">
+  <img src="../images/star.png" alt="Star" class="icon-sm">
+  <img src="../images/star.png" alt="Star" class="icon-sm">
+</span>
+
+                            <span>4.9 (445 reviews)</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="vendor-specialties">
+                    <span class="specialty-tag">Skincare</span>
+                    <span class="specialty-tag">Makeup</span>
+                    <span class="specialty-tag">Hair Products</span>
+                </div>
+                <div class="vendor-stats">
+                    <div class="stat-group">
+                        <span class="number">2,100</span>
+                        <span>Orders</span>
+                    </div>
+                    <div class="stat-group">
+                        <span class="number">Ibadan</span>
+                        <span>Location</span>
+                    </div>
+                    <div class="stat-group">
+                        <span class="number">1 hr</span>
+                        <span>Response</span>
+                    </div>
+                </div>
+                <p class="vendor-description">Premium beauty products vendor. Authentic skincare, makeup, and hair care products from top international brands.</p>
+                <div class="vendor-actions">
+                   <a href="#" class="btn btn-whatsapp">
+  <img src="../images/whatsapp (1).png" alt="Chat" class="icon-sm" style="margin-right: 8px;">
+  Chat on WhatsApp
+</a>
+
+                      <button class="btn btn-secondary">
+  <img src="../images/heart.png" alt="Favorite" class="icon-sm">
+</button>
+                    <button class="btn btn-secondary">
+  <img src="../images/share.png" alt="Share" class="icon-sm">
+</button>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+            <a href="#" class="page-btn disabled">« Previous</a>
+            <a href="#" class="page-btn active">1</a>
+            <a href="#" class="page-btn">2</a>
+            <a href="#" class="page-btn">3</a>
+            <a href="#" class="page-btn">4</a>
+            <a href="#" class="page-btn">5</a>
+            <span>...</span>
+            <a href="#" class="page-btn">262</a>
+            <a href="#" class="page-btn">Next »</a>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+<div class="logo footer-logo">
+                        <img src="../images/thriftlink-logo-.png" alt="Thrift Link Logo">
+                    </div>
+                <p style="margin-bottom: 1rem;">Nigeria's most trusted WhatsApp vendor marketplace. Connecting buyers with verified sellers since 2024.</p>
+            <div class="trust-indicators" style="justify-content: flex-start; margin: 0;">
+                        <div class="trust-item" style="font-size: 0.8rem;">
+                            <span>
+                              <img src="../images/shield.png" alt="Shield" class="icon-sm" style="width: 20px; height: 20px;">
+                            </span>
+                            <span>Secure Platform</span>
+                        </div>
+                        <div class="trust-item" style="font-size: 0.8rem;">
+                            <span>
+                              <img src="../images/checklist.png" alt="Check" style="width: 20px; height: 20px;">
+                            </span>
+                            <span>Verified Vendors</span>
+                        </div>
+                    </div>
+            </div>
+            <div class="footer-section">
+                <h4>For Buyers</h4>
+                <div class="footer-links">
+                    <a href="#browse">Browse Vendors</a>
+                    <a href="#categories">Shop by Category</a>
+                    <a href="#safety">Safety Tips</a>
+                    <a href="#reviews">Vendor Reviews</a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h4>For Vendors</h4>
+                <div class="footer-links">
+                    <a href="#register">Register as Vendor</a>
+                    <a href="#verification">Get Verified</a>
+                    <a href="#pricing">Pricing Plans</a>
+                    <a href="#vendor-guide">Vendor Guide</a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h4>Support</h4>
+                <div class="footer-links">
+                    <a href="#help">Help Center</a>
+                    <a href="#contact">Contact Us</a>
+                    <a href="#faq">FAQ</a>
+                    <a href="#report">Report Issues</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2025 Thrift Link Nigeria. All rights reserved. | Made with ❤️ in Nigeria</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // AUTH CHECK
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            const signInBtn = document.getElementById('signInBtn');
+            const profileBtn = document.getElementById('profileBtn');
+
+            if (currentUser) {
+                signInBtn.style.display = 'none';
+                profileBtn.style.display = 'inline-block';
+                
+                if (currentUser.type === 'seller') {
+                    profileBtn.href = '../Vendor dashboard/dashboard.html';
+                } else {
+                    profileBtn.href = '../User dashboard/dashboard.html';
+                }
+            } else {
+                signInBtn.style.display = 'inline-flex';
+                profileBtn.style.display = 'none';
+            }
+
+            // FILTER LOGIC
+            const searchInput = document.getElementById('searchFilter');
+            const locationFilter = document.getElementById('locationFilter');
+            const categoryFilter = document.getElementById('categoryFilter');
+            const ratingFilter = document.getElementById('ratingFilter');
+            const vendorCards = document.querySelectorAll('.vendor-card');
+            const resultsCount = document.querySelector('.results-count');
+
+            function filterVendors() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const locationValue = locationFilter.value.toLowerCase();
+                const categoryValue = categoryFilter.value.toLowerCase();
+                const ratingValue = parseFloat(ratingFilter.value) || 0;
+
+                let visibleCount = 0;
+
+                vendorCards.forEach(card => {
+                    // Extract data from card
+                    const name = card.querySelector('h3').textContent.toLowerCase();
+                    const description = card.querySelector('.vendor-description').textContent.toLowerCase();
+                    const location = card.querySelector('.stat-group:nth-child(2) .number').textContent.toLowerCase();
+                    
+                    // Category extraction (checking specialty tags)
+                    const tags = Array.from(card.querySelectorAll('.specialty-tag')).map(tag => tag.textContent.toLowerCase());
+                    const categoryMatch = categoryValue === '' || tags.some(tag => tag.includes(categoryValue)) || description.includes(categoryValue);
+
+                    // Rating extraction
+                    const ratingText = card.querySelector('.vendor-rating span:last-child').textContent;
+                    const rating = parseFloat(ratingText.split(' ')[0]);
+
+                    // Check conditions
+                    const matchesSearch = name.includes(searchTerm) || description.includes(searchTerm);
+                    const matchesLocation = locationValue === '' || location.includes(locationValue);
+                    const matchesRating = rating >= ratingValue;
+
+                    if (matchesSearch && matchesLocation && categoryMatch && matchesRating) {
+                        card.style.display = 'block';
+                        visibleCount++;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+
+                // Update count
+                resultsCount.textContent = `Showing ${visibleCount} of ${vendorCards.length} verified vendors`;
+            }
+
+            // Event Listeners
+            searchInput.addEventListener('input', filterVendors);
+            locationFilter.addEventListener('change', filterVendors);
+            categoryFilter.addEventListener('change', filterVendors);
+            ratingFilter.addEventListener('change', filterVendors);
+
+            // Handle URL Parameters (from Homepage search)
+            const urlParams = new URLSearchParams(window.location.search);
+            const queryParam = urlParams.get('search');
+            const locationParam = urlParams.get('location');
+            const categoryParam = urlParams.get('category');
+
+            if (queryParam) {
+                searchInput.value = queryParam;
+            }
+            if (locationParam) {
+                // Try to find the option that matches
+                const options = Array.from(locationFilter.options);
+                const match = options.find(opt => opt.value.toLowerCase() === locationParam.toLowerCase());
+                if (match) {
+                    locationFilter.value = match.value;
+                }
+            }
+            if (categoryParam) {
+                // Try to find the option that matches
+                const options = Array.from(categoryFilter.options);
+                const match = options.find(opt => opt.text.toLowerCase().includes(categoryParam.toLowerCase()) || opt.value.toLowerCase().includes(categoryParam.toLowerCase()));
+                if (match) {
+                    categoryFilter.value = match.value;
+                }
+            }
+
+            // Trigger initial filter if params exist
+            if (queryParam || locationParam || categoryParam) {
+                filterVendors();
+            }
+        });
+
+        // Filter chips (Visual only for now, or could map to categories)
+        document.querySelectorAll('.filter-chip').forEach(chip => {
+            chip.addEventListener('click', function() {
+                document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+                this.classList.add('active');
+                console.log('Filter applied:', this.textContent);
+            });
+        });
+
+        // WhatsApp vendor contact
+        document.querySelectorAll('.btn-whatsapp').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const vendorName = this.closest('.vendor-card').querySelector('h3').textContent;
+                const whatsappMessage = `Hi! I found your business "${vendorName}" on Thrift Link. I'm interested in your products.`;
+                
+                if (confirm(`Open WhatsApp to chat with ${vendorName}?`)) {
+                    alert('Opening WhatsApp...');
+                }
+            });
+        });
+
+        // Vendor actions (favorite, share)
+        document.querySelectorAll('.btn-secondary').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const action = this.textContent.includes('❤️') ? 'favorited' : 'shared';
+                const vendorName = this.closest('.vendor-card').querySelector('h3').textContent;
+                alert(`${vendorName} ${action}!`);
+            });
+        });
+
+        // Sort functionality
+        document.querySelector('.sort-dropdown').addEventListener('change', function() {
+            console.log('Sorting by:', this.value);
+            alert(`Sorting vendors by: ${this.value}`);
+        });
+
+        // Pagination
+        document.querySelectorAll('.page-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (!this.classList.contains('disabled')) {
+                    document.querySelectorAll('.page-btn').forEach(b => b.classList.remove('active'));
+                    if (!isNaN(this.textContent)) {
+                        this.classList.add('active');
+                    }
+                }
+            });
+        });
+
+        // Clear filters
+        document.querySelector('.clear-filters').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.querySelectorAll('.filter-select').forEach(select => select.selectedIndex = 0);
+            document.querySelectorAll('.filter-input').forEach(input => input.value = '');
+            document.querySelectorAll('.filter-chip').forEach(chip => {
+                chip.classList.remove('active');
+                if (chip.textContent === 'All') chip.classList.add('active');
+            });
+            alert('All filters cleared');
+        });
+
+        console.log('Verified Vendors page loaded - Thrift Link');
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            const signInBtn = document.getElementById('signInBtn');
+            const profileBtn = document.getElementById('profileBtn');
+
+            if (currentUser) {
+                if(signInBtn) signInBtn.style.display = 'none';
+                if(profileBtn) {
+                    profileBtn.style.display = 'inline-block';
+                    if (currentUser.type === 'seller') {
+                        profileBtn.href = '../Vendor dashboard/dashboard.html';
+                    } else {
+                        profileBtn.href = '../User dashboard/dashboard.html';
+                    }
+                }
+            } else {
+                if(signInBtn) signInBtn.style.display = 'inline-flex';
+                if(profileBtn) profileBtn.style.display = 'none';
+            }
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // AUTH CHECK
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            const signInBtn = document.getElementById('signInBtn');
+            const profileBtn = document.getElementById('profileBtn');
+
+            if (currentUser) {
+                if(signInBtn) signInBtn.style.display = 'none';
+                if(profileBtn) {
+                    profileBtn.style.display = 'inline-block';
+                    if (currentUser.type === 'seller') {
+                        profileBtn.href = '../Vendor dashboard/dashboard.html';
+                    } else {
+                        profileBtn.href = '../User dashboard/dashboard.html';
+                    }
+                }
+            } else {
+                if(signInBtn) signInBtn.style.display = 'inline-flex';
+                if(profileBtn) profileBtn.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

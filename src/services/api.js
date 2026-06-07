@@ -1,0 +1,164 @@
+const BASE_URL = '/api';
+
+function getToken() {
+  return localStorage.getItem('token');
+}
+
+async function request(path, options = {}) {
+  const token = getToken();
+  let res;
+  try {
+    res = await fetch(`${BASE_URL}${path}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...options.headers,
+      },
+    });
+  } catch {
+    throw new Error('Cannot reach the server. Make sure the backend is running on port 5000.');
+  }
+
+  const contentType = res.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    throw new Error(`Server error (${res.status}): backend is unreachable or returned an unexpected response. Ensure the backend server is running.`);
+  }
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+  return data;
+}
+
+async function upload(path, formData, method = 'POST') {
+  const token = getToken();
+  let res;
+  try {
+    res = await fetch(`${BASE_URL}${path}`, {
+      method,
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    });
+  } catch {
+    throw new Error('Cannot reach the server. Make sure the backend is running on port 5000.');
+  }
+
+  const contentType = res.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    throw new Error(`Upload failed (${res.status}): unexpected server response.`);
+  }
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Upload failed');
+  return data;
+}
+
+// --- Auth ---
+export const auth = {
+  login: (email, password) => request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
+  register: (payload) => request('/auth/register', { method: 'POST', body: JSON.stringify(payload) }),
+  me: () => request('/auth/me'),
+  changePassword: (payload) => request('/auth/change-password', { method: 'PUT', body: JSON.stringify(payload) }),
+};
+
+// --- Vendors (public) ---
+export const vendors = {
+  list: (params = {}) => request('/vendors?' + new URLSearchParams(params)),
+  get: (id) => request(`/vendors/${id}`),
+  trackWhatsapp: (id) => request(`/vendors/${id}/whatsapp-click`, { method: 'POST' }),
+};
+
+// --- Vendor (authenticated) ---
+export const vendorMe = {
+  getProfile: () => request('/vendors/me/profile'),
+  updateProfile: (data) => request('/vendors/me/profile', { method: 'PUT', body: JSON.stringify(data) }),
+  uploadLogo: (file) => { const fd = new FormData(); fd.append('logo', file); return upload('/vendors/me/logo', fd); },
+  getProducts: () => request('/vendors/me/products'),
+  addProduct: (formData) => upload('/vendors/me/products', formData),
+  updateProduct: (id, data) => request(`/vendors/me/products/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteProduct: (id) => request(`/vendors/me/products/${id}`, { method: 'DELETE' }),
+  getAnalytics: () => request('/vendors/me/analytics'),
+  getOrders: () => request('/vendors/me/orders'),
+  updateOrderStatus: (id, status) => request(`/vendors/me/orders/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) }),
+};
+
+// --- Products (public) ---
+export const products = {
+  list: (params = {}) => request('/products?' + new URLSearchParams(params)),
+  get: (id) => request(`/products/${id}`),
+  categories: () => request('/products/categories/list'),
+};
+
+// --- Users (authenticated) ---
+export const userMe = {
+  getProfile: () => request('/users/me/profile'),
+  updateProfile: (data) => request('/users/me/profile', { method: 'PUT', body: JSON.stringify(data) }),
+  uploadAvatar: (file) => { const fd = new FormData(); fd.append('avatar', file); return upload('/users/me/avatar', fd); },
+  getOrders: () => request('/orders/my-orders'),
+  getSaved: () => request('/users/me/saved'),
+  saveItem: (data) => request('/users/me/saved', { method: 'POST', body: JSON.stringify(data) }),
+  unsaveItem: (id) => request(`/users/me/saved/${id}`, { method: 'DELETE' }),
+};
+
+// --- Messages (authenticated) ---
+export const messages = {
+  getConversations: () => request('/messages'),
+  getMessages: (partnerId) => request(`/messages/${partnerId}`),
+  sendMessage: (partnerId, payload) =>
+    request(`/messages/${partnerId}`, {
+      method: 'POST',
+      body: JSON.stringify(typeof payload === 'string' ? { content: payload } : payload),
+    }),
+  pingTyping: (partnerId) =>
+    request(`/messages/${partnerId}/typing`, { method: 'POST' }),
+  uploadImage: (file) => {
+    const fd = new FormData();
+    fd.append('image', file);
+    return upload('/messages/upload-image', fd);
+  },
+};
+
+// --- Cart (authenticated) ---
+export const cart = {
+  getAll: () => request('/cart'),
+  add: (productId, quantity) => request('/cart', { method: 'POST', body: JSON.stringify({ productId, quantity }) }),
+  update: (id, quantity) => request(`/cart/${id}`, { method: 'PUT', body: JSON.stringify({ quantity }) }),
+  remove: (id) => request(`/cart/${id}`, { method: 'DELETE' }),
+  clear: () => request('/cart', { method: 'DELETE' }),
+};
+
+// --- Orders ---
+export const orders = {
+  create: (data) => request('/orders', { method: 'POST', body: JSON.stringify(data) }),
+  getMyOrders: () => request('/orders/my-orders'),
+  get: (id) => request(`/orders/${id}`),
+  updateStatus: (id, status) => request(`/orders/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) }),
+};
+
+// --- Reviews ---
+export const reviews = {
+  getForVendor: (vendorId, params = {}) => request(`/reviews/vendor/${vendorId}?` + new URLSearchParams(params)),
+  submit: (vendorId, data) => request(`/reviews/vendor/${vendorId}`, { method: 'POST', body: JSON.stringify(data) }),
+};
+
+// --- Admin ---
+export const admin = {
+  stats: () => request('/admin/stats'),
+  vendors: (params = {}) => request('/admin/vendors?' + new URLSearchParams(params)),
+  verifyVendor: (id, status) => request(`/admin/vendors/${id}/verify`, { method: 'PUT', body: JSON.stringify({ status }) }),
+  updateSubscription: (id, plan) => request(`/admin/vendors/${id}/subscription`, { method: 'PUT', body: JSON.stringify({ plan }) }),
+  users: (params = {}) => request('/admin/users?' + new URLSearchParams(params)),
+  setUserStatus: (id, is_active) => request(`/admin/users/${id}/status`, { method: 'PUT', body: JSON.stringify({ is_active }) }),
+  warnUser: (id, message) => request(`/admin/users/${id}/warn`, { method: 'POST', body: JSON.stringify({ message }) }),
+  reviews: (params = {}) => request('/admin/reviews?' + new URLSearchParams(params)),
+  updateReview: (id, is_approved) => request(`/admin/reviews/${id}`, { method: 'PUT', body: JSON.stringify({ is_approved }) }),
+  deleteReview: (id) => request(`/admin/reviews/${id}`, { method: 'DELETE' }),
+  reports: (params = {}) => request('/admin/reports?' + new URLSearchParams(params)),
+  updateReport: (id, status) => request(`/admin/reports/${id}`, { method: 'PUT', body: JSON.stringify({ status }) }),
+  removeListing: (id) => request(`/admin/products/${id}`, { method: 'DELETE' }),
+};
+
+// --- Reports (authenticated users) ---
+export const reports = {
+  submit: (data) => request('/reports', { method: 'POST', body: JSON.stringify(data) }),
+};

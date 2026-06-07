@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>My Profile</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: #f5f7fa;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 260px;
+      background: #1e293b;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      padding: 2rem 0;
+      position: fixed;
+      height: 100vh;
+      left: 0;
+      top: 0;
+    }
+
+    .logo {
+      padding: 0 1.5rem 2rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 2rem;
+    }
+
+    .logo img {
+      max-width: 140px;
+      height: auto;
+    }
+
+    .nav {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .nav a {
+      color: #94a3b8;
+      text-decoration: none;
+      padding: 0.875rem 1.5rem;
+      transition: all 0.2s;
+      font-weight: 500;
+      font-size: 0.95rem;
+      border-left: 3px solid transparent;
+    }
+
+    .nav a:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: white;
+    }
+
+    .nav a.active {
+      background: rgba(59, 130, 246, 0.1);
+      color: #60a5fa;
+      border-left-color: #3b82f6;
+    }
+
+    .nav a.logout {
+      margin-top: auto;
+      color: #f87171;
+    }
+
+    .nav a.logout:hover {
+      background: rgba(248, 113, 113, 0.1);
+      color: #ef4444;
+    }
+
+    /* Main Content */
+    .main-content {
+      margin-left: 260px;
+      flex: 1;
+      padding: 2.5rem;
+      max-width: 1200px;
+    }
+
+    .section {
+      background: white;
+      border-radius: 16px;
+      padding: 2.5rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .section-header h2 {
+      font-size: 1.75rem;
+      color: #0f172a;
+      font-weight: 700;
+    }
+
+    .edit {
+      padding: 0.625rem 1.25rem;
+      background: #3b82f6;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+    }
+
+    .edit:hover {
+      background: #2563eb;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    }
+
+    .profile-box {
+      display: flex;
+      gap: 2rem;
+      align-items: flex-start;
+    }
+
+    .profile-box img {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 4px solid #f1f5f9;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .profile-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .profile-info p {
+      display: flex;
+      align-items: center;
+      font-size: 1rem;
+      color: #475569;
+      line-height: 1.6;
+    }
+
+    .profile-info strong {
+      color: #64748b;
+      font-weight: 600;
+      min-width: 100px;
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .profile-info p span {
+      color: #0f172a;
+      font-size: 1.05rem;
+      font-weight: 500;
+    }
+
+    /* Profile Details Grid */
+    .profile-details {
+      display: grid;
+      gap: 1.5rem;
+      margin-top: 1rem;
+    }
+
+    .detail-item {
+      display: flex;
+      padding: 1.25rem;
+      background: #f8fafc;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+      transition: all 0.2s;
+    }
+
+    .detail-item:hover {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+    }
+
+    .detail-label {
+      color: #64748b;
+      font-weight: 600;
+      min-width: 120px;
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .detail-value {
+      color: #0f172a;
+      font-size: 1.05rem;
+      font-weight: 500;
+      flex: 1;
+    }
+
+    /* Avatar Section */
+    .avatar-section {
+      text-align: center;
+      padding: 1.5rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 12px;
+      margin-bottom: 2rem;
+    }
+
+    .avatar-section img {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 5px solid white;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+      margin-bottom: 1rem;
+    }
+
+    .avatar-name {
+      color: white;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+
+    .avatar-location {
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 0.95rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 70px;
+        padding: 1rem 0;
+      }
+
+      .logo img {
+        max-width: 40px;
+      }
+
+      .nav a {
+        padding: 1rem;
+        font-size: 0;
+        text-align: center;
+      }
+
+      .nav a::before {
+        content: '●';
+        font-size: 1.2rem;
+      }
+
+      .main-content {
+        margin-left: 70px;
+        padding: 1.5rem;
+      }
+
+      .section {
+        padding: 1.5rem;
+      }
+
+      .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+
+      .profile-box {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .profile-box img {
+        margin: 0 auto;
+      }
+
+      .detail-item {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .detail-label {
+        min-width: auto;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .sidebar {
+        display: none;
+      }
+
+      .main-content {
+        margin-left: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="logo">
+    <img src="../images/thriftlink-logo-.png" alt="Thrift Link">
+  </div>
+  <nav class="nav">
+    <a href="dashboard.html">Dashboard</a>
+    <a href="profile.html" class="active">My Profile</a>
+    <a href="saved.html">Saved Vendors</a>
+    <a href="orders.html">My Orders</a>
+    <a href="support.html">Support</a>
+    <a href="#" class="logout" onclick="logout()">Logout</a>
+  </nav>
+</aside>
+<main class="main-content">
+  <section class="section">
+    <div class="section-header">
+      <h2>My Profile</h2>
+      <a href="#" class="edit">Edit Profile</a>
+    </div>
+    
+    <div class="avatar-section">
+      <img src="user-avatar.png" alt="Justin Ocholi">
+      <div class="avatar-name">Justin Ocholi</div>
+      <div class="avatar-location">📍 Lagos, Nigeria</div>
+    </div>
+
+    <div class="profile-details">
+      <div class="detail-item">
+        <div class="detail-label">Full Name</div>
+        <div class="detail-value">Justin Ocholi</div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">Phone Number</div>
+        <div class="detail-value">+234 800 000 0000</div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">Location</div>
+        <div class="detail-value">Lagos, Nigeria</div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">Member Since</div>
+        <div class="detail-value">December 2024</div>
+      </div>
+    </div>
+  </section>
+</main>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (!currentUser) {
+      window.location.href = '../Vendor dashboard/signin.html';
+    }
+  });
+
+  function logout() {
+    localStorage.removeItem('currentUser');
+    window.location.href = '../Vendor dashboard/signin.html';
+  }
+</script>
+</body>
+</html>
