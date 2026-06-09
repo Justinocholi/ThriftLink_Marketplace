@@ -1,0 +1,27 @@
+﻿
+Name                        Mode  
+----                        ----  
+.git                        d--h--
+backend                     d-----
+images                      d-----
+legacy_backup               d-----
+node_modules                d-----
+src                         d-----
+.gitignore                  ------
+all_files.txt               -a----
+all_files_scan.txt          -a----
+backend_files.txt           -a----
+backend_fullnames.txt       -a----
+backend_top.txt             -a----
+eslint.config.js            ------
+index.html                  ------
+integration_hits.txt        -a----
+named_integration_files.txt -a----
+package-lock.json           -a----
+package.json                ------
+root_top.txt                -a----
+src_files.txt               -a----
+src_fullnames.txt           -a----
+vite.config.js              ------
+
+

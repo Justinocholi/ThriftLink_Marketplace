@@ -1,0 +1,14 @@
+﻿
+Name              Mode  
+----              ----  
+database          d-----
+middleware        d-----
+routes            d-----
+services          d-----
+uploads           d-----
+package-lock.json ------
+package.json      ------
+realtime.js       ------
+server.js         ------
+
+

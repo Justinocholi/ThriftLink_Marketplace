@@ -19,6 +19,14 @@ function safeAddColumn(database, table, column, ddl) {
   }
 }
 
+function ensureIndexes(database) {
+  database.exec(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_users_supabase_user_id
+    ON users(supabase_user_id)
+    WHERE supabase_user_id IS NOT NULL;
+  `);
+}
+
 function getDb() {
   if (!db) {
     db = new Database(DB_PATH);
@@ -32,6 +40,8 @@ function getDb() {
     safeAddColumn(db, 'messages', 'image_url', 'image_url TEXT');
     safeAddColumn(db, 'messages', 'read_at', 'read_at TEXT');
     safeAddColumn(db, 'users', 'last_seen_at', 'last_seen_at TEXT');
+    safeAddColumn(db, 'users', 'supabase_user_id', 'supabase_user_id TEXT');
+    ensureIndexes(db);
   }
   return db;
 }

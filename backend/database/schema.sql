@@ -3,6 +3,7 @@
 -- Users table (buyers, vendors, admins)
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
+  supabase_user_id TEXT UNIQUE,
   email TEXT UNIQUE NOT NULL,
   password_hash TEXT NOT NULL,
   name TEXT NOT NULL,

@@ -4,6 +4,7 @@ const { getDb } = require('../database/db');
 const { authenticate, requireRole } = require('../middleware/auth');
 const upload = require('../middleware/upload');
 const realtime = require('../realtime');
+const { storeUploadedFile, storeUploadedFiles } = require('../services/cloudinaryService');
 
 const router = express.Router();
 
@@ -74,12 +75,21 @@ router.put('/me/profile', authenticate, requireRole('vendor'), (req, res) => {
 });
 
 // POST /api/vendors/me/logo
-router.post('/me/logo', authenticate, requireRole('vendor'), upload.single('logo'), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-  const url = `/uploads/${req.file.filename}`;
-  const db = getDb();
-  db.prepare("UPDATE vendor_profiles SET logo = ?, updated_at = datetime('now') WHERE user_id = ?").run(url, req.user.id);
-  res.json({ url });
+router.post('/me/logo', authenticate, requireRole('vendor'), upload.single('logo'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
+    const uploaded = await storeUploadedFile(req.file, {
+      folder: 'thriftlink/vendors/logos',
+    });
+    const url = uploaded.url;
+    const db = getDb();
+    db.prepare("UPDATE vendor_profiles SET logo = ?, updated_at = datetime('now') WHERE user_id = ?").run(url, req.user.id);
+    res.json({ url });
+  } catch (error) {
+    console.error('Vendor logo upload error:', error);
+    res.status(500).json({ error: 'Failed to upload vendor logo' });
+  }
 });
 
 // GET /api/vendors/me/products
@@ -92,30 +102,39 @@ router.get('/me/products', authenticate, requireRole('vendor'), (req, res) => {
 });
 
 // POST /api/vendors/me/products
-router.post('/me/products', authenticate, requireRole('vendor'), upload.array('images', 5), (req, res) => {
-  const { name, description, price, original_price, category, condition, stock_quantity } = req.body;
-  if (!name || !price || !category) {
-    return res.status(400).json({ error: 'name, price, and category are required' });
+router.post('/me/products', authenticate, requireRole('vendor'), upload.array('images', 5), async (req, res) => {
+  try {
+    const { name, description, price, original_price, category, condition, stock_quantity } = req.body;
+    if (!name || !price || !category) {
+      return res.status(400).json({ error: 'name, price, and category are required' });
+    }
+
+    const db = getDb();
+    const vendor = db.prepare('SELECT id FROM vendor_profiles WHERE user_id = ?').get(req.user.id);
+    if (!vendor) return res.status(404).json({ error: 'Vendor profile not found' });
+
+    const images = req.files?.length
+      ? (await storeUploadedFiles(req.files, () => ({
+          folder: 'thriftlink/products',
+        }))).map((file) => file.url)
+      : [];
+    const id = uuidv4();
+
+    db.prepare(`
+      INSERT INTO products (id, vendor_id, name, description, price, original_price, category, condition, images, stock_quantity)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(id, vendor.id, name, description || null, parseFloat(price),
+      original_price ? parseFloat(original_price) : null,
+      category, condition || 'good', JSON.stringify(images),
+      stock_quantity ? parseInt(stock_quantity) : 1);
+
+    const created = db.prepare('SELECT * FROM products WHERE id = ?').get(id);
+    realtime.emit('*', 'product:created', created);
+    res.status(201).json(created);
+  } catch (error) {
+    console.error('Vendor product upload error:', error);
+    res.status(500).json({ error: 'Failed to create product' });
   }
-
-  const db = getDb();
-  const vendor = db.prepare('SELECT id FROM vendor_profiles WHERE user_id = ?').get(req.user.id);
-  if (!vendor) return res.status(404).json({ error: 'Vendor profile not found' });
-
-  const images = req.files ? req.files.map(f => `/uploads/${f.filename}`) : [];
-  const id = uuidv4();
-
-  db.prepare(`
-    INSERT INTO products (id, vendor_id, name, description, price, original_price, category, condition, images, stock_quantity)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(id, vendor.id, name, description || null, parseFloat(price),
-    original_price ? parseFloat(original_price) : null,
-    category, condition || 'good', JSON.stringify(images),
-    stock_quantity ? parseInt(stock_quantity) : 1);
-
-  const created = db.prepare('SELECT * FROM products WHERE id = ?').get(id);
-  realtime.emit('*', 'product:created', created);
-  res.status(201).json(created);
 });
 
 // PUT /api/vendors/me/products/:productId

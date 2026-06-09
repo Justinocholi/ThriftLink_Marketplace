@@ -3,6 +3,7 @@ const { v4: uuidv4 } = require('uuid');
 const { getDb } = require('../database/db');
 const { authenticate, requireRole } = require('../middleware/auth');
 const upload = require('../middleware/upload');
+const { storeUploadedFile } = require('../services/cloudinaryService');
 
 const router = express.Router();
 
@@ -27,12 +28,21 @@ router.put('/me/profile', authenticate, (req, res) => {
 });
 
 // POST /api/users/me/avatar
-router.post('/me/avatar', authenticate, upload.single('avatar'), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-  const url = `/uploads/${req.file.filename}`;
-  const db = getDb();
-  db.prepare('UPDATE users SET avatar = ?, updated_at = datetime(\'now\') WHERE id = ?').run(url, req.user.id);
-  res.json({ url });
+router.post('/me/avatar', authenticate, upload.single('avatar'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
+    const uploaded = await storeUploadedFile(req.file, {
+      folder: 'thriftlink/users/avatars',
+    });
+    const url = uploaded.url;
+    const db = getDb();
+    db.prepare('UPDATE users SET avatar = ?, updated_at = datetime(\'now\') WHERE id = ?').run(url, req.user.id);
+    res.json({ url });
+  } catch (error) {
+    console.error('Avatar upload error:', error);
+    res.status(500).json({ error: 'Failed to upload avatar' });
+  }
 });
 
 // GET /api/users/me/orders

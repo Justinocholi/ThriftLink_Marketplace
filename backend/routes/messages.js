@@ -5,6 +5,7 @@ const { getDb } = require('../database/db');
 const { authenticate } = require('../middleware/auth');
 const upload = require('../middleware/upload');
 const realtime = require('../realtime');
+const { storeUploadedFile } = require('../services/cloudinaryService');
 
 // Lightweight in-process typing tracker. Acceptable for a single-instance
 // development backend; replace with Redis if horizontally scaled.
@@ -181,10 +182,18 @@ router.post('/:partnerId/typing', authenticate, (req, res) => {
 });
 
 // POST /api/messages/upload-image — upload an image attachment, returns hosted URL
-router.post('/upload-image', authenticate, upload.single('image'), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'No image provided' });
-  const url = `/uploads/${req.file.filename}`;
-  res.status(201).json({ url });
+router.post('/upload-image', authenticate, upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No image provided' });
+
+    const uploaded = await storeUploadedFile(req.file, {
+      folder: 'thriftlink/messages',
+    });
+    res.status(201).json({ url: uploaded.url });
+  } catch (error) {
+    console.error('Message image upload error:', error);
+    res.status(500).json({ error: 'Failed to upload image' });
+  }
 });
 
 module.exports = router;
