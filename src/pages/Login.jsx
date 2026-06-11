@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import thriftlinkLogo from '../assets/thriftlink-logo.png';
 import magnifierIcon from '../assets/magnifier.png';
@@ -165,6 +165,11 @@ const Login = () => {
               <button type="submit" disabled={loading} style={{ width: '100%', padding: '1rem', background: loading ? '#86efac' : '#25D366', color: 'white', border: 'none', borderRadius: '8px', fontSize: '1rem', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer' }}>
                 {loading ? 'Signing in...' : 'Sign In'}
               </button>
+              <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+                <Link to="/forgot-password" style={{ color: '#3b82f6', textDecoration: 'none', fontSize: '0.875rem', fontWeight: 600 }}>
+                  Forgot your password?
+                </Link>
+              </div>
               <p style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.85rem', color: '#6b7280' }}>
                 Test: <strong>zara@thriftlink.com / vendor123</strong> or <strong>chioma@gmail.com / user123</strong>
               </p>

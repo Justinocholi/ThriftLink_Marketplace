@@ -133,13 +133,25 @@ export const orders = {
   getMyOrders: () => request('/orders/my-orders'),
   get: (id) => request(`/orders/${id}`),
   updateStatus: (id, status) => request(`/orders/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) }),
-  submitPaymentReference: (id, reference) =>
-    request(`/orders/${id}/payment-reference`, { method: 'PUT', body: JSON.stringify({ reference }) }),
 };
 
-// --- Payment ---
-export const payment = {
-  getAccount: () => request('/payment/account'),
+// --- Subscriptions (vendor premium plans, manual bank transfer) ---
+export const subscriptions = {
+  getPlans: () => request('/subscriptions/plans'),
+  getMine: () => request('/subscriptions/me'),
+  submitPayment: ({ plan, reference, note }) =>
+    request('/subscriptions/payment-reference', {
+      method: 'POST',
+      body: JSON.stringify({ plan, reference, note }),
+    }),
+  // admin
+  adminList: (status) =>
+    request('/subscriptions/admin/payments' + (status ? `?status=${encodeURIComponent(status)}` : '')),
+  adminReview: (id, decision, notes) =>
+    request(`/subscriptions/admin/payments/${id}/review`, {
+      method: 'PUT',
+      body: JSON.stringify({ decision, notes }),
+    }),
 };
 
 // --- Auth (password reset) ---

@@ -84,14 +84,9 @@ router.post('/', authenticate, requireRole('user'), (req, res) => {
     const user = db.prepare('SELECT email, name FROM users WHERE id = ?').get(req.user.id);
     const totalAmount = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     
-    const bankAccount = {
-      bankName: process.env.PAYMENT_BANK_NAME,
-      accountNumber: process.env.PAYMENT_ACCOUNT_NUMBER,
-      accountName: process.env.PAYMENT_ACCOUNT_NAME,
-    };
     sendEmail({
       to: user.email,
-      ...templates.orderConfirmation(orderIds[0], totalAmount, bankAccount)
+      ...templates.orderConfirmation(orderIds[0], totalAmount)
     }).catch(err => console.error('Failed to send order confirmation email:', err));
 
     // Realtime: clear buyer cart + notify each vendor of new order.
@@ -230,32 +225,6 @@ router.put('/:id/status', authenticate, (req, res) => {
     console.error('Update order status error:', error);
     res.status(500).json({ error: 'Failed to update order status' });
   }
-});
-
-// PUT /api/orders/:id/payment-reference — buyer attaches the transfer reference
-router.put('/:id/payment-reference', authenticate, requireRole('user'), (req, res) => {
-  const { reference } = req.body;
-  if (!reference || String(reference).trim().length < 3) {
-    return res.status(400).json({ error: 'A valid payment reference is required' });
-  }
-  const ref = String(reference).trim().slice(0, 120);
-
-  const order = db.prepare('SELECT id, user_id, vendor_id, total_amount FROM orders WHERE id = ?').get(req.params.id);
-  if (!order || order.user_id !== req.user.id) {
-    return res.status(404).json({ error: 'Order not found' });
-  }
-
-  db.prepare(
-    `UPDATE orders SET payment_reference = ?, updated_at = datetime('now') WHERE id = ?`
-  ).run(ref, order.id);
-
-  const vendor = db.prepare('SELECT user_id FROM vendor_profiles WHERE id = ?').get(order.vendor_id);
-  realtime.emit('role:admin', 'order:payment-submitted', { orderId: order.id, reference: ref });
-  if (vendor) {
-    realtime.emit(`user:${vendor.user_id}`, 'order:payment-submitted', { orderId: order.id, reference: ref });
-  }
-
-  res.json({ message: 'Payment reference recorded. We will confirm shortly.' });
 });
 
 module.exports = router;

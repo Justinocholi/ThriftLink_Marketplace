@@ -56,31 +56,33 @@ const templates = {
     text: `Hi ${name},\n\nWelcome to Thrift-Link! You can now browse and buy from verified vendors.\n\n— The Thrift-Link Team`,
     html: `<h1>Welcome to Thrift-Link!</h1><p>Hi ${name},</p><p>Welcome to Thrift-Link! You can now browse and buy from verified vendors.</p>`,
   }),
-  orderConfirmation: (orderId, total, bankAccount) => ({
-    subject: `Order #${orderId.slice(0, 8)} received — payment instructions inside`,
+  orderConfirmation: (orderId, total) => ({
+    subject: `Order #${orderId.slice(0, 8)} received`,
     text:
       `Thank you for your order!\n\n` +
       `Order ID: ${orderId.slice(0, 8)}\n` +
       `Total: ₦${Number(total).toLocaleString()}\n\n` +
-      `To complete your purchase, please transfer the total to:\n` +
-      `Bank: ${bankAccount?.bankName}\n` +
-      `Account number: ${bankAccount?.accountNumber}\n` +
-      `Account name: ${bankAccount?.accountName}\n\n` +
-      `After paying, log in and submit your transfer reference on the order page so we can confirm payment and notify the vendor.\n\n— The Thrift-Link Team`,
+      `The vendor will reach out to coordinate payment and delivery directly.\n\n— The Thrift-Link Team`,
     html:
-      `<h1>Order received — please complete payment</h1>` +
+      `<h1>Order received</h1>` +
       `<p><strong>Order ID:</strong> ${orderId.slice(0, 8)}<br/>` +
       `<strong>Total:</strong> ₦${Number(total).toLocaleString()}</p>` +
-      `<p>Transfer the total amount to:</p>` +
-      `<ul><li><strong>Bank:</strong> ${bankAccount?.bankName}</li>` +
-      `<li><strong>Account number:</strong> ${bankAccount?.accountNumber}</li>` +
-      `<li><strong>Account name:</strong> ${bankAccount?.accountName}</li></ul>` +
-      `<p>After paying, log in and submit your transfer reference on the order page so we can confirm payment.</p>`,
+      `<p>The vendor will reach out to coordinate payment and delivery directly.</p>`,
   }),
-  paymentConfirmed: (orderId) => ({
-    subject: `Payment confirmed for order #${orderId.slice(0, 8)}`,
-    text: `Your payment for order #${orderId.slice(0, 8)} has been confirmed. The vendor has been notified and will process your order.`,
-    html: `<h1>Payment confirmed</h1><p>Your payment for order <strong>#${orderId.slice(0, 8)}</strong> has been confirmed. The vendor has been notified and will process your order.</p>`,
+  subscriptionSubmitted: (name, plan) => ({
+    subject: 'Subscription payment received — review in progress',
+    text: `Hi ${name},\n\nWe received your transfer reference for the ${plan} plan. Our team will confirm and activate it within 1 business day.\n\n— The Thrift-Link Team`,
+    html: `<h1>Subscription payment received</h1><p>Hi ${name},</p><p>We received your transfer reference for the <strong>${plan}</strong> plan. Our team will confirm and activate it within 1 business day.</p>`,
+  }),
+  subscriptionApproved: (name, plan, expiresAt) => ({
+    subject: `Your ${plan} subscription is active`,
+    text: `Hi ${name},\n\nYour ${plan} subscription is now active${expiresAt ? ` until ${new Date(expiresAt).toDateString()}` : ''}. Enjoy the upgrade!\n\n— The Thrift-Link Team`,
+    html: `<h1>You're upgraded!</h1><p>Hi ${name},</p><p>Your <strong>${plan}</strong> subscription is now active${expiresAt ? ` until <strong>${new Date(expiresAt).toDateString()}</strong>` : ''}.</p>`,
+  }),
+  subscriptionRejected: (name, plan, reason) => ({
+    subject: `${plan} subscription payment needs another look`,
+    text: `Hi ${name},\n\nWe couldn't confirm your transfer for the ${plan} plan. Reason: ${reason || 'Not specified'}.\n\nPlease re-check your bank receipt and submit a new reference, or contact support.\n\n— The Thrift-Link Team`,
+    html: `<h1>Subscription payment needs another look</h1><p>Hi ${name},</p><p>We couldn't confirm your transfer for the <strong>${plan}</strong> plan.</p><p><strong>Reason:</strong> ${reason || 'Not specified'}</p><p>Please re-check your bank receipt and submit a new reference, or contact support.</p>`,
   }),
   kycSubmitted: (name) => ({
     subject: 'KYC submitted — review in progress',

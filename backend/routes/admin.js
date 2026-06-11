@@ -85,25 +85,6 @@ router.put('/vendors/:id/verify', (req, res) => {
   res.json({ message: `Vendor ${status}` });
 });
 
-// PUT /api/admin/orders/:id/confirm-payment — mark a bank transfer as received
-router.put('/orders/:id/confirm-payment', (req, res) => {
-  const db = getDb();
-  const order = db.prepare('SELECT id, user_id FROM orders WHERE id = ?').get(req.params.id);
-  if (!order) return res.status(404).json({ error: 'Order not found' });
-
-  db.prepare(
-    `UPDATE orders SET payment_status = 'paid', status = CASE WHEN status = 'pending' THEN 'confirmed' ELSE status END,
-     payment_confirmed_at = datetime('now'), payment_confirmed_by = ?, updated_at = datetime('now') WHERE id = ?`
-  ).run(req.user.id, order.id);
-
-  const user = db.prepare('SELECT email FROM users WHERE id = ?').get(order.user_id);
-  if (user?.email) {
-    const tpl = templates.paymentConfirmed(order.id);
-    sendEmail({ to: user.email, ...tpl }).catch(() => {});
-  }
-  realtime.emit(`user:${order.user_id}`, 'order:payment-confirmed', { orderId: order.id });
-  res.json({ message: 'Payment confirmed' });
-});
 
 // PUT /api/admin/vendors/:id/subscription
 router.put('/vendors/:id/subscription', (req, res) => {

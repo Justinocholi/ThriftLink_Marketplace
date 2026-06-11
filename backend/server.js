@@ -17,6 +17,7 @@ const webhookRoutes = require('./routes/webhooks');
 const messageRoutes = require('./routes/messages');
 const reportRoutes = require('./routes/reports');
 const paymentRoutes = require('./routes/payment');
+const subscriptionRoutes = require('./routes/subscriptions');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -45,6 +46,7 @@ app.use('/api/webhooks', webhookRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/payment', paymentRoutes);
+app.use('/api/subscriptions', subscriptionRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
-import { orders as ordersApi, payment as paymentApi } from '../../services/api';
+import { orders as ordersApi } from '../../services/api';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
-import { ArrowLeft, CreditCard, Truck, ShieldCheck, Loader2, Copy, Check } from 'lucide-react';
+import { ArrowLeft, CreditCard, Truck, ShieldCheck, Loader2 } from 'lucide-react';
 
 const Checkout = () => {
   const { cartItems, cartTotal, clearCart } = useCart();
@@ -18,17 +18,8 @@ const Checkout = () => {
     notes: '',
     paymentMethod: 'bank_transfer'
   });
-  const [bankAccount, setBankAccount] = useState(null);
-  const [orderResult, setOrderResult] = useState(null);
-  const [paymentReference, setPaymentReference] = useState('');
-  const [copied, setCopied] = useState('');
-  const [refSubmitting, setRefSubmitting] = useState(false);
 
-  useEffect(() => {
-    paymentApi.getAccount().then(setBankAccount).catch(() => {});
-  }, []);
-
-  if (cartItems.length === 0 && !orderResult) {
+  if (cartItems.length === 0) {
     navigate('/cart');
     return null;
   }
@@ -42,119 +33,15 @@ const Checkout = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await ordersApi.create({
-        cartItems,
-        ...formData
-      });
+      await ordersApi.create({ cartItems, ...formData });
       await clearCart();
-      setOrderResult({ orderIds: response.orderIds, total: cartTotal });
+      navigate('/user/orders', { state: { message: 'Order placed successfully!' } });
     } catch (error) {
       alert(error.message || 'Failed to place order');
     } finally {
       setLoading(false);
     }
   };
-
-  const copyToClipboard = (key, value) => {
-    navigator.clipboard?.writeText(String(value || ''));
-    setCopied(key);
-    setTimeout(() => setCopied(''), 1500);
-  };
-
-  const submitReference = async (e) => {
-    e.preventDefault();
-    if (!paymentReference.trim() || !orderResult?.orderIds?.length) return;
-    setRefSubmitting(true);
-    try {
-      await Promise.all(
-        orderResult.orderIds.map((id) => ordersApi.submitPaymentReference(id, paymentReference.trim()))
-      );
-      navigate('/user/orders', {
-        state: { message: 'Payment reference submitted. We will confirm shortly.' },
-      });
-    } catch (err) {
-      alert(err.message || 'Failed to submit reference');
-    } finally {
-      setRefSubmitting(false);
-    }
-  };
-
-  // ----- Post-order payment instructions screen -----
-  if (orderResult) {
-    const order8 = orderResult.orderIds[0].slice(0, 8);
-    return (
-      <div style={{ background: '#f9fafb', minHeight: '100vh', fontFamily: "'Inter', sans-serif" }}>
-        <Navbar />
-        <div style={{ maxWidth: '720px', margin: '0 auto', padding: '6rem 1.5rem 4rem' }}>
-          <h1 style={{ fontSize: '2rem', fontWeight: 800, color: '#1f2937', marginBottom: '0.5rem' }}>
-            Order #{order8} placed
-          </h1>
-          <p style={{ color: '#6b7280', marginBottom: '2rem' }}>
-            Transfer <strong>₦{orderResult.total.toLocaleString()}</strong> to the account below to complete your purchase.
-          </p>
-
-          <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 16, padding: '2rem', marginBottom: '2rem' }}>
-            <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1f2937', marginBottom: '1rem' }}>
-              Payment account
-            </h2>
-            {[
-              { key: 'bank', label: 'Bank', value: bankAccount?.bankName },
-              { key: 'number', label: 'Account number', value: bankAccount?.accountNumber },
-              { key: 'name', label: 'Account name', value: bankAccount?.accountName },
-              { key: 'amount', label: 'Amount', value: `₦${orderResult.total.toLocaleString()}` },
-              { key: 'ref', label: 'Use this as transfer narration', value: `THRIFT-${order8}` },
-            ].map((row) => (
-              <div key={row.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 0', borderBottom: '1px solid #f3f4f6' }}>
-                <div>
-                  <div style={{ fontSize: '0.75rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.5 }}>{row.label}</div>
-                  <div style={{ fontWeight: 600, color: '#1f2937', marginTop: 2 }}>{row.value || '—'}</div>
-                </div>
-                <button
-                  onClick={() => copyToClipboard(row.key, row.value)}
-                  style={{ background: '#f3f4f6', border: 'none', padding: '0.5rem 0.75rem', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', color: '#374151' }}
-                >
-                  {copied === row.key ? <Check size={14} /> : <Copy size={14} />}
-                  {copied === row.key ? 'Copied' : 'Copy'}
-                </button>
-              </div>
-            ))}
-          </div>
-
-          <form onSubmit={submitReference} style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 16, padding: '2rem' }}>
-            <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1f2937', marginBottom: '0.5rem' }}>
-              After paying, paste your transfer reference
-            </h2>
-            <p style={{ color: '#6b7280', marginBottom: '1rem', fontSize: '0.9rem' }}>
-              Found on your bank app receipt (e.g. <code>FT123456789</code>). We use it to match your payment.
-            </p>
-            <input
-              type="text"
-              value={paymentReference}
-              onChange={(e) => setPaymentReference(e.target.value)}
-              placeholder="Transfer reference"
-              required
-              style={{ width: '100%', padding: '0.9rem', border: '1px solid #e5e7eb', borderRadius: 8, marginBottom: '1rem' }}
-            />
-            <button
-              type="submit"
-              disabled={refSubmitting || !paymentReference.trim()}
-              style={{ width: '100%', padding: '1rem', background: '#3b82f6', color: 'white', borderRadius: 8, fontWeight: 700, border: 'none', cursor: refSubmitting ? 'not-allowed' : 'pointer' }}
-            >
-              {refSubmitting ? 'Submitting…' : 'Submit reference & go to my orders'}
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate('/user/orders')}
-              style={{ width: '100%', padding: '0.85rem', marginTop: '0.75rem', background: 'transparent', color: '#6b7280', borderRadius: 8, fontWeight: 600, border: '1px solid #e5e7eb', cursor: 'pointer' }}
-            >
-              I'll do it later
-            </button>
-          </form>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
 
   return (
     <div style={{ background: '#f9fafb', minHeight: '100vh', fontFamily: "'Inter', sans-serif" }}>
@@ -243,23 +130,37 @@ const Checkout = () => {
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <label style={{
-                  display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.25rem', border: `2px solid #3b82f6`,
-                  borderRadius: '12px', cursor: 'pointer', background: '#eff6ff'
+                  display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.25rem', border: `2px solid ${formData.paymentMethod === 'bank_transfer' ? '#3b82f6' : '#e5e7eb'}`,
+                  borderRadius: '12px', cursor: 'pointer', background: formData.paymentMethod === 'bank_transfer' ? '#eff6ff' : 'white'
                 }}>
                   <input
                     type="radio"
                     name="paymentMethod"
                     value="bank_transfer"
-                    checked
-                    readOnly
+                    checked={formData.paymentMethod === 'bank_transfer'}
+                    onChange={handleInputChange}
                   />
                   <div>
-                    <div style={{ fontWeight: '700', color: '#1f2937' }}>Bank Transfer</div>
-                    <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>
-                      Transfer to {bankAccount?.bankName || 'our'} account{' '}
-                      {bankAccount?.accountNumber ? <strong>{bankAccount.accountNumber}</strong> : ''}.
-                      You'll see the full details after placing the order.
-                    </div>
+                    <div style={{ fontWeight: '700', color: '#1f2937' }}>Direct Bank Transfer / Pay on Delivery</div>
+                    <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>Coordinate payment directly with the vendor after order confirmation.</div>
+                  </div>
+                </label>
+
+                <label style={{
+                  display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.25rem', border: `2px solid ${formData.paymentMethod === 'online' ? '#3b82f6' : '#e5e7eb'}`,
+                  borderRadius: '12px', cursor: 'pointer', background: formData.paymentMethod === 'online' ? '#eff6ff' : 'white', opacity: 0.6
+                }}>
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="online"
+                    disabled
+                    checked={formData.paymentMethod === 'online'}
+                    onChange={handleInputChange}
+                  />
+                  <div>
+                    <div style={{ fontWeight: '700', color: '#1f2937' }}>Online Payment (Coming Soon)</div>
+                    <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>Pay securely with Card, Transfer, or USSD.</div>
                   </div>
                 </label>
               </div>
@@ -318,7 +219,7 @@ const Checkout = () => {
               
               <div style={{ marginTop: '1.5rem', padding: '1rem', background: '#fef3c7', borderRadius: '8px', border: '1px solid #fde68a' }}>
                 <div style={{ fontSize: '0.8rem', color: '#92400e', lineHeight: '1.5' }}>
-                  <strong>Note:</strong> After placing the order you'll see our bank details and can paste your transfer reference so we can confirm payment and notify the vendor.
+                  <strong>Note:</strong> You will coordinate payment and delivery directly with the vendor via WhatsApp/Phone after placing this order.
                 </div>
               </div>
             </div>
