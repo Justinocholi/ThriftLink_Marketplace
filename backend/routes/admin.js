@@ -3,6 +3,7 @@ const { v4: uuidv4 } = require('uuid');
 const { getDb } = require('../database/db');
 const { authenticate, requireRole } = require('../middleware/auth');
 const realtime = require('../realtime');
+const { sendEmail, templates } = require('../services/emailService');
 
 const router = express.Router();
 
@@ -47,9 +48,9 @@ router.get('/vendors', (req, res) => {
   res.json({ vendors, total, page: parseInt(page), pages: Math.ceil(total / parseInt(limit)) });
 });
 
-// PUT /api/admin/vendors/:id/verify
+// PUT /api/admin/vendors/:id/verify — also closes out the KYC review and emails the vendor
 router.put('/vendors/:id/verify', (req, res) => {
-  const { status } = req.body;
+  const { status, notes } = req.body;
   if (!['approved', 'rejected'].includes(status)) {
     return res.status(400).json({ error: 'status must be approved or rejected' });
   }
@@ -59,17 +60,49 @@ router.put('/vendors/:id/verify', (req, res) => {
     UPDATE vendor_profiles SET
       verification_status = ?,
       is_verified = ?,
+      kyc_reviewed_at = datetime('now'),
+      kyc_review_notes = ?,
       updated_at = datetime('now')
     WHERE id = ?
-  `).run(status, status === 'approved' ? 1 : 0, req.params.id);
+  `).run(status, status === 'approved' ? 1 : 0, notes || null, req.params.id);
 
-  const vendor = db.prepare('SELECT user_id, shop_name FROM vendor_profiles WHERE id = ?').get(req.params.id);
+  const vendor = db.prepare(
+    `SELECT vp.user_id, vp.shop_name, u.email, u.name
+     FROM vendor_profiles vp JOIN users u ON u.id = vp.user_id WHERE vp.id = ?`
+  ).get(req.params.id);
+
   if (vendor) {
     realtime.emit(`user:${vendor.user_id}`, 'vendor:verification', { status, shop_name: vendor.shop_name });
+    if (vendor.email) {
+      const tpl = status === 'approved'
+        ? templates.kycApproved(vendor.name)
+        : templates.kycRejected(vendor.name, notes);
+      sendEmail({ to: vendor.email, ...tpl }).catch(() => {});
+    }
   }
   realtime.emit('role:admin', 'vendor:updated', { id: req.params.id, verification_status: status });
 
   res.json({ message: `Vendor ${status}` });
+});
+
+// PUT /api/admin/orders/:id/confirm-payment — mark a bank transfer as received
+router.put('/orders/:id/confirm-payment', (req, res) => {
+  const db = getDb();
+  const order = db.prepare('SELECT id, user_id FROM orders WHERE id = ?').get(req.params.id);
+  if (!order) return res.status(404).json({ error: 'Order not found' });
+
+  db.prepare(
+    `UPDATE orders SET payment_status = 'paid', status = CASE WHEN status = 'pending' THEN 'confirmed' ELSE status END,
+     payment_confirmed_at = datetime('now'), payment_confirmed_by = ?, updated_at = datetime('now') WHERE id = ?`
+  ).run(req.user.id, order.id);
+
+  const user = db.prepare('SELECT email FROM users WHERE id = ?').get(order.user_id);
+  if (user?.email) {
+    const tpl = templates.paymentConfirmed(order.id);
+    sendEmail({ to: user.email, ...tpl }).catch(() => {});
+  }
+  realtime.emit(`user:${order.user_id}`, 'order:payment-confirmed', { orderId: order.id });
+  res.json({ message: 'Payment confirmed' });
 });
 
 // PUT /api/admin/vendors/:id/subscription

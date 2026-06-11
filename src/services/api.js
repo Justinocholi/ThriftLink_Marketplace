@@ -133,6 +133,20 @@ export const orders = {
   getMyOrders: () => request('/orders/my-orders'),
   get: (id) => request(`/orders/${id}`),
   updateStatus: (id, status) => request(`/orders/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) }),
+  submitPaymentReference: (id, reference) =>
+    request(`/orders/${id}/payment-reference`, { method: 'PUT', body: JSON.stringify({ reference }) }),
+};
+
+// --- Payment ---
+export const payment = {
+  getAccount: () => request('/payment/account'),
+};
+
+// --- Auth (password reset) ---
+export const passwordReset = {
+  request: (email) => request('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) }),
+  complete: (uid, token, newPassword) =>
+    request('/auth/reset-password', { method: 'POST', body: JSON.stringify({ uid, token, newPassword }) }),
 };
 
 // --- Reviews ---

@@ -5,12 +5,14 @@ const { v4: uuidv4 } = require('uuid');
 const { getDb } = require('../database/db');
 const { authenticate } = require('../middleware/auth');
 const { sendEmail, templates } = require('../services/emailService');
+const crypto = require('crypto');
 const {
   isSupabaseEnabled,
   hasSupabasePublicConfig,
   registerSupabaseUser,
   signInSupabaseUser,
   updateSupabaseUserPassword,
+  getSupabaseClient,
 } = require('../services/supabaseService');
 const { sendWelcomeSms } = require('../services/termiiService');
 
@@ -305,6 +307,96 @@ router.put('/change-password', authenticate, async (req, res) => {
   } catch (error) {
     console.error('Change password error:', error);
     res.status(500).json({ error: 'Failed to change password' });
+  }
+});
+
+// POST /api/auth/forgot-password — sends reset email
+// Strategy: prefer Supabase's resetPasswordForEmail (delivers via Supabase's mailer).
+// Fall back to local token + SMTP if Supabase isn't configured.
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const email = normalizeEmail(req.body.email);
+    if (!email) return res.status(400).json({ error: 'Email is required' });
+
+    const db = getDb();
+    const user = db.prepare('SELECT id, email, name, supabase_user_id FROM users WHERE email = ?').get(email);
+
+    // Always respond with success to avoid leaking which emails are registered.
+    const okResponse = { message: 'If that email is registered, a reset link has been sent.' };
+    if (!user) return res.json(okResponse);
+
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    let supabaseSent = false;
+
+    if (user.supabase_user_id && hasSupabasePublicConfig()) {
+      const supabase = getSupabaseClient();
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${frontendUrl}/reset-password`,
+      });
+      if (!error) supabaseSent = true;
+      else console.warn('Supabase reset email failed:', error.message);
+    }
+
+    if (!supabaseSent) {
+      const rawToken = crypto.randomBytes(32).toString('hex');
+      const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+      db.prepare('UPDATE users SET reset_token_hash = ?, reset_token_expires_at = ? WHERE id = ?')
+        .run(tokenHash, expiresAt, user.id);
+
+      const resetUrl = `${frontendUrl}/reset-password?token=${rawToken}&uid=${user.id}`;
+      const tpl = templates.passwordReset(resetUrl);
+      await sendEmail({ to: email, ...tpl });
+    }
+
+    res.json(okResponse);
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ error: 'Failed to start password reset' });
+  }
+});
+
+// POST /api/auth/reset-password — completes a local-token reset
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { uid, token, newPassword } = req.body;
+    if (!uid || !token || !newPassword) {
+      return res.status(400).json({ error: 'uid, token, and newPassword are required' });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'New password must be at least 6 characters' });
+    }
+
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const db = getDb();
+    const user = db.prepare(
+      'SELECT id, supabase_user_id, reset_token_hash, reset_token_expires_at FROM users WHERE id = ?'
+    ).get(uid);
+
+    if (!user || !user.reset_token_hash || user.reset_token_hash !== tokenHash) {
+      return res.status(400).json({ error: 'Invalid or expired reset link' });
+    }
+    if (!user.reset_token_expires_at || new Date(user.reset_token_expires_at) < new Date()) {
+      return res.status(400).json({ error: 'Invalid or expired reset link' });
+    }
+
+    if (user.supabase_user_id) {
+      try {
+        await updateSupabaseUserPassword(user.supabase_user_id, newPassword);
+      } catch (error) {
+        return res.status(502).json({ error: `Supabase password update failed: ${error.message}` });
+      }
+    }
+
+    const password_hash = bcrypt.hashSync(newPassword, 10);
+    db.prepare(
+      "UPDATE users SET password_hash = ?, reset_token_hash = NULL, reset_token_expires_at = NULL, updated_at = datetime('now') WHERE id = ?"
+    ).run(password_hash, user.id);
+
+    res.json({ message: 'Password updated. You can now sign in.' });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ error: 'Failed to reset password' });
   }
 });
 

@@ -5,6 +5,8 @@ const { authenticate, requireRole } = require('../middleware/auth');
 const upload = require('../middleware/upload');
 const realtime = require('../realtime');
 const { storeUploadedFile, storeUploadedFiles } = require('../services/cloudinaryService');
+const { validateKyc } = require('../middleware/validate');
+const { sendEmail, templates } = require('../services/emailService');
 
 const router = express.Router();
 
@@ -277,6 +279,82 @@ router.get('/:id', (req, res) => {
   `).all(vendor.id);
 
   res.json({ vendor, products, reviews });
+});
+
+// POST /api/vendors/me/kyc — submit/replace KYC details with NIN + business info + ID document
+router.post(
+  '/me/kyc',
+  authenticate,
+  requireRole('vendor'),
+  upload.single('id_document'),
+  async (req, res) => {
+    try {
+      const { errors, data } = validateKyc(req.body);
+      if (errors.length) return res.status(400).json({ errors });
+
+      const db = getDb();
+      const profile = db.prepare('SELECT id FROM vendor_profiles WHERE user_id = ?').get(req.user.id);
+      if (!profile) return res.status(404).json({ error: 'Vendor profile not found. Create your shop first.' });
+
+      let documentUrl = null;
+      if (req.file) {
+        const uploaded = await storeUploadedFile(req.file, { folder: 'thriftlink/kyc' });
+        documentUrl = uploaded?.url || null;
+      }
+
+      const existing = db.prepare('SELECT id_document_url FROM vendor_profiles WHERE id = ?').get(profile.id);
+      const finalDocUrl = documentUrl || existing?.id_document_url || null;
+      if (!finalDocUrl) {
+        return res.status(400).json({ error: 'A photo of your ID document is required.' });
+      }
+
+      db.prepare(
+        `UPDATE vendor_profiles
+         SET nin = ?, bvn = ?, business_name = ?, business_address = ?,
+             business_registration_number = ?, id_document_type = ?, id_document_url = ?,
+             kyc_submitted_at = datetime('now'),
+             kyc_reviewed_at = NULL, kyc_review_notes = NULL,
+             verification_status = 'pending',
+             updated_at = datetime('now')
+         WHERE id = ?`
+      ).run(
+        data.nin,
+        data.bvn || null,
+        data.business_name,
+        data.business_address,
+        data.business_registration_number || null,
+        data.id_document_type,
+        finalDocUrl,
+        profile.id
+      );
+
+      const user = db.prepare('SELECT email, name FROM users WHERE id = ?').get(req.user.id);
+      if (user?.email) {
+        const tpl = templates.kycSubmitted(user.name);
+        sendEmail({ to: user.email, ...tpl }).catch(() => {});
+      }
+
+      res.json({ message: 'KYC submitted. We will review within 1–2 business days.' });
+    } catch (error) {
+      console.error('KYC submission error:', error);
+      res.status(500).json({ error: 'Failed to submit KYC' });
+    }
+  }
+);
+
+// GET /api/vendors/me/kyc — fetch current KYC status (sensitive fields masked)
+router.get('/me/kyc', authenticate, requireRole('vendor'), (req, res) => {
+  const db = getDb();
+  const row = db.prepare(
+    `SELECT verification_status, business_name, business_address, business_registration_number,
+            id_document_type, id_document_url, kyc_submitted_at, kyc_reviewed_at, kyc_review_notes,
+            nin, bvn
+     FROM vendor_profiles WHERE user_id = ?`
+  ).get(req.user.id);
+
+  if (!row) return res.status(404).json({ error: 'Vendor profile not found' });
+  const mask = (v) => (v ? `${'*'.repeat(Math.max(0, v.length - 4))}${v.slice(-4)}` : null);
+  res.json({ ...row, nin: mask(row.nin), bvn: mask(row.bvn) });
 });
 
 module.exports = router;

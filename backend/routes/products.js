@@ -1,6 +1,7 @@
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const { getDb } = require('../database/db');
+const { validateProductQuery } = require('../middleware/validate');
 
 const router = express.Router();
 
@@ -16,36 +17,37 @@ router.get('/categories/list', (req, res) => {
 });
 
 // GET /api/products — public product search
-router.get('/', (req, res) => {
-  const { search, category, condition, min_price, max_price, state, city, sort = 'newest', page = 1, limit = 24, verified_only = 'false' } = req.query;
-  const db = getDb();
-  const offset = (parseInt(page) - 1) * parseInt(limit);
+const ORDER_BY_MAP = {
+  newest: 'p.created_at DESC',
+  price_low: 'p.price ASC',
+  price_high: 'p.price DESC',
+  popular: 'p.views DESC',
+  rating: 'vp.rating DESC',
+};
 
-  let where = ['p.is_available = 1'];
+router.get('/', (req, res) => {
+  const q = validateProductQuery(req.query);
+  const db = getDb();
+  const offset = (q.page - 1) * q.limit;
+
+  const where = ['p.is_available = 1'];
   const params = [];
 
-  if (verified_only === 'true') {
-    where.push('vp.is_verified = 1');
-  }
-
-  if (search) {
+  if (q.verified_only) where.push('vp.is_verified = 1');
+  if (q.search) {
     where.push('(p.name LIKE ? OR p.description LIKE ? OR p.category LIKE ?)');
-    params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+    const like = `%${q.search}%`;
+    params.push(like, like, like);
   }
-  if (category) { where.push('p.category = ?'); params.push(category); }
-  if (condition) { where.push('p.condition = ?'); params.push(condition); }
-  if (min_price) { where.push('p.price >= ?'); params.push(parseFloat(min_price)); }
-  if (max_price) { where.push('p.price <= ?'); params.push(parseFloat(max_price)); }
-  if (state) { where.push('vp.state = ?'); params.push(state); }
-  if (city) { where.push('vp.city = ?'); params.push(city); }
+  if (q.category) { where.push('p.category = ?'); params.push(q.category); }
+  if (q.condition) { where.push('p.condition = ?'); params.push(q.condition); }
+  if (q.min_price !== undefined) { where.push('p.price >= ?'); params.push(q.min_price); }
+  if (q.max_price !== undefined) { where.push('p.price <= ?'); params.push(q.max_price); }
+  if (q.state) { where.push('vp.state = ?'); params.push(q.state); }
+  if (q.city) { where.push('vp.city = ?'); params.push(q.city); }
 
   const whereClause = 'WHERE ' + where.join(' AND ');
-
-  let orderBy = 'p.created_at DESC';
-  if (sort === 'price_low') orderBy = 'p.price ASC';
-  else if (sort === 'price_high') orderBy = 'p.price DESC';
-  else if (sort === 'popular') orderBy = 'p.views DESC';
-  else if (sort === 'rating') orderBy = 'vp.rating DESC';
+  const orderBy = ORDER_BY_MAP[q.sort];
 
   const prods = db.prepare(`
     SELECT p.*, vp.shop_name as vendor_name, vp.id as vendor_profile_id,
@@ -56,14 +58,14 @@ router.get('/', (req, res) => {
     ${whereClause}
     ORDER BY ${orderBy}
     LIMIT ? OFFSET ?
-  `).all(...params, parseInt(limit), offset);
+  `).all(...params, q.limit, offset);
 
   const total = db.prepare(`
     SELECT COUNT(*) as count FROM products p
     JOIN vendor_profiles vp ON vp.id = p.vendor_id ${whereClause}
   `).get(...params).count;
 
-  res.json({ products: prods, total, page: parseInt(page), pages: Math.ceil(total / parseInt(limit)) });
+  res.json({ products: prods, total, page: q.page, pages: Math.ceil(total / q.limit) });
 });
 
 // GET /api/products/:id — MUST be after /categories/list
