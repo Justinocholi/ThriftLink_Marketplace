@@ -2,10 +2,20 @@ const { getDataClient, fromDbMany, unwrap } = require('../db/supabaseData');
 
 async function listForUser(userId) {
   const db = getDataClient();
-  return fromDbMany(unwrap(
-    await db.from('saved_items').select('*, products(id,name,price,images), vendor_profiles(id,shop_name,logo)')
+  const rows = unwrap(
+    await db.from('saved_items').select('*, products(name,price,images,condition), vendor_profiles(id,shop_name)')
       .eq('user_id', userId).order('created_at', { ascending: false })
-  ));
+  ) || [];
+  // Field names mirror routes/users.js SQLite JOIN.
+  return rows.map((r) => {
+    const p = r.products; const vp = r.vendor_profiles;
+    const { products, vendor_profiles, ...rest } = r;
+    return {
+      ...rest,
+      product_name: p?.name, price: p?.price, images: p?.images, condition: p?.condition,
+      vendor_name: vp?.shop_name, vendor_profile_id: vp?.id,
+    };
+  });
 }
 
 async function add({ id, userId, productId, vendorId }) {

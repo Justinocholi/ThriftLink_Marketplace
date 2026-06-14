@@ -13,17 +13,19 @@ async function listForUser(userId) {
       `*, products(id,name,price,images,stock_quantity,vendor_id,vendor_profiles(shop_name,whatsapp_number))`
     ).eq('user_id', userId).order('created_at', { ascending: false })
   );
+  // Field names mirror the SQLite JOIN in routes/cart.js (name, shop_name)
+  // so the frontend contract is unchanged. images stays a JSON string for
+  // the route to JSON.parse, same as SQLite.
   return (data || []).map((row) => {
     const p = row.products;
     return {
       id: row.id, user_id: row.user_id, product_id: row.product_id, quantity: row.quantity,
-      product_name: p?.name,
+      name: p?.name,
       price: p?.price,
       images: p?.images,
       stock_quantity: p?.stock_quantity,
       vendor_id: p?.vendor_id,
-      vendor_name: p?.vendor_profiles?.shop_name,
-      vendor_whatsapp: p?.vendor_profiles?.whatsapp_number,
+      shop_name: p?.vendor_profiles?.shop_name,
     };
   });
 }
