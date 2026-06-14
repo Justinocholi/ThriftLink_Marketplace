@@ -33,4 +33,10 @@ do
   write_var "$VAR"
 done
 
+# Default the data backend to Supabase (the migration target). A container
+# env var of the same name still wins via the loop above if explicitly set.
+if ! grep -q "^DATA_BACKEND=" "$ENV_FILE" 2>/dev/null; then
+  echo "DATA_BACKEND=${DATA_BACKEND:-supabase}" >> "$ENV_FILE"
+fi
+
 echo "[bootstrap-env] backend/.env hydrated from container environment."
