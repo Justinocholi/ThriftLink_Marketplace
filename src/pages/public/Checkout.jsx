@@ -45,11 +45,21 @@ const Checkout = () => {
 
   return (
     <div style={{ background: '#f9fafb', minHeight: '100vh', fontFamily: "'Inter', sans-serif" }}>
+      <style>{`
+        @media (max-width: 860px) {
+          .checkout-wrap { padding: 5.5rem 1.25rem 3rem !important; }
+          .checkout-grid { grid-template-columns: 1fr !important; }
+          .checkout-summary { position: static !important; top: auto !important; }
+        }
+        @media (max-width: 480px) {
+          .checkout-two-col { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
       <Navbar />
-      
-      <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '6rem 2rem 4rem' }}>
+
+      <div className="checkout-wrap" style={{ maxWidth: '1100px', margin: '0 auto', padding: '6rem 2rem 4rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-          <button 
+          <button
             onClick={() => navigate('/cart')}
             style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
           >
@@ -59,7 +69,7 @@ const Checkout = () => {
           <h1 style={{ fontSize: '2rem', fontWeight: '800', color: '#1f2937' }}>Checkout</h1>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: '2rem' }}>
+        <form onSubmit={handleSubmit} className="checkout-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: '2rem' }}>
           {/* Main Content */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
             
@@ -83,7 +93,7 @@ const Checkout = () => {
                   />
                 </div>
                 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="checkout-two-col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   <div>
                     <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>Phone Number</label>
                     <input 
@@ -168,7 +178,7 @@ const Checkout = () => {
           </div>
 
           {/* Sidebar - Summary */}
-          <div style={{ position: 'sticky', top: '6rem', height: 'fit-content' }}>
+          <div className="checkout-summary" style={{ position: 'sticky', top: '6rem', height: 'fit-content' }}>
             <div style={{ background: 'white', borderRadius: '16px', padding: '2rem', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', border: '1px solid #e5e7eb' }}>
               <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#1f2937', marginBottom: '1.5rem' }}>Your Items</h2>
               

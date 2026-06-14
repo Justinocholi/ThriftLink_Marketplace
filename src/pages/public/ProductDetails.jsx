@@ -176,7 +176,7 @@ const ProductDetails = () => {
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
         <Navbar />
         <main style={{ flex: 1, padding: '2rem 1.25rem', maxWidth: 1200, width: '100%', margin: '0 auto' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.1fr) minmax(0, 1fr)', gap: '2rem' }}>
+          <div className="pd-grid">
             <div>
               <Skeleton height={460} radius={16} />
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginTop: 12 }}>

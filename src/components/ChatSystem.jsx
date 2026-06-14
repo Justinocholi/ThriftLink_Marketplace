@@ -190,7 +190,6 @@ const ChatSystem = () => {
     setActiveChat({ partner_id: to, partner_name: '…' });
     // Strip the query string once consumed so refreshes don't keep re-opening.
     navigate(location.pathname, { replace: true });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.search]);
 
   // Debounced user search inside the New-chat modal.
