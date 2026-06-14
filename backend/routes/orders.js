@@ -5,15 +5,55 @@ const { getDb } = require('../database/db');
 const { authenticate, requireRole } = require('../middleware/auth');
 const { sendEmail, templates } = require('../services/emailService');
 const realtime = require('../realtime');
+const ordersRepo = require('../repos/ordersRepo');
+const useSupabase = () => process.env.DATA_BACKEND === 'supabase';
 
+// Lazy SQLite handle — only touched in sqlite mode.
 const db = getDb();
 
 // Create new order (Checkout) - Users only
-router.post('/', authenticate, requireRole('user'), (req, res) => {
+router.post('/', authenticate, requireRole('user'), async (req, res) => {
   const { cartItems, shippingAddress, phone, notes, paymentMethod } = req.body;
 
   if (!cartItems || cartItems.length === 0) {
     return res.status(400).json({ error: 'Cart is empty' });
+  }
+
+  // Supabase: delegate the whole atomic checkout to the place_order RPC.
+  if (useSupabase()) {
+    try {
+      const orderIds = await ordersRepo.placeOrder(req.user.id, {
+        shippingAddress, phone, notes, paymentMethod,
+        items: cartItems.map((i) => ({
+          product_id: i.product_id, vendor_id: i.vendor_id, price: i.price, quantity: i.quantity,
+        })),
+      });
+      const totalAmount = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const user = await require('../repos/usersRepo').getById(req.user.id);
+      if (user?.email) {
+        sendEmail({ to: user.email, ...templates.orderConfirmation(orderIds[0], totalAmount) }).catch(() => {});
+      }
+      realtime.emit(`user:${req.user.id}`, 'cart:updated', []);
+      for (const oid of orderIds) {
+        const ord = await ordersRepo.getById(oid, req.user.id);
+        if (!ord) continue;
+        const vendorUserId = ord.vendor_user_id;
+        if (vendorUserId) {
+          realtime.emit(`user:${vendorUserId}`, 'order:new', ord);
+          realtime.emit(`user:${vendorUserId}`, 'notification:new', {
+            type: 'order_update', title: 'New Order',
+            message: `New order #${oid.slice(0, 8)} for ₦${Number(ord.total_amount).toLocaleString()}`,
+            link: '/vendor/orders', created_at: new Date().toISOString(),
+          });
+        }
+        realtime.emit(`user:${req.user.id}`, 'order:new', ord);
+        realtime.emit('role:admin', 'order:new', ord);
+      }
+      return res.json({ message: 'Orders created successfully', orderIds });
+    } catch (error) {
+      console.error('Checkout (supabase) error:', error);
+      return res.status(500).json({ error: 'Failed to process checkout: ' + error.message });
+    }
   }
 
   const transaction = db.transaction(() => {
@@ -118,7 +158,16 @@ router.post('/', authenticate, requireRole('user'), (req, res) => {
 });
 
 // Get user's orders - Users only
-router.get('/my-orders', authenticate, requireRole('user'), (req, res) => {
+router.get('/my-orders', authenticate, requireRole('user'), async (req, res) => {
+  if (useSupabase()) {
+    try {
+      const orders = await ordersRepo.listForUser(req.user.id);
+      return res.json(orders.map((o) => ({ ...o, items: (o.items || []).map((it) => ({ ...it, images: JSON.parse(it.images || '[]') })) })));
+    } catch (error) {
+      console.error('Fetch orders (supabase) error:', error);
+      return res.status(500).json({ error: 'Failed to fetch orders' });
+    }
+  }
   try {
     const orders = db.prepare(`
       SELECT o.*, vp.shop_name as vendor_name 
@@ -154,7 +203,20 @@ router.get('/my-orders', authenticate, requireRole('user'), (req, res) => {
 });
 
 // Get order details
-router.get('/:id', authenticate, (req, res) => {
+router.get('/:id', authenticate, async (req, res) => {
+  if (useSupabase()) {
+    try {
+      const order = await ordersRepo.getById(req.params.id, req.user.id);
+      if (!order) return res.status(404).json({ error: 'Order not found' });
+      // Permission: buyer, the vendor's user, or admin.
+      const isOwner = order.user_id === req.user.id || order.vendor_user_id === req.user.id || req.user.role === 'admin';
+      if (!isOwner) return res.status(404).json({ error: 'Order not found' });
+      return res.json({ ...order, items: (order.items || []).map((it) => ({ ...it, images: JSON.parse(it.images || '[]') })) });
+    } catch (error) {
+      console.error('Fetch order detail (supabase) error:', error);
+      return res.status(500).json({ error: 'Failed to fetch order details' });
+    }
+  }
   try {
     const order = db.prepare(`
       SELECT o.*, vp.shop_name as vendor_name, vp.whatsapp_number as vendor_whatsapp
@@ -186,9 +248,36 @@ router.get('/:id', authenticate, (req, res) => {
 });
 
 // Update order status (Vendor/Admin only)
-router.put('/:id/status', authenticate, (req, res) => {
+router.put('/:id/status', authenticate, async (req, res) => {
   const { status } = req.body;
   const { id } = req.params;
+
+  if (useSupabase()) {
+    try {
+      const order = await ordersRepo.getBasic(id);
+      if (!order) return res.status(404).json({ error: 'Order not found' });
+      const vendor = await require('../repos/vendorsRepo').getByUserId(req.user.id);
+      const isVendor = vendor && vendor.id === order.vendor_id;
+      if (!isVendor && req.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Unauthorized to update this order' });
+      }
+      await ordersRepo.setStatus(id, status);
+      const notifId = uuidv4();
+      const notifMsg = `Your order #${id.slice(0, 8)} status is now: ${status}`;
+      await require('../repos/notificationsRepo').create({
+        id: notifId, userId: order.user_id, type: 'order_update', title: 'Order Status Updated', message: notifMsg,
+      });
+      realtime.emit(`user:${order.user_id}`, 'order:updated', { id, status });
+      realtime.emit(`user:${order.user_id}`, 'notification:new', {
+        id: notifId, type: 'order_update', title: 'Order Status Updated', message: notifMsg,
+        link: '/user/orders', created_at: new Date().toISOString(),
+      });
+      return res.json({ message: 'Order status updated' });
+    } catch (error) {
+      console.error('Update order status (supabase) error:', error);
+      return res.status(500).json({ error: 'Failed to update order status' });
+    }
+  }
 
   try {
     const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(id);

@@ -6,6 +6,10 @@ const { authenticate } = require('../middleware/auth');
 const upload = require('../middleware/upload');
 const realtime = require('../realtime');
 const { storeUploadedFile } = require('../services/cloudinaryService');
+const messagesRepo = require('../repos/messagesRepo');
+const usersRepo = require('../repos/usersRepo');
+const notificationsRepo = require('../repos/notificationsRepo');
+const useSupabase = () => process.env.DATA_BACKEND === 'supabase';
 
 // Lightweight in-process typing tracker. Acceptable for a single-instance
 // development backend; replace with Redis if horizontally scaled.
@@ -26,12 +30,28 @@ function isTyping(userId, partnerId) {
 
 function markOnline(db, userId) {
   try {
+    if (useSupabase()) { usersRepo.setLastSeen(userId).catch(() => {}); return; }
     db.prepare("UPDATE users SET last_seen_at = datetime('now') WHERE id = ?").run(userId);
   } catch {}
 }
 
 // Get list of conversations
-router.get('/', authenticate, (req, res) => {
+router.get('/', authenticate, async (req, res) => {
+  if (useSupabase()) {
+    try {
+      markOnline(null, req.user.id);
+      const conversations = await messagesRepo.conversations(req.user.id);
+      const decorated = conversations.map((c) => ({
+        ...c,
+        is_typing: isTyping(c.partner_id, req.user.id),
+        is_online: c.partner_last_seen ? Date.now() - new Date(c.partner_last_seen).getTime() < 120000 : false,
+      }));
+      return res.json(decorated);
+    } catch (error) {
+      console.error('Fetch conversations (supabase) error:', error);
+      return res.status(500).json({ error: 'Failed to fetch conversations' });
+    }
+  }
   const db = getDb();
   try {
     markOnline(db, req.user.id);
@@ -69,7 +89,29 @@ router.get('/', authenticate, (req, res) => {
 });
 
 // Get messages for a specific conversation
-router.get('/:partnerId', authenticate, (req, res) => {
+router.get('/:partnerId', authenticate, async (req, res) => {
+  if (useSupabase()) {
+    try {
+      markOnline(null, req.user.id);
+      const messages = await messagesRepo.thread(req.user.id, req.params.partnerId);
+      const changes = await messagesRepo.markRead(req.user.id, req.params.partnerId);
+      if (changes > 0) {
+        realtime.emit(`user:${req.params.partnerId}`, 'message:read', { by: req.user.id, readAt: new Date().toISOString() });
+      }
+      const partner = await messagesRepo.getPartner(req.params.partnerId);
+      return res.json({
+        messages,
+        partner: partner ? {
+          ...partner,
+          is_typing: isTyping(partner.id, req.user.id),
+          is_online: partner.last_seen_at ? Date.now() - new Date(partner.last_seen_at).getTime() < 120000 : false,
+        } : null,
+      });
+    } catch (error) {
+      console.error('Fetch messages (supabase) error:', error);
+      return res.status(500).json({ error: 'Failed to fetch messages' });
+    }
+  }
   const db = getDb();
   try {
     markOnline(db, req.user.id);
@@ -115,12 +157,38 @@ router.get('/:partnerId', authenticate, (req, res) => {
 });
 
 // Send a message (text and/or image)
-router.post('/:partnerId', authenticate, (req, res) => {
+router.post('/:partnerId', authenticate, async (req, res) => {
   const { content, image_url } = req.body;
   const { partnerId } = req.params;
 
   if (!content && !image_url) {
     return res.status(400).json({ error: 'Message content or image is required' });
+  }
+
+  if (useSupabase()) {
+    try {
+      markOnline(null, req.user.id);
+      const id = uuidv4();
+      const newMessage = await messagesRepo.send({
+        id, senderId: req.user.id, receiverId: partnerId, content, imageUrl: image_url,
+      });
+      const notifId = uuidv4();
+      await notificationsRepo.create({
+        id: notifId, userId: partnerId, type: 'new_message', title: 'New Message',
+        message: `You have a new message from ${req.user.name}`, link: '/user/messages',
+      });
+      typingTracker.delete(`${req.user.id}:${partnerId}`);
+      realtime.emit([`user:${partnerId}`, `user:${req.user.id}`], 'message:new', { ...newMessage, sender_name: req.user.name });
+      realtime.emit(`user:${partnerId}`, 'notification:new', {
+        id: notifId, type: 'new_message', title: 'New Message',
+        message: `You have a new message from ${req.user.name}`, link: '/user/messages',
+        created_at: new Date().toISOString(),
+      });
+      return res.status(201).json(newMessage);
+    } catch (error) {
+      console.error('Send message (supabase) error:', error);
+      return res.status(500).json({ error: 'Failed to send message' });
+    }
   }
 
   const db = getDb();
@@ -173,7 +241,7 @@ router.post('/:partnerId', authenticate, (req, res) => {
 // POST /api/messages/:partnerId/typing — heartbeat for typing indicator
 router.post('/:partnerId/typing', authenticate, (req, res) => {
   typingTracker.set(`${req.user.id}:${req.params.partnerId}`, Date.now());
-  markOnline(getDb(), req.user.id);
+  markOnline(useSupabase() ? null : getDb(), req.user.id);
   realtime.emit(`user:${req.params.partnerId}`, 'typing', {
     from: req.user.id,
     isTyping: true,
