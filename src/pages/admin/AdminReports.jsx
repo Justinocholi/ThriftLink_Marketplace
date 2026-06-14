@@ -35,7 +35,6 @@ const AdminReports = () => {
 
   useEffect(() => {
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
 
   // Realtime: new report arrives — prepend if it matches the current filter.

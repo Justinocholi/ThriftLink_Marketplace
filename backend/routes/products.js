@@ -2,7 +2,7 @@ const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const { getDb } = require('../database/db');
 const productsRepo = require('../repos/productsRepo');
-const { validateProductQuery } = require('../middleware/validate');
+const { validateProductQuery, isUuid } = require('../middleware/validate');
 
 const router = express.Router();
 const useSupabase = () => process.env.DATA_BACKEND === 'supabase';
@@ -84,6 +84,7 @@ router.get('/', async (req, res) => {
 
 // GET /api/products/:id — MUST be after /categories/list
 router.get('/:id', async (req, res) => {
+  if (!isUuid(req.params.id)) return res.status(404).json({ error: 'Product not found' });
   try {
     if (useSupabase()) {
       const product = await productsRepo.getById(req.params.id);

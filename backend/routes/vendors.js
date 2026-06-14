@@ -5,7 +5,7 @@ const { authenticate, requireRole } = require('../middleware/auth');
 const upload = require('../middleware/upload');
 const realtime = require('../realtime');
 const { storeUploadedFile, storeUploadedFiles } = require('../services/cloudinaryService');
-const { validateKyc } = require('../middleware/validate');
+const { validateKyc, isUuid } = require('../middleware/validate');
 const { sendEmail, templates } = require('../services/emailService');
 const vendorsRepo = require('../repos/vendorsRepo');
 const productsRepo = require('../repos/productsRepo');
@@ -378,6 +378,7 @@ router.put('/me/orders/:orderId/status', authenticate, requireRole('vendor'), as
 
 // POST /api/vendors/:id/whatsapp-click
 router.post('/:id/whatsapp-click', async (req, res) => {
+  if (!isUuid(req.params.id)) return res.status(404).json({ error: 'Vendor not found' });
   try {
     if (useSupabase()) {
       analyticsRepo.logEvent({ id: uuidv4(), vendorId: req.params.id, eventType: 'whatsapp_click' }).catch(() => {});
@@ -397,6 +398,7 @@ router.post('/:id/whatsapp-click', async (req, res) => {
 
 // GET /api/vendors/:id — public vendor profile
 router.get('/:id', async (req, res) => {
+  if (!isUuid(req.params.id)) return res.status(404).json({ error: 'Vendor not found' });
   if (useSupabase()) {
     try {
       const vendor = await vendorsRepo.getById(req.params.id);

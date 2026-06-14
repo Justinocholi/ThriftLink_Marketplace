@@ -2,7 +2,8 @@ const Database = require('better-sqlite3');
 const path = require('path');
 const fs = require('fs');
 
-const DB_PATH = path.join(__dirname, 'thriftlink.db');
+// Tests set SQLITE_DB_PATH to an ephemeral file so they don't trample dev data.
+const DB_PATH = process.env.SQLITE_DB_PATH || path.join(__dirname, 'thriftlink.db');
 const SCHEMA_PATH = path.join(__dirname, 'schema.sql');
 
 let db;

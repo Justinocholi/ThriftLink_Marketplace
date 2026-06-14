@@ -4,7 +4,8 @@ const crypto = require('crypto');
 const { getDb } = require('../database/db');
 const { v4: uuidv4 } = require('uuid');
 
-const db = getDb();
+// Lazy SQLite handle — webhooks remain SQLite-only (unused with no online payments).
+const db = new Proxy({}, { get: (_t, p) => getDb()[p] });
 
 // Paystack Webhook Handler
 router.post('/paystack', (req, res) => {

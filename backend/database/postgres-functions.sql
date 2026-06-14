@@ -25,6 +25,11 @@ end $$;
 -- place_order: atomic checkout (one order per vendor in the cart, order_items,
 -- stock decrement, vendor notifications, cart clear). Returns created order ids.
 --
+-- Concurrency: each product row is SELECT ... FOR UPDATE locked before the
+-- stock check + decrement, so two simultaneous checkouts cannot both pass the
+-- check and oversell. Raises 'INSUFFICIENT_STOCK:<product_id>' on conflict;
+-- the whole transaction rolls back.
+--
 -- p_payload shape:
 --   { "shippingAddress","phone","notes","paymentMethod",
 --     "items":[{"product_id","vendor_id","price","quantity"}, ...] }
@@ -39,6 +44,9 @@ declare
   v_order_id uuid;
   v_order_total double precision;
   v_item jsonb;
+  v_pid uuid;
+  v_qty int;
+  v_available int;
   v_order_ids text[] := array[]::text[];
 begin
   for v_vendor_id in
@@ -61,18 +69,34 @@ begin
       select item from jsonb_array_elements(p_payload->'items') item
       where item->>'vendor_id' = v_vendor_id
     loop
+      v_pid := (v_item->>'product_id')::uuid;
+      v_qty := (v_item->>'quantity')::int;
+
+      -- Lock the product row and re-read stock under the lock. Anything trying
+      -- to deduct from the same row concurrently has to wait until we commit.
+      select stock_quantity into v_available
+        from products
+        where id = v_pid
+        for update;
+
+      if v_available is null then
+        raise exception 'PRODUCT_NOT_FOUND:%', v_pid;
+      end if;
+      if v_available < v_qty then
+        raise exception 'INSUFFICIENT_STOCK:%', v_pid;
+      end if;
+
       insert into order_items (id, order_id, product_id, quantity, price_at_purchase)
       values (
         gen_random_uuid(), v_order_id,
-        (v_item->>'product_id')::uuid,
-        (v_item->>'quantity')::int,
+        v_pid, v_qty,
         (v_item->>'price')::double precision
       );
 
       update products
-        set stock_quantity = greatest(0, stock_quantity - (v_item->>'quantity')::int),
+        set stock_quantity = v_available - v_qty,
             updated_at = now()
-        where id = (v_item->>'product_id')::uuid;
+        where id = v_pid;
     end loop;
 
     insert into notifications (id, user_id, type, title, message, link)

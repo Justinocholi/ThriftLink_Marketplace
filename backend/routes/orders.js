@@ -8,8 +8,14 @@ const realtime = require('../realtime');
 const ordersRepo = require('../repos/ordersRepo');
 const useSupabase = () => process.env.DATA_BACKEND === 'supabase';
 
-// Lazy SQLite handle — only touched in sqlite mode.
-const db = getDb();
+// SQLite handle is created on demand inside each handler so the sqlite db
+// file is never opened in supabase mode.
+const sqliteDb = () => getDb();
+const db = new Proxy({}, {
+  get(_t, prop) {
+    return sqliteDb()[prop];
+  },
+});
 
 // Create new order (Checkout) - Users only
 router.post('/', authenticate, requireRole('user'), async (req, res) => {
@@ -52,7 +58,16 @@ router.post('/', authenticate, requireRole('user'), async (req, res) => {
       return res.json({ message: 'Orders created successfully', orderIds });
     } catch (error) {
       console.error('Checkout (supabase) error:', error);
-      return res.status(500).json({ error: 'Failed to process checkout: ' + error.message });
+      const msg = String(error?.message || '');
+      const stockMatch = msg.match(/INSUFFICIENT_STOCK:([0-9a-f-]+)/i);
+      if (stockMatch) {
+        return res.status(409).json({ error: 'A product in your cart sold out before checkout completed.', productId: stockMatch[1] });
+      }
+      const missingMatch = msg.match(/PRODUCT_NOT_FOUND:([0-9a-f-]+)/i);
+      if (missingMatch) {
+        return res.status(404).json({ error: 'A product in your cart no longer exists.', productId: missingMatch[1] });
+      }
+      return res.status(500).json({ error: 'Failed to process checkout: ' + msg });
     }
   }
 
