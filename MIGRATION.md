@@ -1,6 +1,35 @@
 # #10 — SQLite → Supabase Postgres migration
 
-Status: **foundation laid, reconnaissance complete, cutover not yet executed.**
+Status: **route layer fully converted (dual-mode). Final activation steps pending.**
+
+## Where it stands now
+Every active route file reads/writes through async repositories when
+`DATA_BACKEND=supabase`, and falls back to the original `better-sqlite3`
+path when unset/`sqlite` (the default). The live app is unaffected until the
+flag is flipped.
+
+Converted + live-tested in Supabase mode: products, vendors (public + me/* +
+KYC), auth, cart, users, reviews, reports, subscriptions, admin, messages
+(send/thread), orders (reads). `webhooks.js` (Paystack, unused) intentionally
+left on SQLite.
+
+Three endpoints are coded but need the Postgres RPCs to function:
+checkout (`place_order`), chat conversation list (`conversation_list`),
+admin stats (`vendor_stats`).
+
+### To finish (≈10 min + a smoke test)
+1. Run `backend/database/postgres-functions.sql` in the Supabase SQL Editor.
+2. Set `DATA_BACKEND=supabase` (add it to the environment so the
+   bootstrap-env hook persists it across sessions).
+3. Smoke-test every flow; confirm checkout, chat conversation list, and the
+   admin dashboard stats now work.
+4. Once green, retire `better-sqlite3`: delete the SQLite branches and the
+   `database/db.js` handle. (Left in place now as a safety net.)
+
+---
+
+## Original reconnaissance (kept for reference)
+Status: **foundation laid, reconnaissance complete.**
 
 ## What we learned (reconnaissance from inside the container)
 
