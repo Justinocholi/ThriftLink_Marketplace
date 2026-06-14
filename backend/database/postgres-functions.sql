@@ -1,41 +1,50 @@
--- ThriftLink — Postgres functions required by the supabase-js cutover.
+-- ThriftLink — Postgres functions + type fixups required by the supabase-js cutover.
 -- Run this ONCE in the Supabase SQL Editor (after postgres-schema.sql).
+--
+-- The existing Supabase tables use uuid id/fk columns and boolean flag columns
+-- (is_active, is_verified, is_read, is_approved, ...). The is_featured column,
+-- added later, came in as integer — this block normalizes it to boolean so it
+-- matches every other flag and the app's boolean<->int mapping layer.
 
--- place_order: atomic checkout (creates one order per vendor in the cart,
--- inserts order_items, decrements product stock, creates vendor notifications,
--- and clears the user's cart). Returns the array of created order ids.
+do $$
+begin
+  if exists (
+    select 1 from information_schema.columns
+    where table_name = 'vendor_profiles' and column_name = 'is_featured'
+      and data_type <> 'boolean'
+  ) then
+    alter table vendor_profiles alter column is_featured drop default;
+    alter table vendor_profiles
+      alter column is_featured type boolean
+      using (case when is_featured::int <> 0 then true else false end);
+    alter table vendor_profiles alter column is_featured set default false;
+    alter table vendor_profiles alter column is_featured set not null;
+  end if;
+end $$;
+
+-- place_order: atomic checkout (one order per vendor in the cart, order_items,
+-- stock decrement, vendor notifications, cart clear). Returns created order ids.
 --
 -- p_payload shape:
---   {
---     "shippingAddress": "...",
---     "phone": "...",
---     "notes": "...",
---     "paymentMethod": "bank_transfer",
---     "items": [
---       {"product_id":"...", "vendor_id":"...", "price":1234, "quantity":1},
---       ...
---     ]
---   }
+--   { "shippingAddress","phone","notes","paymentMethod",
+--     "items":[{"product_id","vendor_id","price","quantity"}, ...] }
 create or replace function place_order(p_user_id text, p_payload jsonb)
 returns text[]
 language plpgsql
 security definer
 as $$
 declare
+  v_user_id uuid := p_user_id::uuid;
   v_vendor_id text;
-  v_order_id text;
+  v_order_id uuid;
   v_order_total double precision;
   v_item jsonb;
-  v_buyer_name text;
   v_order_ids text[] := array[]::text[];
 begin
-  select name into v_buyer_name from users where id = p_user_id;
-
-  -- Group by vendor_id, one order per vendor.
   for v_vendor_id in
     select distinct (jsonb_array_elements(p_payload->'items')->>'vendor_id')
   loop
-    v_order_id := gen_random_uuid()::text;
+    v_order_id := gen_random_uuid();
     select coalesce(sum((item->>'price')::double precision * (item->>'quantity')::int), 0)
       into v_order_total
       from jsonb_array_elements(p_payload->'items') item
@@ -43,20 +52,19 @@ begin
 
     insert into orders (id, user_id, vendor_id, total_amount, shipping_address, phone, notes, payment_method, status, payment_status)
     values (
-      v_order_id, p_user_id, v_vendor_id, v_order_total,
+      v_order_id, v_user_id, v_vendor_id::uuid, v_order_total,
       p_payload->>'shippingAddress', p_payload->>'phone', p_payload->>'notes',
       p_payload->>'paymentMethod', 'pending', 'pending'
     );
 
-    -- Items + stock decrement
     for v_item in
       select item from jsonb_array_elements(p_payload->'items') item
       where item->>'vendor_id' = v_vendor_id
     loop
       insert into order_items (id, order_id, product_id, quantity, price_at_purchase)
       values (
-        gen_random_uuid()::text, v_order_id,
-        v_item->>'product_id',
+        gen_random_uuid(), v_order_id,
+        (v_item->>'product_id')::uuid,
         (v_item->>'quantity')::int,
         (v_item->>'price')::double precision
       );
@@ -64,35 +72,32 @@ begin
       update products
         set stock_quantity = greatest(0, stock_quantity - (v_item->>'quantity')::int),
             updated_at = now()
-        where id = v_item->>'product_id';
+        where id = (v_item->>'product_id')::uuid;
     end loop;
 
-    -- Vendor notification
     insert into notifications (id, user_id, type, title, message, link)
     select
-      gen_random_uuid()::text,
+      gen_random_uuid(),
       vp.user_id,
       'order_update',
       'New Order Received',
-      format('You have a new order (#%s) for ₦%s', substr(v_order_id, 1, 8), to_char(v_order_total, 'FM999,999,999.00')),
+      format('You have a new order (#%s) for ₦%s', substr(v_order_id::text, 1, 8), to_char(v_order_total, 'FM999,999,999.00')),
       '/vendor/orders'
-    from vendor_profiles vp where vp.id = v_vendor_id;
+    from vendor_profiles vp where vp.id = v_vendor_id::uuid;
 
-    v_order_ids := array_append(v_order_ids, v_order_id);
+    v_order_ids := array_append(v_order_ids, v_order_id::text);
   end loop;
 
-  -- Clear the buyer's cart
-  delete from cart_items where user_id = p_user_id;
+  delete from cart_items where user_id = v_user_id;
 
   return v_order_ids;
 end
 $$;
 
--- conversation_list: returns the user's chat partners with last message + unread count.
--- Replaces the GROUP BY query in routes/messages.js which PostgREST can't do.
+-- conversation_list: chat partner list with last message + unread count.
 create or replace function conversation_list(p_user_id text)
 returns table (
-  partner_id text,
+  partner_id uuid,
   partner_name text,
   partner_avatar text,
   partner_last_seen timestamptz,
@@ -104,30 +109,31 @@ returns table (
 language sql
 stable
 as $$
-  with conv as (
+  with me as (select p_user_id::uuid as uid),
+  conv as (
     select
-      case when sender_id = p_user_id then receiver_id else sender_id end as partner,
+      case when sender_id = (select uid from me) then receiver_id else sender_id end as partner,
       max(created_at) as last_at
     from messages
-    where sender_id = p_user_id or receiver_id = p_user_id
+    where sender_id = (select uid from me) or receiver_id = (select uid from me)
     group by 1
   ),
   latest as (
     select distinct on (
-      case when m.sender_id = p_user_id then m.receiver_id else m.sender_id end
+      case when m.sender_id = (select uid from me) then m.receiver_id else m.sender_id end
     )
-      case when m.sender_id = p_user_id then m.receiver_id else m.sender_id end as partner,
+      case when m.sender_id = (select uid from me) then m.receiver_id else m.sender_id end as partner,
       m.content as last_message,
       m.image_url as last_image,
       m.created_at as last_message_time
     from messages m
-    where m.sender_id = p_user_id or m.receiver_id = p_user_id
+    where m.sender_id = (select uid from me) or m.receiver_id = (select uid from me)
     order by 1, m.created_at desc
   ),
   unread as (
     select sender_id as partner, count(*) as unread_count
     from messages
-    where receiver_id = p_user_id and is_read = 0
+    where receiver_id = (select uid from me) and is_read = false
     group by 1
   )
   select
@@ -146,7 +152,7 @@ as $$
   order by c.last_at desc;
 $$;
 
--- vendor_stats: returns the dashboard counters used by admin/stats.
+-- vendor_stats: admin dashboard counters.
 create or replace function vendor_stats()
 returns table (
   total_vendors bigint,
@@ -166,6 +172,6 @@ as $$
     (select count(*) from users where role = 'user'),
     (select count(*) from products),
     (select count(*) from reviews),
-    (select count(*) from reviews where is_approved = 0),
+    (select count(*) from reviews where is_approved = false),
     (select count(*) from orders);
 $$;

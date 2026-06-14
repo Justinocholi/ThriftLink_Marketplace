@@ -1,11 +1,14 @@
 -- ThriftLink — Postgres schema (Supabase)
 -- Ported from database/schema.sql (SQLite).
 --
--- Design choices to minimize application rewrite:
---   * Primary keys stay `text` (the app generates UUID v4 strings itself).
---   * Booleans stay `integer` (0/1) because every query compares `= 1`
---     and the app writes 1/0. Changing to real booleans would touch
---     dozens of call sites.
+-- Design choices:
+--   * Primary keys are `text` here, but the EXISTING Supabase project uses
+--     `uuid` id/fk columns. The app generates UUID-v4 strings, which work as
+--     both; PostgREST coerces, and the repos pass strings through.
+--   * Flag columns are real `boolean` (is_active, is_verified, is_featured,
+--     is_available, is_read, is_approved) — matching the live DB. The data
+--     client (db/supabaseData.js) maps boolean<->0/1 so route/UI code that
+--     expects 1/0 is unchanged.
 --   * Money/ratings use `double precision` to mirror SQLite REAL.
 --   * Timestamps use `timestamptz default now()`. NOTE: a couple of
 --     frontend/date spots append 'Z' to SQLite's naive timestamps —
@@ -24,7 +27,7 @@ create table if not exists users (
   avatar text,
   state text,
   city text,
-  is_active integer not null default 1,
+  is_active boolean not null default true,
   last_seen_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -42,8 +45,8 @@ create table if not exists vendor_profiles (
   city text,
   logo text,
   banner text,
-  is_verified integer not null default 0,
-  is_featured integer not null default 0,
+  is_verified boolean not null default false,
+  is_featured boolean not null default false,
   featured_rank integer,
   verification_status text not null default 'pending' check (verification_status in ('pending','approved','rejected')),
   subscription_plan text not null default 'free' check (subscription_plan in ('free','basic','pro')),
@@ -78,8 +81,8 @@ create table if not exists products (
   condition text not null default 'good' check (condition in ('new','like-new','good','fair')),
   images text not null default '[]',
   stock_quantity integer not null default 1,
-  is_available integer not null default 1,
-  is_featured integer not null default 0,
+  is_available boolean not null default true,
+  is_featured boolean not null default false,
   boost_expires_at timestamptz,
   views integer not null default 0,
   created_at timestamptz not null default now(),
@@ -142,7 +145,7 @@ create table if not exists notifications (
   type text not null,
   title text not null,
   message text not null,
-  is_read integer not null default 0,
+  is_read boolean not null default false,
   link text,
   created_at timestamptz not null default now()
 );
@@ -153,7 +156,7 @@ create table if not exists reviews (
   user_id text not null references users(id),
   rating integer not null check (rating between 1 and 5),
   comment text,
-  is_approved integer not null default 1,
+  is_approved boolean not null default true,
   created_at timestamptz not null default now()
 );
 
@@ -163,7 +166,7 @@ create table if not exists messages (
   receiver_id text not null references users(id),
   content text not null,
   image_url text,
-  is_read integer not null default 0,
+  is_read boolean not null default false,
   read_at timestamptz,
   created_at timestamptz not null default now()
 );
@@ -234,7 +237,7 @@ alter table users add column if not exists reset_token_hash text;
 alter table users add column if not exists reset_token_expires_at timestamptz;
 
 -- vendor_profiles: featured + KYC
-alter table vendor_profiles add column if not exists is_featured integer not null default 0;
+alter table vendor_profiles add column if not exists is_featured boolean not null default false;
 alter table vendor_profiles add column if not exists featured_rank integer;
 alter table vendor_profiles add column if not exists nin text;
 alter table vendor_profiles add column if not exists bvn text;
