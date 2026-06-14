@@ -11,14 +11,17 @@ const { sendEmail, templates } = require('../services/emailService');
 const router = express.Router();
 
 // GET /api/vendors — public list of verified vendors
+// Admin-featured vendors always rank first (by featured_rank), then by rating.
+// Pass ?featured=true to return only the admin-curated featured vendors.
 router.get('/', (req, res) => {
-  const { state, category, search, page = 1, limit = 20 } = req.query;
+  const { state, category, search, page = 1, limit = 20, featured } = req.query;
   const db = getDb();
   const offset = (parseInt(page) - 1) * parseInt(limit);
 
   let where = ['vp.is_verified = 1'];
   const params = [];
 
+  if (featured === 'true') where.push('vp.is_featured = 1');
   if (state) { where.push('vp.state = ?'); params.push(state); }
   if (category) { where.push('vp.category = ?'); params.push(category); }
   if (search) {
@@ -32,7 +35,10 @@ router.get('/', (req, res) => {
     FROM vendor_profiles vp
     JOIN users u ON u.id = vp.user_id
     ${whereClause}
-    ORDER BY vp.rating DESC, vp.profile_views DESC
+    ORDER BY vp.is_featured DESC,
+             CASE WHEN vp.featured_rank IS NULL THEN 1 ELSE 0 END,
+             vp.featured_rank ASC,
+             vp.rating DESC, vp.profile_views DESC
     LIMIT ? OFFSET ?
   `).all(...params, parseInt(limit), offset);
 

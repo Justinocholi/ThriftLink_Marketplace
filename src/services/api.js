@@ -181,6 +181,8 @@ export const admin = {
   vendors: (params = {}) => request('/admin/vendors?' + new URLSearchParams(params)),
   verifyVendor: (id, status) => request(`/admin/vendors/${id}/verify`, { method: 'PUT', body: JSON.stringify({ status }) }),
   updateSubscription: (id, plan) => request(`/admin/vendors/${id}/subscription`, { method: 'PUT', body: JSON.stringify({ plan }) }),
+  featureVendor: (id, is_featured, featured_rank) =>
+    request(`/admin/vendors/${id}/feature`, { method: 'PUT', body: JSON.stringify({ is_featured, featured_rank }) }),
   users: (params = {}) => request('/admin/users?' + new URLSearchParams(params)),
   setUserStatus: (id, is_active) => request(`/admin/users/${id}/status`, { method: 'PUT', body: JSON.stringify({ is_active }) }),
   warnUser: (id, message) => request(`/admin/users/${id}/warn`, { method: 'POST', body: JSON.stringify({ message }) }),

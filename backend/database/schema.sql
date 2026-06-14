@@ -32,6 +32,8 @@ CREATE TABLE IF NOT EXISTS vendor_profiles (
   logo TEXT,
   banner TEXT,
   is_verified INTEGER NOT NULL DEFAULT 0,
+  is_featured INTEGER NOT NULL DEFAULT 0,
+  featured_rank INTEGER,
   verification_status TEXT NOT NULL DEFAULT 'pending' CHECK(verification_status IN ('pending', 'approved', 'rejected')),
   subscription_plan TEXT NOT NULL DEFAULT 'free' CHECK(subscription_plan IN ('free', 'basic', 'pro')),
   subscription_expires_at TEXT,

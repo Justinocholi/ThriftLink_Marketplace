@@ -53,6 +53,9 @@ const Home = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // The public vendors endpoint already ranks admin-featured vendors first
+    // (by featured_rank), then by rating — so the home page reflects the
+    // admin's curated "top vendors" automatically.
     vendorsApi
       .list({ limit: 8 })
       .then((data) => setVendors(Array.isArray(data?.vendors) ? data.vendors : []))

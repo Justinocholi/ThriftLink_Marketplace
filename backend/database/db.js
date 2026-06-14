@@ -53,6 +53,10 @@ function getDb() {
     safeAddColumn(db, 'vendor_profiles', 'kyc_reviewed_at', 'kyc_reviewed_at TEXT');
     safeAddColumn(db, 'vendor_profiles', 'kyc_review_notes', 'kyc_review_notes TEXT');
 
+    // Admin-curated featured/top vendors
+    safeAddColumn(db, 'vendor_profiles', 'is_featured', 'is_featured INTEGER NOT NULL DEFAULT 0');
+    safeAddColumn(db, 'vendor_profiles', 'featured_rank', 'featured_rank INTEGER');
+
     safeAddColumn(db, 'orders', 'payment_reference', 'payment_reference TEXT');
     safeAddColumn(db, 'orders', 'payment_confirmed_at', 'payment_confirmed_at TEXT');
     safeAddColumn(db, 'orders', 'payment_confirmed_by', 'payment_confirmed_by TEXT');

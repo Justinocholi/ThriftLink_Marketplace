@@ -86,6 +86,31 @@ router.put('/vendors/:id/verify', (req, res) => {
 });
 
 
+// PUT /api/admin/vendors/:id/feature — admin curates featured/top vendors
+// body: { is_featured: bool, featured_rank?: number }
+router.put('/vendors/:id/feature', (req, res) => {
+  const db = getDb();
+  const isFeatured = req.body.is_featured ? 1 : 0;
+  let rank = null;
+  if (isFeatured) {
+    const parsed = parseInt(req.body.featured_rank, 10);
+    rank = Number.isFinite(parsed) ? Math.max(1, Math.min(999, parsed)) : null;
+  }
+
+  const vendor = db.prepare('SELECT id, is_verified FROM vendor_profiles WHERE id = ?').get(req.params.id);
+  if (!vendor) return res.status(404).json({ error: 'Vendor not found' });
+  if (isFeatured && !vendor.is_verified) {
+    return res.status(400).json({ error: 'Only verified vendors can be featured.' });
+  }
+
+  db.prepare(
+    `UPDATE vendor_profiles SET is_featured = ?, featured_rank = ?, updated_at = datetime('now') WHERE id = ?`
+  ).run(isFeatured, rank, req.params.id);
+
+  realtime.emit('role:admin', 'vendor:updated', { id: req.params.id, is_featured: isFeatured, featured_rank: rank });
+  res.json({ message: isFeatured ? 'Vendor featured' : 'Vendor unfeatured', is_featured: isFeatured, featured_rank: rank });
+});
+
 // PUT /api/admin/vendors/:id/subscription
 router.put('/vendors/:id/subscription', (req, res) => {
   const { plan } = req.body;

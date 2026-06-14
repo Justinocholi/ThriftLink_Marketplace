@@ -37,6 +37,21 @@ const AdminVendors = () => {
     }
   };
 
+  const handleFeature = async (vendor, is_featured, featured_rank) => {
+    setActing(vendor.id);
+    setError('');
+    try {
+      const res = await admin.featureVendor(vendor.id, is_featured, featured_rank);
+      setVendors(prev => prev.map(v => v.id === vendor.id
+        ? { ...v, is_featured: res.is_featured, featured_rank: res.featured_rank }
+        : v));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setActing(null);
+    }
+  };
+
   const filtered = filter === 'all' ? vendors : vendors.filter(v => v.verification_status === filter);
 
   return (
@@ -66,7 +81,7 @@ const AdminVendors = () => {
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: '#f8fafc', textAlign: 'left' }}>
-                  {['Shop Name', 'Category', 'State', 'Status', 'Plan', 'Actions'].map(h => (
+                  {['Shop Name', 'Category', 'State', 'Status', 'Plan', 'Featured', 'Actions'].map(h => (
                     <th key={h} style={{ padding: '1rem', borderBottom: '1px solid #e2e8f0', color: '#64748b', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase' }}>{h}</th>
                   ))}
                 </tr>
@@ -85,6 +100,39 @@ const AdminVendors = () => {
                         </span>
                       </td>
                       <td style={{ padding: '1rem', color: '#475569' }}>{vendor.subscription_plan || 'free'}</td>
+                      <td style={{ padding: '1rem' }}>
+                        {vendor.is_verified ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            <button
+                              disabled={acting === vendor.id}
+                              onClick={() => handleFeature(vendor, vendor.is_featured ? 0 : 1, vendor.featured_rank || 1)}
+                              title={vendor.is_featured ? 'Remove from featured' : 'Mark as featured/top vendor'}
+                              style={{
+                                padding: '0.4rem 0.7rem', border: 'none', borderRadius: '6px', cursor: 'pointer',
+                                background: vendor.is_featured ? '#fef9c3' : '#f1f5f9',
+                                color: vendor.is_featured ? '#a16207' : '#64748b',
+                                fontWeight: '600', fontSize: '0.8rem', whiteSpace: 'nowrap',
+                              }}>
+                              {vendor.is_featured ? '★ Featured' : '☆ Feature'}
+                            </button>
+                            {vendor.is_featured ? (
+                              <input
+                                type="number"
+                                min="1"
+                                title="Rank (1 = top)"
+                                defaultValue={vendor.featured_rank || 1}
+                                onBlur={(e) => {
+                                  const r = parseInt(e.target.value, 10);
+                                  if (r && r !== vendor.featured_rank) handleFeature(vendor, 1, r);
+                                }}
+                                style={{ width: '52px', padding: '0.35rem', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '0.8rem' }}
+                              />
+                            ) : null}
+                          </div>
+                        ) : (
+                          <span style={{ color: '#cbd5e1', fontSize: '0.8rem' }}>—</span>
+                        )}
+                      </td>
                       <td style={{ padding: '1rem' }}>
                         <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
                           {vendor.verification_status !== 'approved' && (
