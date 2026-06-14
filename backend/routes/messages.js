@@ -49,7 +49,7 @@ router.get('/', authenticate, async (req, res) => {
       return res.json(decorated);
     } catch (error) {
       console.error('Fetch conversations (supabase) error:', error);
-      return res.status(500).json({ error: 'Failed to fetch conversations' });
+      return res.status(error.status || 500).json({ error: error.status ? error.message : 'Failed to fetch conversations' });
     }
   }
   const db = getDb();
@@ -84,7 +84,7 @@ router.get('/', authenticate, async (req, res) => {
     res.json(decorated);
   } catch (error) {
     console.error('Fetch conversations error:', error);
-    res.status(500).json({ error: 'Failed to fetch conversations' });
+    res.status(error.status || 500).json({ error: error.status ? error.message : 'Failed to fetch conversations' });
   }
 });
 
@@ -109,7 +109,7 @@ router.get('/:partnerId', authenticate, async (req, res) => {
       });
     } catch (error) {
       console.error('Fetch messages (supabase) error:', error);
-      return res.status(500).json({ error: 'Failed to fetch messages' });
+      return res.status(error.status || 500).json({ error: error.status ? error.message : 'Failed to fetch messages' });
     }
   }
   const db = getDb();
@@ -152,7 +152,7 @@ router.get('/:partnerId', authenticate, async (req, res) => {
     });
   } catch (error) {
     console.error('Fetch messages error:', error);
-    res.status(500).json({ error: 'Failed to fetch messages' });
+    res.status(error.status || 500).json({ error: error.status ? error.message : 'Failed to fetch messages' });
   }
 });
 
@@ -187,7 +187,7 @@ router.post('/:partnerId', authenticate, async (req, res) => {
       return res.status(201).json(newMessage);
     } catch (error) {
       console.error('Send message (supabase) error:', error);
-      return res.status(500).json({ error: 'Failed to send message' });
+      return res.status(error.status || 500).json({ error: error.status ? error.message : 'Failed to send message' });
     }
   }
 
@@ -234,7 +234,7 @@ router.post('/:partnerId', authenticate, async (req, res) => {
     res.status(201).json(newMessage);
   } catch (error) {
     console.error('Send message error:', error);
-    res.status(500).json({ error: 'Failed to send message' });
+    res.status(error.status || 500).json({ error: error.status ? error.message : 'Failed to send message' });
   }
 });
 
@@ -260,7 +260,7 @@ router.post('/upload-image', authenticate, upload.single('image'), async (req, r
     res.status(201).json({ url: uploaded.url });
   } catch (error) {
     console.error('Message image upload error:', error);
-    res.status(500).json({ error: 'Failed to upload image' });
+    res.status(error.status || 500).json({ error: error.status ? error.message : 'Failed to upload image' });
   }
 });
 

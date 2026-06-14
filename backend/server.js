@@ -25,6 +25,46 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const isProd = process.env.NODE_ENV === 'production';
 
+// --- JWT secret hardening ------------------------------------------------
+// Critical: the dev placeholder must never be used in production. We also
+// refuse weak (empty/short) secrets unconditionally. In dev a weak secret
+// only emits a warning so local work isn't disrupted.
+(function assertJwtSecret() {
+  const s = process.env.JWT_SECRET || '';
+  const isDevSecret = s.startsWith('dev-only-');
+  if (!s) throw new Error('FATAL: JWT_SECRET is required.');
+  if (s.length < 32) throw new Error('FATAL: JWT_SECRET must be at least 32 characters.');
+  if (isProd && isDevSecret) {
+    throw new Error(
+      'FATAL: refusing to boot in production with the dev JWT_SECRET. ' +
+      'Generate a strong random secret (e.g. `openssl rand -hex 48`) and set it.'
+    );
+  }
+  if (isDevSecret) console.warn('[security] Using the dev JWT_SECRET. Replace before production.');
+})();
+
+// --- CORS allowlist ------------------------------------------------------
+// In dev: localhost:5173 only. In prod: FRONTEND_URL and any comma-separated
+// extra origins in CORS_ALLOWED_ORIGINS (e.g. preview deployment URLs).
+const allowedOrigins = (() => {
+  if (!isProd) return new Set(['http://localhost:5173']);
+  const out = new Set();
+  const add = (u) => u && out.add(u.replace(/\/$/, ''));
+  add(process.env.FRONTEND_URL);
+  for (const o of (process.env.CORS_ALLOWED_ORIGINS || '').split(',').map((x) => x.trim()).filter(Boolean)) add(o);
+  return out;
+})();
+
+function corsOriginCheck(origin, cb) {
+  // Allow non-browser callers (curl, server-to-server, webhooks) which omit Origin.
+  if (!origin) return cb(null, true);
+  const normalized = origin.replace(/\/$/, '');
+  if (allowedOrigins.has(normalized)) return cb(null, true);
+  // Reject by omitting the Access-Control-Allow-Origin header. Browsers block
+  // the response client-side; we don't throw so the HTTP layer stays clean.
+  return cb(null, false);
+}
+
 // Security headers. crossOriginResourcePolicy is relaxed so Cloudinary /
 // cross-origin <img> loads aren't blocked; CSP is left off here because the
 // SPA is served separately by Vite in dev and a CDN in prod.
@@ -34,7 +74,7 @@ app.use(helmet({
 }));
 
 app.use(cors({
-  origin: isProd ? true : 'http://localhost:5173',
+  origin: corsOriginCheck,
   credentials: true,
 }));
 app.use(express.json());
@@ -111,7 +151,7 @@ app.use((err, req, res, next) => {
 });
 
 const server = http.createServer(app);
-realtime.init(server, { origin: isProd ? true : 'http://localhost:5173' });
+realtime.init(server, { origin: corsOriginCheck });
 app.set('io', realtime);
 
 server.listen(PORT, () => {

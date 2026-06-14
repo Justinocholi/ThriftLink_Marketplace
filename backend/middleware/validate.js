@@ -77,4 +77,23 @@ function validateKyc(body) {
   };
 }
 
-module.exports = { validateProductQuery, validateKyc, clampString };
+// Sanitize a string before embedding it into a PostgREST filter expression
+// (.or, .ilike, .eq, ...). Commas, parens, colons, and backslashes are
+// PostgREST control characters — leaving them in lets a search box rewrite
+// the query. Wildcards (%, _) would also let users craft pathological LIKEs
+// so we strip those too. Result is trimmed and capped.
+const POSTGREST_UNSAFE = /[,()\\:%_*]/g;
+function sanitizePostgrestLike(value, maxLen = 60) {
+  if (typeof value !== 'string') return '';
+  return value.replace(POSTGREST_UNSAFE, ' ').trim().slice(0, maxLen);
+}
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function isUuid(v) {
+  return typeof v === 'string' && UUID_RE.test(v);
+}
+
+module.exports = {
+  validateProductQuery, validateKyc, clampString,
+  sanitizePostgrestLike, isUuid,
+};

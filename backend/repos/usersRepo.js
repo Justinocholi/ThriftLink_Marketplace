@@ -5,6 +5,7 @@
  */
 
 const { getDataClient, fromDb, toDb, unwrap } = require('../db/supabaseData');
+const { sanitizePostgrestLike, isUuid } = require('../middleware/validate');
 
 const TABLE = 'users';
 
@@ -61,17 +62,19 @@ async function clearResetToken(id, password_hash) {
 
 // User search for chat. Excludes admins, the caller, inactives.
 async function search({ q, role, excludeUserId, limit = 20 }) {
+  const sanitized = sanitizePostgrestLike(q);
+  if (!sanitized) return [];
   const db = getDataClient();
   // Pull user rows; embed vendor_profiles to surface shop_name + is_verified.
   let qb = db
     .from(TABLE)
     .select('id,name,avatar,role,state,city,last_seen_at,vendor_profiles(shop_name,is_verified)')
     .eq('is_active', true)
-    .or(`name.ilike.%${q}%,email.ilike.%${q}%`)
+    .or(`name.ilike.%${sanitized}%,email.ilike.%${sanitized}%`)
     .order('name', { ascending: true })
     .limit(limit);
 
-  if (excludeUserId) qb = qb.neq('id', excludeUserId);
+  if (excludeUserId && isUuid(excludeUserId)) qb = qb.neq('id', excludeUserId);
   if (role && ['user', 'vendor'].includes(role)) qb = qb.eq('role', role);
   else qb = qb.in('role', ['user', 'vendor']);
 

@@ -6,6 +6,7 @@
  */
 
 const { getDataClient, fromDb, fromDbMany, toDb, unwrap } = require('../db/supabaseData');
+const { sanitizePostgrestLike } = require('../middleware/validate');
 
 const TABLE = 'vendor_profiles';
 
@@ -21,7 +22,10 @@ async function listVerified({ state, category, search, featured, limit = 20, pag
   if (featured) q = q.eq('is_featured', true);
   if (state) q = q.eq('state', state);
   if (category) q = q.eq('category', category);
-  if (search) q = q.or(`shop_name.ilike.%${search}%,description.ilike.%${search}%`);
+  if (search) {
+    const s = sanitizePostgrestLike(search);
+    if (s) q = q.or(`shop_name.ilike.%${s}%,description.ilike.%${s}%`);
+  }
 
   // Featured first (desc), then rating desc, then views desc.
   // PostgREST sorts nulls last by default for desc.

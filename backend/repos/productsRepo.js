@@ -5,6 +5,7 @@
  */
 
 const { getDataClient, fromDb, fromDbMany, toDb, unwrap } = require('../db/supabaseData');
+const { sanitizePostgrestLike } = require('../middleware/validate');
 
 const TABLE = 'products';
 
@@ -22,10 +23,8 @@ async function search(q) {
 
   if (q.verified_only) query = query.eq('vendor_profiles.is_verified', true);
   if (q.search) {
-    // OR across name/description/category. PostgREST `.or` only accepts a
-    // single comma-separated string; ilike is case-insensitive.
-    const s = q.search.replace(/,/g, ' ');
-    query = query.or(`name.ilike.%${s}%,description.ilike.%${s}%,category.ilike.%${s}%`);
+    const s = sanitizePostgrestLike(q.search);
+    if (s) query = query.or(`name.ilike.%${s}%,description.ilike.%${s}%,category.ilike.%${s}%`);
   }
   if (q.category) query = query.eq('category', q.category);
   if (q.condition) query = query.eq('condition', q.condition);
