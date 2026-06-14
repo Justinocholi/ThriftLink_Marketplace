@@ -99,6 +99,11 @@ async function adminList({ page = 1, limit = 50 } = {}) {
   return { users: (data || []).map((r) => { const { password_hash, ...safe } = r; return fromDb(safe); }), total: count || 0 };
 }
 
+async function activeAdmins() {
+  const db = getDataClient();
+  return unwrap(await db.from(TABLE).select('id').eq('role', 'admin').eq('is_active', true)) || [];
+}
+
 async function setActive(id, isActive) {
   const db = getDataClient();
   unwrap(await db.from(TABLE).update({ is_active: !!isActive, updated_at: new Date().toISOString() }).eq('id', id));
@@ -107,5 +112,5 @@ async function setActive(id, isActive) {
 module.exports = {
   getById, getByEmail, getBySupabaseUserId, create, update,
   setLastSeen, setResetToken, clearResetToken,
-  search, adminList, setActive,
+  search, adminList, activeAdmins, setActive,
 };
