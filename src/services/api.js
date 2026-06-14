@@ -90,6 +90,14 @@ export const products = {
 };
 
 // --- Users (authenticated) ---
+export const users = {
+  search: (q, role) => {
+    const params = new URLSearchParams({ q });
+    if (role) params.set('role', role);
+    return request('/users/search?' + params.toString());
+  },
+};
+
 export const userMe = {
   getProfile: () => request('/users/me/profile'),
   updateProfile: (data) => request('/users/me/profile', { method: 'PUT', body: JSON.stringify(data) }),

@@ -14,6 +14,43 @@ router.get('/me/profile', authenticate, (req, res) => {
   res.json(user);
 });
 
+// GET /api/users/search?q=...&role=user|vendor
+// Used to start new chats with other users/vendors. Authenticated only.
+router.get('/search', authenticate, (req, res) => {
+  const db = getDb();
+  const qRaw = typeof req.query.q === 'string' ? req.query.q.trim() : '';
+  if (qRaw.length < 2) return res.json({ users: [] });
+
+  const q = `%${qRaw.slice(0, 60)}%`;
+  const roleFilter = ['user', 'vendor'].includes(req.query.role) ? req.query.role : null;
+
+  const where = [
+    "u.is_active = 1",
+    "u.id != ?",
+    "(u.name LIKE ? OR u.email LIKE ?)",
+  ];
+  const params = [req.user.id, q, q];
+  if (roleFilter) {
+    where.push('u.role = ?');
+    params.push(roleFilter);
+  } else {
+    // Don't surface admins in chat search.
+    where.push("u.role IN ('user', 'vendor')");
+  }
+
+  const rows = db.prepare(`
+    SELECT u.id, u.name, u.avatar, u.role, u.state, u.city, u.last_seen_at,
+           vp.shop_name as vendor_shop_name, vp.is_verified as vendor_is_verified
+    FROM users u
+    LEFT JOIN vendor_profiles vp ON vp.user_id = u.id
+    WHERE ${where.join(' AND ')}
+    ORDER BY u.name ASC
+    LIMIT 20
+  `).all(...params);
+
+  res.json({ users: rows });
+});
+
 // PUT /api/users/me/profile
 router.put('/me/profile', authenticate, (req, res) => {
   const { name, phone, state, city } = req.body;
