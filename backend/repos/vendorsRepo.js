@@ -71,4 +71,96 @@ async function setFeatured(id, isFeatured, rank) {
   return fromDb(data);
 }
 
-module.exports = { listVerified, getById, getByUserId, setFeatured };
+async function create(row) {
+  const db = getDataClient();
+  return fromDb(unwrap(await db.from(TABLE).insert(toDb(row)).select().maybeSingle()));
+}
+
+async function update(id, patch) {
+  const db = getDataClient();
+  return fromDb(unwrap(
+    await db.from(TABLE).update(toDb({ ...patch, updated_at: new Date().toISOString() }))
+      .eq('id', id).select().maybeSingle()
+  ));
+}
+
+async function updateLogo(id, logoUrl) {
+  return update(id, { logo: logoUrl });
+}
+
+async function submitKyc(id, kycData) {
+  return update(id, {
+    ...kycData,
+    kyc_submitted_at: new Date().toISOString(),
+    kyc_reviewed_at: null,
+    kyc_review_notes: null,
+    verification_status: 'pending',
+  });
+}
+
+async function reviewKyc(id, decision, notes) {
+  return update(id, {
+    verification_status: decision,
+    is_verified: decision === 'approved' ? 1 : 0,
+    kyc_reviewed_at: new Date().toISOString(),
+    kyc_review_notes: notes || null,
+  });
+}
+
+async function getKycForVendor(userId) {
+  const db = getDataClient();
+  return fromDb(unwrap(
+    await db.from(TABLE).select(
+      'verification_status,business_name,business_address,business_registration_number,id_document_type,id_document_url,kyc_submitted_at,kyc_reviewed_at,kyc_review_notes,nin,bvn'
+    ).eq('user_id', userId).maybeSingle()
+  ));
+}
+
+async function incrementWhatsappClicks(id) {
+  const db = getDataClient();
+  const row = unwrap(await db.from(TABLE).select('whatsapp_clicks').eq('id', id).maybeSingle());
+  if (!row) return;
+  await db.from(TABLE).update({ whatsapp_clicks: (row.whatsapp_clicks || 0) + 1 }).eq('id', id);
+}
+
+async function incrementProfileViews(id) {
+  const db = getDataClient();
+  const row = unwrap(await db.from(TABLE).select('profile_views').eq('id', id).maybeSingle());
+  if (!row) return;
+  await db.from(TABLE).update({ profile_views: (row.profile_views || 0) + 1 }).eq('id', id);
+}
+
+async function setSubscription(id, plan, expiresAt) {
+  return update(id, { subscription_plan: plan, subscription_expires_at: expiresAt });
+}
+
+// Admin list with pagination + status filter
+async function adminList({ status, page = 1, limit = 20 } = {}) {
+  const db = getDataClient();
+  let q = db
+    .from(TABLE)
+    .select('*, users(email,name,phone,created_at)', { count: 'exact' })
+    .order('created_at', { ascending: false });
+  if (status) q = q.eq('verification_status', status);
+  const from = (page - 1) * limit;
+  q = q.range(from, from + limit - 1);
+  const { data, error, count } = await q;
+  if (error) throw error;
+  const vendors = (data || []).map((row) => {
+    const { users, ...rest } = row;
+    return fromDb({
+      ...rest,
+      email: users?.email, owner_name: users?.name, phone: users?.phone,
+      user_created_at: users?.created_at,
+    });
+  });
+  return { vendors, total: count || 0, page, pages: Math.ceil((count || 0) / limit) };
+}
+
+module.exports = {
+  listVerified, getById, getByUserId, setFeatured,
+  create, update, updateLogo,
+  submitKyc, reviewKyc, getKycForVendor,
+  incrementWhatsappClicks, incrementProfileViews,
+  setSubscription, adminList,
+};
