@@ -9,3 +9,4 @@ backend/.env
 dist
 .claude/logs/
 backend/test/.tmp/
+.tmp/

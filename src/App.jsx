@@ -65,9 +65,12 @@ import Checkout from './pages/public/Checkout';
 import ForgotPassword from './pages/public/ForgotPassword';
 import ResetPassword from './pages/public/ResetPassword';
 
+import PageviewTracker from './analytics/PageviewTracker';
+
 function App() {
   return (
     <Router>
+      <PageviewTracker />
       <AuthProvider>
         <ToastProvider>
           <RealtimeProvider>
