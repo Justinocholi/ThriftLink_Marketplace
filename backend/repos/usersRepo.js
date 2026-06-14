@@ -87,16 +87,18 @@ async function search({ q, role, excludeUserId, limit = 20 }) {
   });
 }
 
-// Admin list with pagination
-async function adminList({ page = 1, limit = 50 } = {}) {
+// Admin list with pagination + optional role filter
+async function adminList({ page = 1, limit = 50, role } = {}) {
   const db = getDataClient();
   const from = (page - 1) * limit;
-  const { data, error, count } = await db
-    .from(TABLE).select('*', { count: 'exact' })
+  let q = db
+    .from(TABLE).select('id,email,name,role,phone,state,city,is_active,created_at', { count: 'exact' })
     .order('created_at', { ascending: false })
     .range(from, from + limit - 1);
+  if (role) q = q.eq('role', role);
+  const { data, error, count } = await q;
   if (error) throw error;
-  return { users: (data || []).map((r) => { const { password_hash, ...safe } = r; return fromDb(safe); }), total: count || 0 };
+  return { users: (data || []).map(fromDb), total: count || 0 };
 }
 
 async function activeAdmins() {
