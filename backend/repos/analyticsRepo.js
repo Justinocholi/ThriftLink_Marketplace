@@ -36,4 +36,28 @@ async function vendorAnalytics(vendorId, { days = 30 } = {}) {
   return { range_days: days, ...counts, total_events: events.length };
 }
 
-module.exports = { logEvent, adminStats, vendorAnalytics };
+// Dashboard data for GET /api/vendors/me/analytics. PostgREST has no GROUP BY,
+// so pull the last-30-days events and tally in JS (per-vendor volume is small).
+async function vendorDashboard(vendorId) {
+  const db = getDataClient();
+  const since = new Date(Date.now() - 30 * 86400000).toISOString();
+  const events = unwrap(
+    await db.from('analytics_events').select('event_type,created_at')
+      .eq('vendor_id', vendorId).gte('created_at', since)
+  ) || [];
+  const byType = new Map();
+  const byDay = new Map();
+  for (const e of events) {
+    byType.set(e.event_type, (byType.get(e.event_type) || 0) + 1);
+    if (e.event_type === 'profile_view') {
+      const day = String(e.created_at).slice(0, 10);
+      byDay.set(day, (byDay.get(day) || 0) + 1);
+    }
+  }
+  return {
+    last30days: Array.from(byType.entries()).map(([event_type, count]) => ({ event_type, count })),
+    dailyViews: Array.from(byDay.entries()).map(([date, views]) => ({ date, views })).sort((a, b) => a.date.localeCompare(b.date)),
+  };
+}
+
+module.exports = { logEvent, adminStats, vendorAnalytics, vendorDashboard };
