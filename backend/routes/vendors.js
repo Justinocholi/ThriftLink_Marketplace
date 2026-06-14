@@ -7,14 +7,33 @@ const realtime = require('../realtime');
 const { storeUploadedFile, storeUploadedFiles } = require('../services/cloudinaryService');
 const { validateKyc } = require('../middleware/validate');
 const { sendEmail, templates } = require('../services/emailService');
+const vendorsRepo = require('../repos/vendorsRepo');
+const productsRepo = require('../repos/productsRepo');
+const reviewsRepo = require('../repos/reviewsRepo');
+const analyticsRepo = require('../repos/analyticsRepo');
+const useSupabase = () => process.env.DATA_BACKEND === 'supabase';
 
 const router = express.Router();
 
 // GET /api/vendors — public list of verified vendors
 // Admin-featured vendors always rank first (by featured_rank), then by rating.
 // Pass ?featured=true to return only the admin-curated featured vendors.
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   const { state, category, search, page = 1, limit = 20, featured } = req.query;
+
+  if (useSupabase()) {
+    try {
+      const result = await vendorsRepo.listVerified({
+        state, category, search, featured: featured === 'true',
+        page: parseInt(page), limit: parseInt(limit),
+      });
+      return res.json(result);
+    } catch (err) {
+      console.error('vendors list (supabase) error:', err);
+      return res.status(500).json({ error: 'Failed to load vendors' });
+    }
+  }
+
   const db = getDb();
   const offset = (parseInt(page) - 1) * parseInt(limit);
 
@@ -261,7 +280,27 @@ router.post('/:id/whatsapp-click', (req, res) => {
 });
 
 // GET /api/vendors/:id — public vendor profile
-router.get('/:id', (req, res) => {
+router.get('/:id', async (req, res) => {
+  if (useSupabase()) {
+    try {
+      const vendor = await vendorsRepo.getById(req.params.id);
+      if (!vendor) return res.status(404).json({ error: 'Vendor not found' });
+      // Fire-and-forget side effects
+      vendorsRepo.incrementProfileViews(vendor.id).catch(() => {});
+      analyticsRepo.logEvent({
+        id: uuidv4(), vendorId: vendor.id, eventType: 'profile_view',
+      }).catch(() => {});
+      const [products, reviews] = await Promise.all([
+        productsRepo.listByVendor(vendor.id, { availableOnly: true }),
+        reviewsRepo.listForVendor(vendor.id, { approvedOnly: true, limit: 10 }),
+      ]);
+      return res.json({ vendor, products, reviews });
+    } catch (err) {
+      console.error('vendor detail (supabase) error:', err);
+      return res.status(500).json({ error: 'Failed to load vendor' });
+    }
+  }
+
   const db = getDb();
   const vendor = db.prepare(`
     SELECT vp.*, u.name as owner_name

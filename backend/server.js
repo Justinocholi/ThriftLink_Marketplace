@@ -116,5 +116,7 @@ app.set('io', realtime);
 
 server.listen(PORT, () => {
   console.log(`Thrift-Link API + realtime on http://localhost:${PORT}`);
+  const backend = (process.env.DATA_BACKEND || 'sqlite').toLowerCase();
+  console.log(`Data backend: ${backend}`);
   if (isProd) console.log('Serving React frontend from dist/');
 });
