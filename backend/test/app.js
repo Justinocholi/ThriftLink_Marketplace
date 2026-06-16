@@ -1,6 +1,9 @@
 // Boots the Express app for integration tests without binding a port or
 // initializing Socket.IO. Mirrors server.js's middleware pipeline.
-require('dotenv').config();
+//
+// Intentionally does NOT load dotenv — tests rely on the explicit env set
+// by test/setup-env.js so they're hermetic and a dev's local .env can't
+// contaminate them (e.g. by enabling Mailboxlayer or Supabase).
 
 const express = require('express');
 const cors = require('cors');

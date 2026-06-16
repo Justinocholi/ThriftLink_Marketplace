@@ -15,6 +15,7 @@ const {
   getSupabaseClient,
 } = require('../services/supabaseService');
 const { sendWelcomeSms } = require('../services/termiiService');
+const { verifyEmailDeliverability } = require('../services/mailboxlayerService');
 const usersRepo = require('../repos/usersRepo');
 const vendorsRepo = require('../repos/vendorsRepo');
 
@@ -227,6 +228,13 @@ router.post('/register', async (req, res) => {
     }
     if (!['user', 'vendor'].includes(role)) {
       return res.status(400).json({ error: 'Role must be user or vendor' });
+    }
+
+    // Pre-flight email verification (Mailboxlayer). No-ops if MAILBOXLAYER_KEY
+    // isn't set; fails open on any API error so outages can't block signup.
+    const verdict = await verifyEmailDeliverability(normalizedEmail);
+    if (!verdict.ok) {
+      return res.status(400).json({ error: verdict.reason, suggestion: verdict.suggestion || undefined });
     }
 
     const onSupabase = useSupabase();
