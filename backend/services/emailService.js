@@ -1,16 +1,50 @@
 /**
  * Email Service for Thrift-Link
  *
- * Picks the first available transport:
- *   1. SMTP (nodemailer) if SMTP_HOST is set — works with Gmail, SendGrid, Mailgun, Resend SMTP, etc.
- *   2. console fallback for local dev so missing creds never crash the app.
+ * Picks the first available transport, in priority order:
+ *   1. Resend HTTPS API (if RESEND_API_KEY is set, OR SMTP_USER === 'resend').
+ *      Strictly preferred because port 443 is open everywhere — port 465/587
+ *      are routinely blocked by PaaS / managed environments.
+ *   2. SMTP (nodemailer) if SMTP_HOST is set — works with Gmail, SendGrid,
+ *      Mailgun, Postmark, Brevo, etc.
+ *   3. console fallback for local dev so missing creds never crash the app.
  *
- * Password reset emails use Supabase's built-in resetPasswordForEmail (handled in auth.js),
- * which delivers via Supabase's own mailer with no extra config.
+ * Password reset emails ALSO use Supabase's built-in resetPasswordForEmail
+ * (handled in auth.js) when the user has a supabase_user_id, which delivers
+ * via Supabase's own mailer independent of this service.
  */
 
 const nodemailer = require('nodemailer');
 
+// --- Resend HTTPS API path ----------------------------------------------
+// Resend's SMTP uses user="resend" + password=API key, so we can extract the
+// key from either SMTP_PASSWORD or a dedicated RESEND_API_KEY.
+function resendApiKey() {
+  if (process.env.RESEND_API_KEY) return process.env.RESEND_API_KEY;
+  if (process.env.SMTP_USER === 'resend' && process.env.SMTP_PASSWORD) {
+    return process.env.SMTP_PASSWORD;
+  }
+  return null;
+}
+
+async function sendViaResendHttp({ from, to, subject, text, html }) {
+  const key = resendApiKey();
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${key}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ from, to: Array.isArray(to) ? to : [to], subject, text, html }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    return { success: false, transport: 'resend-http', status: res.status, error: data?.message || JSON.stringify(data) };
+  }
+  return { success: true, transport: 'resend-http', messageId: data?.id || null };
+}
+
+// --- SMTP (nodemailer) path ---------------------------------------------
 let cachedTransport = null;
 
 function getTransport() {
@@ -33,9 +67,22 @@ function getTransport() {
 }
 
 const sendEmail = async ({ to, subject, text, html }) => {
-  const transport = getTransport();
   const from = process.env.EMAIL_FROM || 'Thrift-Link <no-reply@thriftlink.local>';
 
+  // 1. Resend HTTPS — preferred (works in environments where SMTP is blocked).
+  if (resendApiKey()) {
+    try {
+      const r = await sendViaResendHttp({ from, to, subject, text, html });
+      if (r.success) return r;
+      console.error('[email:resend-http-error]', r.status, r.error);
+      // Fall through to SMTP if Resend HTTP fails for some reason (e.g. invalid key).
+    } catch (err) {
+      console.error('[email:resend-http-throw]', err.message);
+    }
+  }
+
+  // 2. SMTP via nodemailer.
+  const transport = getTransport();
   if (!transport) {
     console.log('[email:log-only]', { to, subject, text: text?.slice(0, 200) });
     return { success: true, transport: 'log' };
