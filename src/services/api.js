@@ -1,4 +1,8 @@
-const BASE_URL = '/api';
+// In dev: empty → '/api' is proxied to the backend by vite.config.js.
+// In prod: set VITE_API_URL to the backend's origin (e.g. https://thriftlink-api.onrender.com),
+//          which makes every fetch absolute.
+const API_ORIGIN = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+const BASE_URL = `${API_ORIGIN}/api`;
 
 function getToken() {
   return localStorage.getItem('token');
