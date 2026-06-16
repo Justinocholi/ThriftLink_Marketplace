@@ -40,7 +40,15 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (payload) => {
     try {
-      const { token, user } = await authApi.register(payload);
+      const res = await authApi.register(payload);
+      // When Supabase requires email confirmation the backend returns 202
+      // with { requiresEmailConfirmation: true } and no token. We surface this
+      // to the caller so the UI can show a "check your email" screen.
+      if (res?.requiresEmailConfirmation) {
+        trackEvent('user_registered', { role: payload.role, requires_confirmation: true });
+        return { success: true, requiresEmailConfirmation: true, message: res.message };
+      }
+      const { token, user } = res;
       localStorage.setItem('token', token);
       setUser(user);
       identifyUser(user);

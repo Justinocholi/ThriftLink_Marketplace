@@ -247,9 +247,10 @@ router.post('/register', async (req, res) => {
     }
 
     let supabaseUserId = null;
+    let requiresEmailConfirmation = false;
     if (isSupabaseEnabled()) {
       try {
-        const { user: supabaseUser } = await registerSupabaseUser({
+        const result = await registerSupabaseUser({
           email: normalizedEmail,
           password,
           name,
@@ -258,7 +259,17 @@ router.post('/register', async (req, res) => {
           state,
           city,
         });
+        const supabaseUser = result?.user;
         supabaseUserId = supabaseUser?.id || null;
+        // signUp returns {user, session: null} when "Confirm email" is on
+        // in the Supabase dashboard. The user exists but can't sign in until
+        // they click the link Supabase emailed them.
+        requiresEmailConfirmation = Boolean(
+          process.env.SUPABASE_REQUIRE_EMAIL_CONFIRMATION === 'true' &&
+            supabaseUser &&
+            !supabaseUser.email_confirmed_at &&
+            !result.session
+        );
       } catch (error) {
         if (isSupabaseDuplicateUserError(error)) {
           return res.status(409).json({ error: 'Email already registered' });
@@ -270,6 +281,17 @@ router.post('/register', async (req, res) => {
     const user = onSupabase
       ? await createUserAsync({ email: normalizedEmail, password, name, role, phone, state, city, supabaseUserId })
       : createLocalUser(db, { email: normalizedEmail, password, name, role, phone, state, city, supabaseUserId });
+
+    // When confirmation is required we DON'T issue a JWT — the frontend
+    // shows a "check your email" screen instead of logging the user in.
+    if (requiresEmailConfirmation) {
+      return res.status(202).json({
+        requiresEmailConfirmation: true,
+        message: 'Account created. Please check your email to confirm before signing in.',
+        user: { email: user.email, name: user.name, role: user.role },
+      });
+    }
+
     const token = signToken(user);
 
     sendEmail({

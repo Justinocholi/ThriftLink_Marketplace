@@ -49,45 +49,38 @@ function isSupabaseEnabled() {
 }
 
 async function registerSupabaseUser({ email, password, name, role, phone, state, city }) {
-  const adminClient = getSupabaseAdminClient();
+  // Two paths:
+  //  A. SUPABASE_REQUIRE_EMAIL_CONFIRMATION=true → public signUp. Supabase
+  //     creates an unconfirmed user and sends a confirmation email via their
+  //     own verified domain (no Resend domain required). The dashboard's
+  //     Authentication → Providers → Email → "Confirm email" toggle must be ON.
+  //  B. Default → admin.createUser with email_confirm:true. User is created
+  //     pre-confirmed, no email sent, can log in immediately.
+  const requireConfirmation = process.env.SUPABASE_REQUIRE_EMAIL_CONFIRMATION === 'true';
+  const userMetadata = { name, role, phone, state, city };
 
-  if (adminClient) {
-    const { data, error } = await adminClient.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: {
-        name,
-        role,
-        phone,
-        state,
-        city,
-      },
-    });
-
-    if (error) throw error;
-    return data;
+  if (!requireConfirmation) {
+    const adminClient = getSupabaseAdminClient();
+    if (adminClient) {
+      const { data, error } = await adminClient.auth.admin.createUser({
+        email, password, email_confirm: true, user_metadata: userMetadata,
+      });
+      if (error) throw error;
+      return data;
+    }
   }
 
+  // Confirmation flow (or fallback when no admin key is available).
   const client = getSupabaseClient();
   if (!client) {
     return { user: null, session: null, skipped: true };
   }
 
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
   const { data, error } = await client.auth.signUp({
-    email,
-    password,
-    options: {
-      data: {
-        name,
-        role,
-        phone,
-        state,
-        city,
-      },
-    },
+    email, password,
+    options: { data: userMetadata, emailRedirectTo: `${frontendUrl}/login?confirmed=1` },
   });
-
   if (error) throw error;
   return data;
 }

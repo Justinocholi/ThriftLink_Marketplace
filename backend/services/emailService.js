@@ -39,7 +39,16 @@ async function sendViaResendHttp({ from, to, subject, text, html }) {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    return { success: false, transport: 'resend-http', status: res.status, error: data?.message || JSON.stringify(data) };
+    // Resend sandbox mode (unverified sending domain): only the account
+    // owner's own email can receive. Log at info level and move on — this
+    // is the expected state until the user verifies a domain.
+    const msg = data?.message || '';
+    const isSandboxBlock = res.status === 403 && /testing emails to your own email/i.test(msg);
+    if (isSandboxBlock) {
+      console.info('[email:resend-sandbox]', `Skipped send to ${Array.isArray(to) ? to.join(',') : to} — verify a domain at resend.com/domains to send to anyone.`);
+      return { success: true, transport: 'resend-sandbox', skipped: true };
+    }
+    return { success: false, transport: 'resend-http', status: res.status, error: msg || JSON.stringify(data) };
   }
   return { success: true, transport: 'resend-http', messageId: data?.id || null };
 }
