@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "verify:analytics": "node scripts/verify-analytics.mjs",
     "verify:posthog": "node scripts/posthog-live-verify.mjs",
-    "verify:sentry": "node scripts/sentry-live-verify.mjs"
+    "verify:sentry": "node scripts/sentry-live-verify.mjs",
+    "verify:resend": "node scripts/verify-resend-domain.mjs"
   },
   "dependencies": {
     "@sentry/react": "^10.58.0",
