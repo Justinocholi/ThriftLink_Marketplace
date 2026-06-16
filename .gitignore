@@ -7,3 +7,7 @@ backend/uploads/*
 !backend/uploads/.gitkeep
 backend/.env
 dist
+.claude/logs/
+backend/test/.tmp/
+.tmp/
+.env.local

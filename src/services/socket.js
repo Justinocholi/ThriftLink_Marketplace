@@ -21,7 +21,10 @@ export function getSocket() {
   }
 
   currentToken = token;
-  socket = io({
+  // Same-origin in dev (Vite proxy handles /socket.io). In prod, set
+  // VITE_API_URL to the backend origin so the socket connects across hosts.
+  const socketUrl = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '') || undefined;
+  socket = io(socketUrl, {
     path: '/socket.io',
     auth: { token },
     transports: ['websocket', 'polling'],

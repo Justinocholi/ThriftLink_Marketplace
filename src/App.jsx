@@ -41,6 +41,7 @@ import AdminUsers from './pages/admin/AdminUsers';
 import AdminPlatform from './pages/admin/AdminPlatform';
 import AdminSettings from './pages/admin/AdminSettings';
 import AdminReports from './pages/admin/AdminReports';
+import AdminSubscriptions from './pages/admin/AdminSubscriptions';
 
 import VendorLayout from './pages/vendor/VendorLayout';
 import VendorDashboard from './pages/vendor/VendorDashboard';
@@ -61,10 +62,15 @@ import UserSupport from './pages/user/UserSupport';
 import UserMessages from './pages/user/UserMessages';
 import Cart from './pages/public/Cart';
 import Checkout from './pages/public/Checkout';
+import ForgotPassword from './pages/public/ForgotPassword';
+import ResetPassword from './pages/public/ResetPassword';
+
+import PageviewTracker from './analytics/PageviewTracker';
 
 function App() {
   return (
     <Router>
+      <PageviewTracker />
       <AuthProvider>
         <ToastProvider>
           <RealtimeProvider>
@@ -73,6 +79,8 @@ function App() {
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/categories" element={<Categories />} />
                 <Route path="/product/:id" element={<ProductDetails />} />
                 <Route path="/verified-vendors" element={<VerifiedVendors />} />
@@ -122,6 +130,7 @@ function App() {
                   <Route path="reviews" element={<AdminReviews />} />
                   <Route path="reports" element={<AdminReports />} />
                   <Route path="users" element={<AdminUsers />} />
+                  <Route path="subscriptions" element={<AdminSubscriptions />} />
                   <Route path="platform" element={<AdminPlatform />} />
                   <Route path="settings" element={<AdminSettings />} />
                 </Route>

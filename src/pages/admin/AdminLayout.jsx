@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { LayoutDashboard, Store, Star, Users, LogOut, Menu, X, ShieldCheck, Settings, Flag } from 'lucide-react';
+import { LayoutDashboard, Store, Star, Users, LogOut, Menu, X, ShieldCheck, Settings, Flag, CreditCard } from 'lucide-react';
 
 const AdminLayout = () => {
   const { logout, user } = useAuth();
@@ -26,6 +26,7 @@ const AdminLayout = () => {
     { path: '/admin/reviews', icon: <Star size={20} />, label: 'Reviews' },
     { path: '/admin/reports', icon: <Flag size={20} />, label: 'Reports' },
     { path: '/admin/users', icon: <Users size={20} />, label: 'Users' },
+    { path: '/admin/subscriptions', icon: <CreditCard size={20} />, label: 'Subscriptions' },
     { path: '/admin/platform', icon: <ShieldCheck size={20} />, label: 'Platform' },
     { path: '/admin/settings', icon: <Settings size={20} />, label: 'Settings' },
   ];

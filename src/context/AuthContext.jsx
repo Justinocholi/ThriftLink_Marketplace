@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { auth as authApi } from '../services/api';
+import { identifyUser, resetUser, trackEvent } from '../analytics/posthog';
 
 const AuthContext = createContext(null);
 
@@ -11,7 +12,10 @@ export const AuthProvider = ({ children }) => {
     const token = localStorage.getItem('token');
     if (token) {
       authApi.me()
-        .then(({ user }) => setUser(user))
+        .then(({ user }) => {
+          setUser(user);
+          identifyUser(user);
+        })
         .catch(() => {
           localStorage.removeItem('token');
         })
@@ -26,6 +30,8 @@ export const AuthProvider = ({ children }) => {
       const { token, user } = await authApi.login(email, password);
       localStorage.setItem('token', token);
       setUser(user);
+      identifyUser(user);
+      trackEvent('user_logged_in', { role: user.role });
       return { success: true, type: user.role };
     } catch (err) {
       return { success: false, error: err.message };
@@ -34,9 +40,19 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (payload) => {
     try {
-      const { token, user } = await authApi.register(payload);
+      const res = await authApi.register(payload);
+      // When Supabase requires email confirmation the backend returns 202
+      // with { requiresEmailConfirmation: true } and no token. We surface this
+      // to the caller so the UI can show a "check your email" screen.
+      if (res?.requiresEmailConfirmation) {
+        trackEvent('user_registered', { role: payload.role, requires_confirmation: true });
+        return { success: true, requiresEmailConfirmation: true, message: res.message };
+      }
+      const { token, user } = res;
       localStorage.setItem('token', token);
       setUser(user);
+      identifyUser(user);
+      trackEvent('user_registered', { role: user.role });
       return { success: true, type: user.role };
     } catch (err) {
       return { success: false, error: err.message };
@@ -44,6 +60,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+    trackEvent('user_logged_out');
+    resetUser();
     setUser(null);
     localStorage.removeItem('token');
   };

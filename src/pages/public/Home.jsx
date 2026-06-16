@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
+import { vendors as vendorsApi } from '../../services/api';
 
 // Import Assets
 import checklistIcon from '../../assets/checklist.png';
@@ -12,11 +13,6 @@ import searchIcon from '../../assets/search.png';
 import messageIcon from '../../assets/message.png';
 import packageIcon from '../../assets/package.png';
 import starIcon from '../../assets/star.png';
-import heartIcon from '../../assets/heart.png';
-import shareIcon from '../../assets/share.png';
-import magnifierIcon from '../../assets/magnifier.png';
-import shoppingCartIcon from '../../assets/shopping-cart.png';
-import customerServiceIcon from '../../assets/customer-service.png';
 
 // Category Icons
 import smartphoneIcon from '../../assets/smartphone.png';
@@ -28,10 +24,47 @@ import briefcaseIcon from '../../assets/briefcase.png';
 import sportCarIcon from '../../assets/sport-car.png';
 import educationIcon from '../../assets/education.png';
 
+// Deterministic avatar gradient + initials for vendors without a logo.
+const AVATAR_GRADIENTS = [
+  'linear-gradient(135deg, #25D366, #128C7E)',
+  'linear-gradient(135deg, #ec4899, #be185d)',
+  'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+  'linear-gradient(135deg, #f59e0b, #b45309)',
+  'linear-gradient(135deg, #8b5cf6, #6d28d9)',
+  'linear-gradient(135deg, #14b8a6, #0f766e)',
+];
+
+const initialsOf = (name = '') =>
+  name.split(' ').filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase() || 'TL';
+
+const gradientFor = (id = '') => {
+  let sum = 0;
+  for (let i = 0; i < String(id).length; i++) sum += String(id).charCodeAt(i);
+  return AVATAR_GRADIENTS[sum % AVATAR_GRADIENTS.length];
+};
+
+const MONTHLY_COLORS = ['#3b82f6', '#ec4899', '#f97316'];
+
 const Home = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [location, setLocation] = useState('');
+  const [vendors, setVendors] = useState([]);
+  const [vendorsLoading, setVendorsLoading] = useState(true);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // The public vendors endpoint already ranks admin-featured vendors first
+    // (by featured_rank), then by rating — so the home page reflects the
+    // admin's curated "top vendors" automatically.
+    vendorsApi
+      .list({ limit: 8 })
+      .then((data) => setVendors(Array.isArray(data?.vendors) ? data.vendors : []))
+      .catch(() => setVendors([]))
+      .finally(() => setVendorsLoading(false));
+  }, []);
+
+  const featuredVendors = vendors.slice(0, 4);
+  const monthlyVendors = vendors.slice(0, 3);
 
   const handleSearch = () => {
     navigate(`/category/all?q=${encodeURIComponent(searchTerm)}&state=${encodeURIComponent(location)}`);
@@ -48,66 +81,32 @@ const Home = () => {
     { name: 'Health & Beauty', count: '6k+ ads', icon: beautyIcon, color: '#ffe4e6', link: '/category/health' }
   ];
 
-  const featuredVendors = [
-    {
-      id: 1,
-      name: "Gadget Hub NG",
-      avatarColor: "linear-gradient(135deg, #25D366, #128C7E)",
-      initials: "GH",
-      verified: true,
-      rating: 4.9,
-      reviews: 120,
-      specialties: ["Phones", "Laptops"],
-      stats: { sales: "500+", response: "< 10m" }
-    },
-    {
-      id: 2,
-      name: "Luxe Fashion",
-      avatarColor: "linear-gradient(135deg, #ec4899, #be185d)",
-      initials: "LF",
-      verified: true,
-      rating: 4.8,
-      reviews: 85,
-      specialties: ["Dresses", "Shoes"],
-      stats: { sales: "300+", response: "< 30m" }
-    },
-    {
-      id: 3,
-      name: "Auto World",
-      avatarColor: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-      initials: "AW",
-      verified: true,
-      rating: 4.7,
-      reviews: 45,
-      specialties: ["Toyota", "Lexus"],
-      stats: { sales: "50+", response: "< 1h" }
-    },
-    {
-      id: 4,
-      name: "Home Decor",
-      avatarColor: "linear-gradient(135deg, #f59e0b, #b45309)",
-      initials: "HD",
-      verified: true,
-      rating: 4.6,
-      reviews: 32,
-      specialties: ["Interiors", "Furniture"],
-      stats: { sales: "100+", response: "< 2h" }
-    }
-  ];
-
   return (
     <div style={{ fontFamily: "'Inter', sans-serif", background: '#f9fafb', color: '#333', overflowX: 'hidden' }}>
       <style>
         {`
           @media (max-width: 768px) {
-            .hero h1 { font-size: 2.2rem !important; }
+            .hero { padding: 5.5rem 1.25rem 3rem !important; }
+            .hero h1 { font-size: 2rem !important; }
             .trust-indicators { flex-direction: column; gap: 1rem !important; }
+            .search-section, .categories, .featured-vendors,
+            .top-vendors-month, .how-it-works, .stats-section, .cta-section {
+              padding-left: 1.25rem !important; padding-right: 1.25rem !important;
+            }
             .main-search { flex-direction: column; }
             .location-input { border-left: none !important; border-top: 1px solid #e5e7eb; }
-            .categories-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) !important; }
+            .categories-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 1rem !important; }
             .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
             .cta-buttons { flex-direction: column; align-items: center; }
+            .cta-buttons .btn, .cta-buttons .btn-white { width: 100%; justify-content: center; }
             .vendors-grid { grid-template-columns: 1fr !important; }
+            .monthly-vendors-grid { grid-template-columns: 1fr !important; }
+            .monthly-card { flex-direction: column !important; text-align: center; }
+            .section-title { font-size: 1.6rem !important; }
+          }
+          @media (max-width: 420px) {
+            .categories-grid { grid-template-columns: 1fr 1fr !important; }
+            .stats-grid { grid-template-columns: 1fr !important; }
           }
           @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(20px); }
@@ -320,6 +319,13 @@ const Home = () => {
             Top Rated Vendors
           </h2>
           
+          {vendorsLoading ? (
+            <div style={{ textAlign: 'center', color: '#6b7280', padding: '2rem' }}>Loading vendors…</div>
+          ) : featuredVendors.length === 0 ? (
+            <div style={{ textAlign: 'center', color: '#6b7280', padding: '2rem', maxWidth: '500px', margin: '0 auto' }}>
+              No verified vendors yet. <Link to="/login" style={{ color: '#25D366', fontWeight: 600 }}>Become the first vendor →</Link>
+            </div>
+          ) : (
           <div className="vendors-grid" style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
@@ -335,119 +341,63 @@ const Home = () => {
                 position: 'relative',
                 cursor: 'pointer'
               }}
-              onClick={() => window.location.href = `/vendor/${vendor.id}`}
+              onClick={() => navigate(`/vendor/${vendor.id}`)}
               >
-                {/* Action Icons - Top Right */}
-                <div className="card-actions" style={{
-                  position: 'absolute',
-                  top: '1rem',
-                  right: '1rem',
-                  display: 'flex',
-                  gap: '0.5rem',
-                  zIndex: 10
-                }}>
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      // Add to favorites logic here
-                      console.log('Added to favorites:', vendor.id);
-                    }}
-                    style={{
-                      background: 'white',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '50%',
-                      width: '32px',
-                      height: '32px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                    }}
-                    onMouseOver={(e) => e.currentTarget.style.background = '#fee2e2'}
-                    onMouseOut={(e) => e.currentTarget.style.background = 'white'}
-                  >
-                    <img src={heartIcon} alt="Favorite" style={{ width: '16px', height: '16px' }} />
-                  </button>
-                  
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      // Share logic here
-                      console.log('Share vendor:', vendor.id);
-                    }}
-                    style={{
-                      background: 'white',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '50%',
-                      width: '32px',
-                      height: '32px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                    }}
-                    onMouseOver={(e) => e.currentTarget.style.background = '#dbeafe'}
-                    onMouseOut={(e) => e.currentTarget.style.background = 'white'}
-                  >
-                    <img src={shareIcon} alt="Share" style={{ width: '16px', height: '16px' }} />
-                  </button>
-                </div>
-
                 <div className="vendor-header" style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
                   <div className="vendor-avatar" style={{
                     width: '50px',
                     height: '50px',
                     borderRadius: '50%',
-                    background: vendor.avatarColor,
+                    background: vendor.logo ? `url(${vendor.logo}) center/cover` : gradientFor(vendor.id),
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     color: 'white',
                     fontWeight: 'bold',
-                    fontSize: '1.2rem'
+                    fontSize: '1.2rem',
+                    flexShrink: 0
                   }}>
-                    {vendor.initials}
+                    {!vendor.logo && initialsOf(vendor.shop_name)}
                   </div>
                   <div className="vendor-info">
-                    <h3 style={{ fontSize: '1.1rem', fontWeight: '600', color: '#1f2937', marginBottom: '0.2rem' }}>{vendor.name}</h3>
-                    <div className="verification-badge" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.75rem', color: '#166534', background: '#dcfce7', padding: '0.2rem 0.6rem', borderRadius: '10px' }}>
-                      <img src={checklistIcon} alt="Verified" style={{ width: '12px', height: '12px' }} /> Verified
-                    </div>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: '600', color: '#1f2937', marginBottom: '0.2rem' }}>{vendor.shop_name}</h3>
+                    {vendor.is_verified ? (
+                      <div className="verification-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.75rem', color: '#166534', background: '#dcfce7', padding: '0.2rem 0.6rem', borderRadius: '10px' }}>
+                        <img src={checklistIcon} alt="Verified" style={{ width: '12px', height: '12px' }} /> Verified
+                      </div>
+                    ) : null}
                   </div>
                 </div>
 
-                <div className="vendor-specialties" style={{ marginBottom: '1rem' }}>
-                  {vendor.specialties.map(tag => (
-                    <span key={tag} style={{
-                      display: 'inline-block',
-                      background: '#f3f4f6',
-                      color: '#6b7280',
-                      padding: '0.3rem 0.8rem',
-                      borderRadius: '12px',
-                      fontSize: '0.8rem',
-                      marginRight: '0.5rem',
-                      marginBottom: '0.5rem'
-                    }}>{tag}</span>
-                  ))}
-                </div>
+                {(vendor.category || vendor.city || vendor.state) && (
+                  <div className="vendor-specialties" style={{ marginBottom: '1rem' }}>
+                    {[vendor.category, [vendor.city, vendor.state].filter(Boolean).join(', ')]
+                      .filter(Boolean)
+                      .map((tag) => (
+                        <span key={tag} style={{
+                          display: 'inline-block',
+                          background: '#f3f4f6',
+                          color: '#6b7280',
+                          padding: '0.3rem 0.8rem',
+                          borderRadius: '12px',
+                          fontSize: '0.8rem',
+                          marginRight: '0.5rem',
+                          marginBottom: '0.5rem'
+                        }}>{tag}</span>
+                      ))}
+                  </div>
+                )}
 
                 <div className="vendor-stats" style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', fontSize: '0.85rem', color: '#6b7280' }}>
-                  <span><strong>{vendor.stats.sales}</strong> Sales</span>
-                  <span><strong>{vendor.rating}</strong> Rating</span>
-                  <span><strong>{vendor.stats.response}</strong> Response</span>
+                  <span><strong>{Number(vendor.rating || 0).toFixed(1)}</strong> Rating</span>
+                  <span><strong>{vendor.total_reviews || 0}</strong> Reviews</span>
+                  <span><strong>{vendor.profile_views || 0}</strong> Views</span>
                 </div>
 
-                <button 
-                  className="btn-whatsapp" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    // WhatsApp chat logic here
-                    console.log('Chat with vendor:', vendor.id);
-                  }}
+                <Link
+                  to={`/vendor/${vendor.id}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="btn-whatsapp"
                   style={{
                     background: '#25D366',
                     color: 'white',
@@ -462,21 +412,24 @@ const Home = () => {
                     fontWeight: '600',
                     fontSize: '0.85rem',
                     cursor: 'pointer',
+                    textDecoration: 'none',
                     transition: 'all 0.2s ease'
                   }}
                   onMouseOver={(e) => e.currentTarget.style.background = '#1fb855'}
                   onMouseOut={(e) => e.currentTarget.style.background = '#25D366'}
                 >
                   <img src={whatsappBtnIcon} alt="WhatsApp" style={{ width: '16px', height: '16px', filter: 'brightness(0) invert(1)' }} />
-                  Chat on WhatsApp
-                </button>
+                  View Vendor
+                </Link>
               </div>
             ))}
           </div>
+          )}
         </div>
       </section>
 
       {/* Top Vendors of the Month Section */}
+      {monthlyVendors.length > 0 && (
       <section className="top-vendors-month" style={{ padding: '4rem 2rem', background: '#f0fdf4' }}>
         <div className="section-container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
@@ -505,35 +458,9 @@ const Home = () => {
             gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
             gap: '2rem'
           }}>
-            {[
-              {
-                id: 101,
-                name: "Elite Gadgets",
-                category: "Electronics",
-                sales: "1.2k+",
-                rating: 5.0,
-                image: smartphoneIcon,
-                color: "#3b82f6"
-              },
-              {
-                id: 102,
-                name: "Style Haven",
-                category: "Fashion",
-                sales: "950+",
-                rating: 4.9,
-                image: womanIcon,
-                color: "#ec4899"
-              },
-              {
-                id: 103,
-                name: "Gourmet Express",
-                category: "Food",
-                sales: "2k+",
-                rating: 4.9,
-                image: fastFoodIcon,
-                color: "#f97316"
-              }
-            ].map((vendor, index) => (
+            {monthlyVendors.map((vendor, index) => {
+              const color = MONTHLY_COLORS[index % MONTHLY_COLORS.length];
+              return (
               <div key={vendor.id} className="monthly-card" style={{
                 background: 'white',
                 borderRadius: '16px',
@@ -542,7 +469,7 @@ const Home = () => {
                 alignItems: 'center',
                 gap: '1.5rem',
                 boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                border: `1px solid ${vendor.color}20`,
+                border: `1px solid ${color}20`,
                 position: 'relative',
                 overflow: 'hidden'
               }}>
@@ -550,7 +477,7 @@ const Home = () => {
                   position: 'absolute',
                   top: 0,
                   right: 0,
-                  background: vendor.color,
+                  background: color,
                   color: 'white',
                   padding: '0.25rem 1rem',
                   borderBottomLeftRadius: '12px',
@@ -559,34 +486,37 @@ const Home = () => {
                 }}>
                   #{index + 1} Vendor
                 </div>
-                
+
                 <div className="monthly-icon" style={{
                   width: '80px',
                   height: '80px',
                   borderRadius: '50%',
-                  background: `${vendor.color}15`,
+                  background: vendor.logo ? `url(${vendor.logo}) center/cover` : gradientFor(vendor.id),
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  flexShrink: 0
+                  flexShrink: 0,
+                  color: 'white',
+                  fontWeight: 'bold',
+                  fontSize: '1.5rem'
                 }}>
-                  <img src={vendor.image} alt={vendor.category} style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
+                  {!vendor.logo && initialsOf(vendor.shop_name)}
                 </div>
-                
+
                 <div className="monthly-info">
                   <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#1f2937', marginBottom: '0.5rem' }}>
-                    {vendor.name}
+                    {vendor.shop_name}
                   </h3>
                   <div style={{ display: 'flex', gap: '1rem', fontSize: '0.9rem', color: '#6b7280', marginBottom: '1rem' }}>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                       <img src={starIcon} alt="Rating" style={{ width: '14px', height: '14px' }} />
-                      {vendor.rating}
+                      {Number(vendor.rating || 0).toFixed(1)}
                     </span>
                     <span>•</span>
-                    <span>{vendor.sales} Sales</span>
+                    <span>{vendor.total_reviews || 0} Reviews</span>
                   </div>
                   <Link to={`/vendor/${vendor.id}`} style={{
-                    color: vendor.color,
+                    color: color,
                     fontWeight: '600',
                     textDecoration: 'none',
                     display: 'flex',
@@ -594,17 +524,19 @@ const Home = () => {
                     gap: '0.5rem',
                     fontSize: '0.9rem'
                   }}>
-                    View Profile 
+                    View Profile
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M5 12h14M12 5l7 7-7 7"/>
                     </svg>
                   </Link>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
+      )}
 
       {/* Stats Section */}
       <section className="stats-section" style={{ background: '#25D366', color: 'white', padding: '3rem 2rem', textAlign: 'center' }}>

@@ -11,8 +11,12 @@ import {
   Flag,
   ArrowLeft,
   Paperclip,
+  Plus,
+  X,
+  ShieldCheck,
 } from 'lucide-react';
-import { messages as messagesApi } from '../services/api';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { messages as messagesApi, users as usersApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from './ui/Toast';
 import { useAuthGate } from '../context/UIContext';
@@ -122,6 +126,12 @@ const ChatSystem = () => {
   const [uploading, setUploading] = useState(false);
   const [search, setSearch] = useState('');
   const [showMenu, setShowMenu] = useState(false);
+  const [newChatOpen, setNewChatOpen] = useState(false);
+  const [newChatQuery, setNewChatQuery] = useState('');
+  const [newChatResults, setNewChatResults] = useState([]);
+  const [newChatLoading, setNewChatLoading] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -168,6 +178,53 @@ const ChatSystem = () => {
   useEffect(() => {
     fetchConversations();
   }, [fetchConversations]);
+
+  // Honor /user/messages?to=<userId> deep-links from product/vendor pages.
+  // The conversation may not exist yet — open a synthetic active chat anyway;
+  // ChatSystem fetches messages by partner id and renders an empty thread.
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const to = params.get('to');
+    if (!to || to === user.id) return;
+    if (activeChat?.partner_id === to) return;
+    setActiveChat({ partner_id: to, partner_name: '…' });
+    // Strip the query string once consumed so refreshes don't keep re-opening.
+    navigate(location.pathname, { replace: true });
+  }, [location.search]);
+
+  // Debounced user search inside the New-chat modal.
+  useEffect(() => {
+    if (!newChatOpen) return;
+    const q = newChatQuery.trim();
+    if (q.length < 2) {
+      setNewChatResults([]);
+      return;
+    }
+    setNewChatLoading(true);
+    const t = setTimeout(async () => {
+      try {
+        const res = await usersApi.search(q);
+        setNewChatResults(res.users || []);
+      } catch (err) {
+        console.error('user search failed', err);
+        setNewChatResults([]);
+      } finally {
+        setNewChatLoading(false);
+      }
+    }, 250);
+    return () => clearTimeout(t);
+  }, [newChatOpen, newChatQuery]);
+
+  const startChatWith = (u) => {
+    setActiveChat({
+      partner_id: u.id,
+      partner_name: u.vendor_shop_name || u.name,
+      partner_avatar: u.avatar,
+    });
+    setNewChatOpen(false);
+    setNewChatQuery('');
+    setNewChatResults([]);
+  };
 
   useEffect(() => {
     if (!activeChat) {
@@ -334,19 +391,35 @@ const ChatSystem = () => {
         }}
       >
         <div style={{ padding: '1.1rem 1.25rem', borderBottom: '1px solid #f1f5f9' }}>
-          <div style={{ position: 'relative' }}>
-            <Search
-              size={16}
-              style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }}
-            />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search conversations..."
-              className="tl-input"
-              style={{ paddingLeft: '2.4rem', background: '#f8fafc' }}
-            />
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <div style={{ position: 'relative', flex: 1 }}>
+              <Search
+                size={16}
+                style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }}
+              />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search conversations..."
+                className="tl-input"
+                style={{ paddingLeft: '2.4rem', background: '#f8fafc' }}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => setNewChatOpen(true)}
+              title="Start a new chat"
+              aria-label="Start a new chat"
+              style={{
+                width: 38, height: 38, borderRadius: 10,
+                background: '#0f172a', color: 'white', border: 'none',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', flexShrink: 0,
+              }}
+            >
+              <Plus size={18} />
+            </button>
           </div>
         </div>
 
@@ -750,6 +823,115 @@ const ChatSystem = () => {
           .tl-chat-empty { display: none !important; }
         }
       `}</style>
+
+      {newChatOpen && (
+        <div
+          onClick={() => setNewChatOpen(false)}
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.55)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '1rem', zIndex: 100,
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'white', borderRadius: 16,
+              maxWidth: 480, width: '100%', maxHeight: '80vh',
+              display: 'flex', flexDirection: 'column', overflow: 'hidden',
+            }}
+          >
+            <div style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              padding: '1.1rem 1.25rem', borderBottom: '1px solid #f1f5f9',
+            }}>
+              <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
+                Start a new chat
+              </h3>
+              <button
+                onClick={() => setNewChatOpen(false)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}
+                aria-label="Close"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid #f1f5f9' }}>
+              <div style={{ position: 'relative' }}>
+                <Search
+                  size={16}
+                  style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }}
+                />
+                <input
+                  type="text"
+                  value={newChatQuery}
+                  onChange={(e) => setNewChatQuery(e.target.value)}
+                  placeholder="Search by name or email…"
+                  autoFocus
+                  className="tl-input"
+                  style={{ paddingLeft: '2.4rem' }}
+                />
+              </div>
+              <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: '#94a3b8' }}>
+                Find buyers and vendors to message.
+              </div>
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '0.5rem 0' }}>
+              {newChatLoading && (
+                <div style={{ padding: '1rem 1.25rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Loader2 size={14} className="tl-spin" /> Searching…
+                </div>
+              )}
+              {!newChatLoading && newChatQuery.trim().length >= 2 && newChatResults.length === 0 && (
+                <div style={{ padding: '1.25rem', color: '#64748b', fontSize: '0.9rem' }}>
+                  No users found.
+                </div>
+              )}
+              {!newChatLoading && newChatQuery.trim().length < 2 && (
+                <div style={{ padding: '1.25rem', color: '#94a3b8', fontSize: '0.85rem' }}>
+                  Type at least 2 characters to search.
+                </div>
+              )}
+              {newChatResults.map((u) => (
+                <button
+                  key={u.id}
+                  onClick={() => startChatWith(u)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    width: '100%', padding: '0.7rem 1.25rem',
+                    background: 'transparent', border: 'none', cursor: 'pointer',
+                    textAlign: 'left',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = '#f8fafc')}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                >
+                  <div style={{
+                    width: 40, height: 40, borderRadius: '50%',
+                    background: u.avatar ? `url(${u.avatar}) center/cover` : '#e2e8f0',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: '#64748b', flexShrink: 0,
+                  }}>
+                    {!u.avatar && <User size={18} />}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {u.vendor_shop_name || u.name}
+                      </span>
+                      {u.vendor_is_verified ? (
+                        <ShieldCheck size={14} color="#16a34a" />
+                      ) : null}
+                    </div>
+                    <div style={{ fontSize: '0.78rem', color: '#64748b', textTransform: 'capitalize' }}>
+                      {u.role}{u.city ? ` • ${u.city}` : ''}{u.state ? `, ${u.state}` : ''}
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

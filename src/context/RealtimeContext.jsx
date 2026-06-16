@@ -106,7 +106,6 @@ export const RealtimeProvider = ({ children }) => {
       socket.off('notification:new', onNotification);
       relayHandlers.forEach(([evt, h]) => socket.off(evt, h));
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
   const subscribe = useCallback((event, handler) => {

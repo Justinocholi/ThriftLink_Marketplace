@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import thriftlinkLogo from '../assets/thriftlink-logo.png';
 import magnifierIcon from '../assets/magnifier.png';
@@ -23,6 +23,7 @@ const Login = () => {
   const [signupRole, setSignupRole] = useState('user');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
   const [loading, setLoading] = useState(false);
 
   // Sign in fields
@@ -39,6 +40,15 @@ const Login = () => {
   const { login, register } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  // When Supabase's confirmation link redirects back to /login?confirmed=1,
+  // greet the user so they know to sign in normally now.
+  useEffect(() => {
+    if (new URLSearchParams(location.search).get('confirmed') === '1') {
+      setNotice('Email confirmed! You can sign in now.');
+      setActiveTab('signin');
+    }
+  }, [location.search]);
 
   const redirectAfterAuth = (role) => {
     const from = location.state?.from?.pathname;
@@ -66,12 +76,21 @@ const Login = () => {
   const handleSignUp = async (e) => {
     e.preventDefault();
     setError('');
+    setNotice('');
     if (!regName || !regEmail || !regPassword) { setError('Name, email and password are required'); return; }
     if (regPassword !== regConfirm) { setError('Passwords do not match'); return; }
     if (regPassword.length < 6) { setError('Password must be at least 6 characters'); return; }
     setLoading(true);
     const result = await register({ name: regName, email: regEmail, phone: regPhone, password: regPassword, role: signupRole });
     setLoading(false);
+    if (result.success && result.requiresEmailConfirmation) {
+      // Switch to sign-in tab and explain what's next. The user can't log in
+      // until they click the Supabase confirmation link in their inbox.
+      setActiveTab('signin');
+      setNotice(result.message || 'Account created. Check your email to confirm before signing in.');
+      setEmail(regEmail);
+      return;
+    }
     if (result.success) {
       redirectAfterAuth(result.type);
     } else {
@@ -146,6 +165,12 @@ const Login = () => {
             </div>
           )}
 
+          {notice && (
+            <div style={{ background: '#ecfdf5', color: '#065f46', padding: '0.75rem 1rem', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.875rem', border: '1px solid #a7f3d0' }}>
+              {notice}
+            </div>
+          )}
+
           {/* Sign In Form */}
           {activeTab === 'signin' && (
             <form onSubmit={handleSignIn}>
@@ -165,6 +190,11 @@ const Login = () => {
               <button type="submit" disabled={loading} style={{ width: '100%', padding: '1rem', background: loading ? '#86efac' : '#25D366', color: 'white', border: 'none', borderRadius: '8px', fontSize: '1rem', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer' }}>
                 {loading ? 'Signing in...' : 'Sign In'}
               </button>
+              <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+                <Link to="/forgot-password" style={{ color: '#3b82f6', textDecoration: 'none', fontSize: '0.875rem', fontWeight: 600 }}>
+                  Forgot your password?
+                </Link>
+              </div>
               <p style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.85rem', color: '#6b7280' }}>
                 Test: <strong>zara@thriftlink.com / vendor123</strong> or <strong>chioma@gmail.com / user123</strong>
               </p>

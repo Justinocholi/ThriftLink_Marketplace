@@ -1,0 +1,65 @@
+# Render Blueprint — backend only.
+# After connecting this repo on render.com → New + Blueprint, Render reads
+# this file and provisions the service. You'll be prompted to fill in the
+# secrets marked `sync: false` below.
+services:
+  - type: web
+    name: thriftlink-api
+    runtime: node
+    plan: free                    # 750h/month; sleeps after 15min of no traffic
+    region: oregon                # change to frankfurt / singapore as needed
+    rootDir: backend
+    buildCommand: npm ci
+    startCommand: node server.js
+    healthCheckPath: /api/health
+    autoDeploy: true              # deploy on every push to the connected branch
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATA_BACKEND
+        value: supabase
+      - key: PORT
+        value: 10000              # Render expects the service to listen here
+      # ----- Required secrets (fill in Render dashboard, do NOT commit) -----
+      - key: JWT_SECRET
+        sync: false               # generate with: openssl rand -hex 48
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: FRONTEND_URL
+        sync: false               # https://<your-vercel-app>.vercel.app
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false               # comma-separated, includes preview URLs
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_REQUIRE_EMAIL_CONFIRMATION
+        value: "true"
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: PAYMENT_BANK_NAME
+        value: Moniepoint MFB
+      - key: PAYMENT_ACCOUNT_NUMBER
+        value: "8178524992"
+      - key: PAYMENT_ACCOUNT_NAME
+        value: Delverse Technologies Limited
+      - key: MAILBOXLAYER_KEY
+        sync: false
+      - key: SMTP_HOST
+        value: smtp.resend.com
+      - key: SMTP_PORT
+        value: "465"
+      - key: SMTP_SECURE
+        value: "true"
+      - key: SMTP_USER
+        value: resend
+      - key: SMTP_PASSWORD
+        sync: false               # the re_… API key
+      - key: EMAIL_FROM
+        value: ThriftLink <onboarding@resend.dev>   # change to your verified sender once domain is up

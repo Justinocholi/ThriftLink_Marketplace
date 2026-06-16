@@ -1,4 +1,8 @@
-const BASE_URL = '/api';
+// In dev: empty → '/api' is proxied to the backend by vite.config.js.
+// In prod: set VITE_API_URL to the backend's origin (e.g. https://thriftlink-api.onrender.com),
+//          which makes every fetch absolute.
+const API_ORIGIN = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+const BASE_URL = `${API_ORIGIN}/api`;
 
 function getToken() {
   return localStorage.getItem('token');
@@ -90,6 +94,14 @@ export const products = {
 };
 
 // --- Users (authenticated) ---
+export const users = {
+  search: (q, role) => {
+    const params = new URLSearchParams({ q });
+    if (role) params.set('role', role);
+    return request('/users/search?' + params.toString());
+  },
+};
+
 export const userMe = {
   getProfile: () => request('/users/me/profile'),
   updateProfile: (data) => request('/users/me/profile', { method: 'PUT', body: JSON.stringify(data) }),
@@ -135,6 +147,32 @@ export const orders = {
   updateStatus: (id, status) => request(`/orders/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) }),
 };
 
+// --- Subscriptions (vendor premium plans, manual bank transfer) ---
+export const subscriptions = {
+  getPlans: () => request('/subscriptions/plans'),
+  getMine: () => request('/subscriptions/me'),
+  submitPayment: ({ plan, reference, note }) =>
+    request('/subscriptions/payment-reference', {
+      method: 'POST',
+      body: JSON.stringify({ plan, reference, note }),
+    }),
+  // admin
+  adminList: (status) =>
+    request('/subscriptions/admin/payments' + (status ? `?status=${encodeURIComponent(status)}` : '')),
+  adminReview: (id, decision, notes) =>
+    request(`/subscriptions/admin/payments/${id}/review`, {
+      method: 'PUT',
+      body: JSON.stringify({ decision, notes }),
+    }),
+};
+
+// --- Auth (password reset) ---
+export const passwordReset = {
+  request: (email) => request('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) }),
+  complete: (uid, token, newPassword) =>
+    request('/auth/reset-password', { method: 'POST', body: JSON.stringify({ uid, token, newPassword }) }),
+};
+
 // --- Reviews ---
 export const reviews = {
   getForVendor: (vendorId, params = {}) => request(`/reviews/vendor/${vendorId}?` + new URLSearchParams(params)),
@@ -147,6 +185,8 @@ export const admin = {
   vendors: (params = {}) => request('/admin/vendors?' + new URLSearchParams(params)),
   verifyVendor: (id, status) => request(`/admin/vendors/${id}/verify`, { method: 'PUT', body: JSON.stringify({ status }) }),
   updateSubscription: (id, plan) => request(`/admin/vendors/${id}/subscription`, { method: 'PUT', body: JSON.stringify({ plan }) }),
+  featureVendor: (id, is_featured, featured_rank) =>
+    request(`/admin/vendors/${id}/feature`, { method: 'PUT', body: JSON.stringify({ is_featured, featured_rank }) }),
   users: (params = {}) => request('/admin/users?' + new URLSearchParams(params)),
   setUserStatus: (id, is_active) => request(`/admin/users/${id}/status`, { method: 'PUT', body: JSON.stringify({ is_active }) }),
   warnUser: (id, message) => request(`/admin/users/${id}/warn`, { method: 'POST', body: JSON.stringify({ message }) }),

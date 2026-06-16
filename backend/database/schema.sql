@@ -32,6 +32,8 @@ CREATE TABLE IF NOT EXISTS vendor_profiles (
   logo TEXT,
   banner TEXT,
   is_verified INTEGER NOT NULL DEFAULT 0,
+  is_featured INTEGER NOT NULL DEFAULT 0,
+  featured_rank INTEGER,
   verification_status TEXT NOT NULL DEFAULT 'pending' CHECK(verification_status IN ('pending', 'approved', 'rejected')),
   subscription_plan TEXT NOT NULL DEFAULT 'free' CHECK(subscription_plan IN ('free', 'basic', 'pro')),
   subscription_expires_at TEXT,
@@ -200,3 +202,21 @@ CREATE TABLE IF NOT EXISTS verification_documents (
   status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'approved', 'rejected')),
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+-- Manual subscription payment submissions (Moniepoint bank transfer)
+CREATE TABLE IF NOT EXISTS subscription_payments (
+  id TEXT PRIMARY KEY,
+  vendor_id TEXT NOT NULL REFERENCES vendor_profiles(id) ON DELETE CASCADE,
+  plan TEXT NOT NULL,
+  amount REAL NOT NULL,
+  reference TEXT NOT NULL,
+  note TEXT,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'approved', 'rejected')),
+  reviewed_by TEXT,
+  reviewed_at TEXT,
+  review_notes TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_subscription_payments_status ON subscription_payments(status);
+CREATE INDEX IF NOT EXISTS idx_subscription_payments_vendor ON subscription_payments(vendor_id);
