@@ -1281,3 +1281,278 @@ body {
     }
 }
 
+/* ============================================================
+   ThriftLink — Marketplace-Playful Skin (overrides)
+   Loaded last → wins over everything above. Goal: Depop/Pinterest
+   energy. Big rounded cards, vibrant accents, tinted shadows,
+   playful typography, subtle gradients. Zero JSX changes required.
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+:root {
+    /* Brand stays anchored to the existing green so nothing visually shifts hue */
+    --tl-primary: #16b865;
+    --tl-primary-dark: #0e9a52;
+    /* Playful accent palette */
+    --tl-coral: #FF6B6B;
+    --tl-lavender: #A78BFA;
+    --tl-sun: #FFD93D;
+    --tl-sky: #67E8F9;
+    --tl-peach: #FFB4A2;
+    /* Re-tinted shadows for warmth instead of neutral grey */
+    --tl-shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.06);
+    --tl-shadow-md: 0 10px 24px -8px rgba(16, 185, 129, 0.18), 0 4px 12px -2px rgba(15, 23, 42, 0.06);
+    --tl-shadow-lg: 0 24px 48px -16px rgba(16, 185, 129, 0.22), 0 12px 24px -8px rgba(15, 23, 42, 0.10);
+    --tl-shadow-coral: 0 16px 32px -12px rgba(255, 107, 107, 0.35);
+    --tl-shadow-lavender: 0 16px 32px -12px rgba(167, 139, 250, 0.35);
+    /* More generous radii — the playful core */
+    --tl-radius-md: 18px;
+    --tl-radius-lg: 24px;
+    --tl-radius-xl: 32px;
+}
+
+body {
+    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+    font-feature-settings: 'cv11', 'ss01';
+    letter-spacing: -0.005em;
+}
+
+h1, h2, h3, .section-title, .hero h1 {
+    font-family: 'Space Grotesk', 'Plus Jakarta Sans', system-ui, sans-serif;
+    letter-spacing: -0.025em;
+    font-weight: 700;
+}
+
+.hero h1, .section-title {
+    background: linear-gradient(180deg, #0f172a 0%, #334155 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Hero: pastel gradient mesh instead of flat slate */
+.hero {
+    background:
+        radial-gradient(circle at 15% 20%, rgba(167, 139, 250, 0.22) 0%, transparent 40%),
+        radial-gradient(circle at 85% 30%, rgba(255, 217, 61, 0.25) 0%, transparent 45%),
+        radial-gradient(circle at 50% 90%, rgba(22, 184, 101, 0.18) 0%, transparent 50%),
+        radial-gradient(circle at 85% 80%, rgba(255, 107, 107, 0.18) 0%, transparent 40%),
+        linear-gradient(135deg, #fdfcfb 0%, #f3f5ff 100%);
+}
+
+/* Buttons: pill shape + tinted shadows + lift on hover */
+.btn, .tl-btn, .search-btn, .post-ad-btn, .btn-primary, .btn-whatsapp {
+    border-radius: 999px !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.01em;
+    transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+                background 0.2s ease;
+}
+.btn-primary, .search-btn, .btn-whatsapp, .tl-btn-primary {
+    background: linear-gradient(135deg, #1ed373 0%, #16b865 100%) !important;
+    box-shadow: 0 10px 24px -8px rgba(22, 184, 101, 0.4);
+}
+.btn-primary:hover, .search-btn:hover, .btn-whatsapp:hover, .tl-btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 28px -8px rgba(22, 184, 101, 0.5);
+}
+.post-ad-btn {
+    background: linear-gradient(135deg, #ff8364 0%, #ff5a5f 100%) !important;
+    box-shadow: var(--tl-shadow-coral);
+}
+.post-ad-btn:hover {
+    background: linear-gradient(135deg, #ff5a5f 0%, #ff3a3f 100%) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 18px 36px -10px rgba(255, 107, 107, 0.5);
+}
+
+/* Cards: more rounded, tinted hover */
+.vendor-card, .step-card, .category-card, .tl-product-card, .monthly-card {
+    border-radius: var(--tl-radius-lg) !important;
+    border: 1px solid rgba(15, 23, 42, 0.06) !important;
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+                border-color 0.2s !important;
+}
+.vendor-card:hover, .category-card:hover, .tl-product-card:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--tl-shadow-lg) !important;
+    border-color: rgba(22, 184, 101, 0.3) !important;
+}
+
+/* Category icons: each one gets a colorful tinted background */
+.category-icon {
+    border-radius: 20px !important;
+    width: 64px !important;
+    height: 64px !important;
+}
+.category-card:nth-child(8n+1) .category-icon { background: linear-gradient(135deg, #FFE5E5 0%, #FFB4A2 100%) !important; }
+.category-card:nth-child(8n+2) .category-icon { background: linear-gradient(135deg, #FCE7F3 0%, #F9A8D4 100%) !important; }
+.category-card:nth-child(8n+3) .category-icon { background: linear-gradient(135deg, #FFF7CD 0%, #FFD93D 100%) !important; }
+.category-card:nth-child(8n+4) .category-icon { background: linear-gradient(135deg, #DCFCE7 0%, #86EFAC 100%) !important; }
+.category-card:nth-child(8n+5) .category-icon { background: linear-gradient(135deg, #E0E7FF 0%, #A78BFA 100%) !important; }
+.category-card:nth-child(8n+6) .category-icon { background: linear-gradient(135deg, #CFFAFE 0%, #67E8F9 100%) !important; }
+.category-card:nth-child(8n+7) .category-icon { background: linear-gradient(135deg, #FED7AA 0%, #FB923C 100%) !important; }
+.category-card:nth-child(8n+8) .category-icon { background: linear-gradient(135deg, #FFE4E6 0%, #FB7185 100%) !important; }
+
+/* Filter chips: pill-perfect + jelly hover */
+.filter-chip, .tl-chip {
+    border-radius: 999px !important;
+    font-weight: 600 !important;
+    border: 1.5px solid rgba(15, 23, 42, 0.08) !important;
+    background: white !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.filter-chip:hover, .tl-chip:hover {
+    background: linear-gradient(135deg, #1ed373 0%, #16b865 100%) !important;
+    border-color: transparent !important;
+    color: white !important;
+    transform: translateY(-1px) scale(1.04);
+}
+
+/* Search bar: glassy + pill */
+.main-search {
+    border-radius: 999px !important;
+    border: 2px solid rgba(15, 23, 42, 0.06) !important;
+    box-shadow: 0 24px 48px -16px rgba(15, 23, 42, 0.12), 0 12px 24px -8px rgba(22, 184, 101, 0.10) !important;
+    background: rgba(255, 255, 255, 0.98) !important;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    overflow: hidden;
+}
+.search-input, .location-input {
+    background: transparent !important;
+    border: none !important;
+}
+
+/* Stats banner: gradient instead of flat green */
+.stats-section {
+    background: linear-gradient(135deg, #16b865 0%, #1ed373 35%, #67E8F9 100%) !important;
+    position: relative;
+    overflow: hidden;
+}
+.stats-section::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(circle at 80% 50%, rgba(255, 217, 61, 0.25) 0%, transparent 50%);
+    pointer-events: none;
+}
+.stats-section > * { position: relative; z-index: 1; }
+.stat-number {
+    font-family: 'Space Grotesk', sans-serif;
+    text-shadow: 0 2px 12px rgba(15, 23, 42, 0.15);
+}
+
+/* CTA section: deep gradient with warmth */
+.cta-section {
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #3b0764 100%) !important;
+    position: relative;
+    overflow: hidden;
+}
+.cta-section::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+        radial-gradient(circle at 20% 30%, rgba(167, 139, 250, 0.25) 0%, transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(255, 107, 107, 0.2) 0%, transparent 40%);
+    pointer-events: none;
+}
+.cta-section > * { position: relative; z-index: 1; }
+
+/* Verified badge: tinted pill */
+.verification-badge, .tl-badge-verified {
+    background: linear-gradient(135deg, rgba(22, 184, 101, 0.12) 0%, rgba(167, 139, 250, 0.12) 100%) !important;
+    border: 1px solid rgba(22, 184, 101, 0.25);
+    color: #0e9a52 !important;
+}
+
+/* Glass nav: warmer, softer */
+.tl-glass {
+    background: rgba(255, 255, 255, 0.78) !important;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.05) !important;
+}
+.tl-glass.scrolled {
+    background: rgba(255, 255, 255, 0.94) !important;
+    box-shadow: 0 8px 32px -12px rgba(15, 23, 42, 0.10) !important;
+}
+
+/* Avatar glow on vendor cards */
+.vendor-avatar {
+    box-shadow: 0 8px 20px -6px rgba(22, 184, 101, 0.4);
+}
+
+/* Hover lift on bare links/cards everywhere */
+.tl-product-card:hover .tl-product-img img { transform: scale(1.08); }
+
+/* Soft, playful skeleton */
+.tl-skel, .tl-pimg::before {
+    background: linear-gradient(90deg, #f3f4f8 25%, #fafbff 50%, #f3f4f8 75%) !important;
+}
+
+/* Inputs: more rounded, focus ring more vibrant */
+.tl-input, input[type="text"]:not(.search-input), input[type="email"], input[type="password"], textarea {
+    border-radius: 14px !important;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.tl-input:focus, input:focus, textarea:focus {
+    border-color: var(--tl-primary) !important;
+    box-shadow: 0 0 0 5px rgba(22, 184, 101, 0.15) !important;
+}
+
+/* Toasts: more playful */
+.tl-toast {
+    border-radius: 16px !important;
+    border-left-width: 4px;
+    box-shadow: var(--tl-shadow-md);
+}
+
+/* Float a subtle decorative blob behind sections that have a white bg */
+.categories::before, .featured-vendors::before {
+    content: '';
+    position: absolute;
+    width: 320px; height: 320px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(167, 139, 250, 0.18) 0%, transparent 70%);
+    top: -100px; right: -100px;
+    pointer-events: none;
+    z-index: 0;
+}
+.categories, .featured-vendors {
+    position: relative;
+    overflow: hidden;
+}
+.categories > *, .featured-vendors > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* Mobile bottom nav: more vibrant active */
+.tl-bottom-nav a.active {
+    color: var(--tl-primary) !important;
+}
+.tl-bottom-nav a.active::before {
+    background: linear-gradient(90deg, var(--tl-primary), var(--tl-lavender)) !important;
+    width: 32px !important;
+    height: 4px !important;
+    border-radius: 999px !important;
+}
+
+/* Selection color */
+::selection {
+    background: rgba(22, 184, 101, 0.25);
+    color: #0f172a;
+}
+
+/* Subtle scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+    background: rgba(15, 23, 42, 0.15);
+    border-radius: 999px;
+    border: 2px solid white;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(15, 23, 42, 0.25); }
+
+
