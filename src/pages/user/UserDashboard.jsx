@@ -43,49 +43,29 @@ const UserDashboard = () => {
         </div>
       )}
 
-      {/* Hero Welcome */}
-      <div style={{ marginBottom: '2rem' }}>
-        <h2 style={{ fontSize: '1.75rem', fontWeight: '800', color: '#1e293b', marginBottom: '0.5rem' }}>Welcome back! 👋</h2>
-        <p style={{ color: '#64748b' }}>Here's what's happening with your account today.</p>
+      {/* Hero Welcome — gradient brand banner */}
+      <div className="tl-dash-hero">
+        <h2>Welcome back! 👋</h2>
+        <p>Here's what's happening with your account today.</p>
       </div>
 
-      {/* Stats Grid */}
+      {/* Stats Grid — branded color tiles */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
-        <Link to="/user/orders" style={{ textDecoration: 'none' }}>
-          <div style={{ background: 'white', borderRadius: '20px', padding: '1.5rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '1.25rem', transition: 'transform 0.2s' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>
-            <div style={{ background: '#eff6ff', padding: '1rem', borderRadius: '14px', color: '#3b82f6' }}>
-              <Package size={26} />
+        {[
+          { to: '/user/orders', label: 'Total Orders',     value: loading ? '—' : orders.length,  icon: <Package size={26} />, tone: 'sky' },
+          { to: '/user/saved',  label: 'Saved Items',      value: loading ? '—' : saved.length,   icon: <Heart size={26} />,   tone: 'coral' },
+          { to: '/user/orders', label: 'Active Deliveries', value: loading ? '—' : pendingCount,   icon: <Truck size={26} />,   tone: 'green' },
+        ].map((s, i) => (
+          <Link key={i} to={s.to} style={{ textDecoration: 'none' }}>
+            <div className={`tl-stat-tile brand-${s.tone}`} style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+              <div className={`tl-stat-icon ${s.tone}`} style={{ marginBottom: 0 }}>{s.icon}</div>
+              <div>
+                <p style={{ color: '#64748b', fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.25rem' }}>{s.label}</p>
+                <h4 style={{ fontSize: '2rem', fontWeight: '800', color: '#0f172a', fontFamily: "'Space Grotesk', sans-serif" }}>{s.value}</h4>
+              </div>
             </div>
-            <div>
-              <p style={{ color: '#64748b', fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.25rem' }}>Total Orders</p>
-              <h4 style={{ fontSize: '1.75rem', fontWeight: '800', color: '#0f172a' }}>{loading ? '—' : orders.length}</h4>
-            </div>
-          </div>
-        </Link>
-
-        <Link to="/user/saved" style={{ textDecoration: 'none' }}>
-          <div style={{ background: 'white', borderRadius: '20px', padding: '1.5rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '1.25rem', transition: 'transform 0.2s' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>
-            <div style={{ background: '#fff1f2', padding: '1rem', borderRadius: '14px', color: '#f43f5e' }}>
-              <Heart size={26} />
-            </div>
-            <div>
-              <p style={{ color: '#64748b', fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.25rem' }}>Saved Items</p>
-              <h4 style={{ fontSize: '1.75rem', fontWeight: '800', color: '#0f172a' }}>{loading ? '—' : saved.length}</h4>
-            </div>
-          </div>
-        </Link>
-
-        <Link to="/user/orders" style={{ textDecoration: 'none' }}>
-          <div style={{ background: 'white', borderRadius: '20px', padding: '1.5rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '1.25rem', transition: 'transform 0.2s' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>
-            <div style={{ background: '#f0fdf4', padding: '1rem', borderRadius: '14px', color: '#10b981' }}>
-              <Truck size={26} />
-            </div>
-            <div>
-              <p style={{ color: '#64748b', fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.25rem' }}>Active Deliveries</p>
-              <h4 style={{ fontSize: '1.75rem', fontWeight: '800', color: '#0f172a' }}>{loading ? '—' : pendingCount}</h4>
-            </div>
-          </div>
-        </Link>
+          </Link>
+        ))}
       </div>
 
       {/* Main Content Sections */}
