@@ -1555,4 +1555,113 @@ h1, h2, h3, .section-title, .hero h1 {
 }
 ::-webkit-scrollbar-thumb:hover { background: rgba(15, 23, 42, 0.25); }
 
+/* ============================================================
+   Polish pass 2: logo visibility + dashboard brand color
+   ============================================================ */
+
+/* Logo: drop-shadow + subtle scale so it pops on glassmorphic header */
+.logo-img {
+    height: 72px !important;
+    width: auto;
+    filter: drop-shadow(0 4px 12px rgba(22, 184, 101, 0.25));
+    transition: filter 0.3s ease, transform 0.3s ease;
+}
+.logo:hover .logo-img {
+    filter: drop-shadow(0 6px 16px rgba(22, 184, 101, 0.4));
+    transform: scale(1.03);
+}
+.footer-logo img {
+    height: 64px !important;
+    width: auto;
+    filter: drop-shadow(0 2px 8px rgba(22, 184, 101, 0.2));
+}
+@media (max-width: 768px) {
+    .logo-img { height: 56px !important; }
+}
+
+/* Dashboard hero banner — applied via .tl-dash-hero wrapper */
+.tl-dash-hero {
+    background:
+        radial-gradient(circle at 20% 30%, rgba(167, 139, 250, 0.25) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(255, 217, 61, 0.18) 0%, transparent 50%),
+        linear-gradient(135deg, #16b865 0%, #1ed373 50%, #67E8F9 100%);
+    color: white;
+    border-radius: 24px;
+    padding: 2rem 2.25rem;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 16px 40px -16px rgba(22, 184, 101, 0.4);
+}
+.tl-dash-hero::before {
+    content: '';
+    position: absolute;
+    width: 240px;
+    height: 240px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+    top: -80px;
+    right: -60px;
+    pointer-events: none;
+}
+.tl-dash-hero h2 {
+    color: white !important;
+    -webkit-text-fill-color: white !important;
+    background: none !important;
+    font-size: 1.85rem !important;
+    margin-bottom: 0.4rem !important;
+    text-shadow: 0 2px 12px rgba(15, 23, 42, 0.15);
+}
+.tl-dash-hero p {
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-size: 1rem;
+}
+
+/* Dashboard stat tiles — auto-color the icon backgrounds with brand-friendly gradients */
+.tl-stat-tile {
+    background: white;
+    border-radius: 20px !important;
+    padding: 1.5rem !important;
+    border: 1px solid rgba(15, 23, 42, 0.04) !important;
+    box-shadow: 0 4px 16px -4px rgba(15, 23, 42, 0.06) !important;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    position: relative;
+    overflow: hidden;
+}
+.tl-stat-tile::before {
+    content: '';
+    position: absolute;
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    top: -40px; right: -40px;
+    opacity: 0.08;
+    pointer-events: none;
+}
+.tl-stat-tile:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 32px -8px rgba(22, 184, 101, 0.18) !important;
+}
+.tl-stat-tile.brand-green::before  { background: var(--tl-primary); }
+.tl-stat-tile.brand-coral::before  { background: var(--tl-coral); }
+.tl-stat-tile.brand-lavender::before { background: var(--tl-lavender); }
+.tl-stat-tile.brand-sun::before    { background: var(--tl-sun); }
+.tl-stat-tile.brand-sky::before    { background: var(--tl-sky); }
+
+.tl-stat-icon {
+    width: 56px; height: 56px;
+    border-radius: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    margin-bottom: 1rem;
+    box-shadow: 0 8px 20px -6px currentColor;
+}
+.tl-stat-icon.green    { background: linear-gradient(135deg, #1ed373, #16b865); }
+.tl-stat-icon.coral    { background: linear-gradient(135deg, #ff8364, #FF6B6B); }
+.tl-stat-icon.lavender { background: linear-gradient(135deg, #C4B5FD, #A78BFA); }
+.tl-stat-icon.sun      { background: linear-gradient(135deg, #FFE066, #FFB627); }
+.tl-stat-icon.sky      { background: linear-gradient(135deg, #99F6E4, #67E8F9); }
+
 

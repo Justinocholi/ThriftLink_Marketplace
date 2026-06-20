@@ -196,7 +196,7 @@ const Login = () => {
                 </Link>
               </div>
               <p style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.85rem', color: '#6b7280' }}>
-                Test: <strong>zara@thriftlink.com / vendor123</strong> or <strong>chioma@gmail.com / user123</strong>
+                Test admin: <strong>admin@thriftlink.com / Admin#2026</strong> · Vendor: <strong>vendor@thriftlink.com / Vendor#2026</strong> · Buyer: <strong>buyer@thriftlink.com / Buyer#2026</strong>
               </p>
             </form>
           )}

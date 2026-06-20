@@ -33,10 +33,10 @@ const VendorDashboard = () => {
     : '0%';
 
   const stats = [
-    { label: 'Profile Views', value: totals.profile_views, icon: <Eye size={20} />, color: '#3b82f6', bg: '#eff6ff', trend: '+12%', isUp: true },
-    { label: 'WhatsApp Clicks', value: totals.whatsapp_clicks, icon: <MessageSquare size={20} />, color: '#10b981', bg: '#f0fdf4', trend: '+5%', isUp: true },
-    { label: 'Conversion', value: conversionRate, icon: <TrendingUp size={20} />, color: '#f59e0b', bg: '#fffbeb', trend: '-2%', isUp: false },
-    { label: 'Store Rating', value: totals.rating > 0 ? totals.rating.toFixed(1) : 'New', icon: <Star size={20} />, color: '#8b5cf6', bg: '#f5f3ff', trend: '0%', isUp: true },
+    { label: 'Profile Views',   value: totals.profile_views,   icon: <Eye size={24} />,           tone: 'sky',      trend: '+12%', isUp: true },
+    { label: 'WhatsApp Clicks', value: totals.whatsapp_clicks, icon: <MessageSquare size={24} />, tone: 'green',    trend: '+5%',  isUp: true },
+    { label: 'Conversion',      value: conversionRate,         icon: <TrendingUp size={24} />,    tone: 'sun',      trend: '-2%',  isUp: false },
+    { label: 'Store Rating',    value: totals.rating > 0 ? totals.rating.toFixed(1) : 'New', icon: <Star size={24} />, tone: 'lavender', trend: '0%', isUp: true },
   ];
 
   if (loading) return (
@@ -53,13 +53,13 @@ const VendorDashboard = () => {
         </div>
       )}
 
-      {/* Page Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
+      {/* Page Header — gradient brand banner with CTA */}
+      <div className="tl-dash-hero" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <h2 style={{ fontSize: '1.75rem', fontWeight: '800', color: '#1e293b', marginBottom: '0.5rem' }}>Store Overview</h2>
-          <p style={{ color: '#64748b' }}>Manage your thrift business and track your performance.</p>
+          <h2>Store Overview 🏪</h2>
+          <p>Manage your thrift business and track your performance.</p>
         </div>
-        <Link to="/vendor/products" style={{ background: '#25D366', color: 'white', padding: '0.75rem 1.5rem', borderRadius: '12px', fontWeight: '700', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <Link to="/vendor/products" style={{ background: 'rgba(255,255,255,0.95)', color: '#0e9a52', padding: '0.85rem 1.5rem', borderRadius: '999px', fontWeight: '700', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem', boxShadow: '0 8px 24px -8px rgba(15,23,42,0.2)', position: 'relative', zIndex: 1 }}>
           <Package size={20} /> Add New Product
         </Link>
       </div>
@@ -67,15 +67,15 @@ const VendorDashboard = () => {
       {/* Stats Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
         {stats.map((s, i) => (
-          <div key={i} style={{ background: 'white', borderRadius: '20px', padding: '1.5rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #f1f5f9' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem' }}>
-              <div style={{ background: s.bg, color: s.color, padding: '0.75rem', borderRadius: '12px' }}>{s.icon}</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', fontWeight: '700', color: s.isUp ? '#10b981' : '#ef4444' }}>
+          <div key={i} className={`tl-stat-tile brand-${s.tone}`}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+              <div className={`tl-stat-icon ${s.tone}`}>{s.icon}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', fontWeight: '700', color: s.isUp ? '#10b981' : '#ef4444', background: s.isUp ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', padding: '0.3rem 0.6rem', borderRadius: '999px' }}>
                 {s.isUp ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />} {s.trend}
               </div>
             </div>
             <p style={{ color: '#64748b', fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.25rem' }}>{s.label}</p>
-            <h4 style={{ fontSize: '1.75rem', fontWeight: '800', color: '#0f172a' }}>{s.value}</h4>
+            <h4 style={{ fontSize: '2rem', fontWeight: '800', color: '#0f172a', fontFamily: "'Space Grotesk', sans-serif" }}>{s.value}</h4>
           </div>
         ))}
       </div>
