@@ -1,6 +1,10 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { sentryVitePlugin } from '@sentry/vite-plugin'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // The Sentry plugin is only active when an auth token is provided, so the
 // default `npm run build` doesn't fail in dev or CI. Set SENTRY_AUTH_TOKEN
@@ -13,6 +17,12 @@ const sentryProject = process.env.SENTRY_PROJECT
 const sentryEnabled = Boolean(sentryAuthToken && sentryOrg && sentryProject)
 
 export default defineConfig({
+  // `@/foo` resolves to `src/foo` — shadcn/ui's standard alias.
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
   build: {
     // Hidden source maps are emitted alongside the bundle so the Sentry CLI
     // can upload them, but the production HTML doesn't reference them — so
