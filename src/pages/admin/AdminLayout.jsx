@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { LayoutDashboard, Store, Star, Users, LogOut, Menu, X, ShieldCheck, Settings, Flag, CreditCard } from 'lucide-react';
+import logo from '../../assets/thriftlink-logo-.png';
 
 const AdminLayout = () => {
   const { logout, user } = useAuth();
@@ -46,8 +47,9 @@ const AdminLayout = () => {
         left: 0,
         top: 0
       }}>
-        <div style={{ padding: '0 1.5rem 2rem', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', marginBottom: '2rem' }}>
-          <h2 style={{ color: '#3b82f6', fontSize: '1.5rem', fontWeight: 'bold' }}>ThriftLink Admin</h2>
+        <div style={{ padding: '0 1.5rem 2rem', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', marginBottom: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+          <img src={logo} alt="ThriftLink" style={{ height: '72px', objectFit: 'contain', filter: 'drop-shadow(0 4px 12px rgba(59, 130, 246, 0.55)) brightness(1.1)' }} />
+          <span style={{ color: '#60a5fa', fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' }}>Admin</span>
         </div>
         
         <nav style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
