@@ -90,8 +90,7 @@ const VendorLayout = () => {
       }}>
         <div style={{ padding: '0 1.5rem 2rem', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', marginBottom: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <img src={logo} alt="Logo" style={{ height: '40px', background: 'white', borderRadius: '4px' }} />
-            <h2 style={{ color: 'white', fontSize: '1.25rem', fontWeight: 'bold' }}>ThriftLink</h2>
+            <img src={logo} alt="ThriftLink" style={{ height: '72px', objectFit: 'contain', filter: 'drop-shadow(0 4px 12px rgba(22, 184, 101, 0.6)) brightness(1.1)' }} />
           </div>
           <button onClick={() => setIsSidebarOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'white' }} className="mobile-header-btn">
             <X size={24} />

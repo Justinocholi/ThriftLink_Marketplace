@@ -140,7 +140,7 @@ const Login = () => {
         {/* Right form panel */}
         <div className="login-section" style={{ flex: '0 0 450px', background: 'white', borderRadius: '16px', padding: '3rem', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', border: '1px solid #e5e7eb' }}>
           <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-            <img src={thriftlinkLogo} alt="Thrift Link" style={{ height: '50px', objectFit: 'contain', marginBottom: '1.5rem' }} />
+            <img src={thriftlinkLogo} alt="Thrift Link" style={{ height: '100px', objectFit: 'contain', marginBottom: '1.5rem', filter: 'drop-shadow(0 4px 12px rgba(22, 184, 101, 0.25))' }} />
             <h2 style={{ fontSize: '1.8rem', fontWeight: '700', color: '#1f2937', marginBottom: '0.5rem' }}>
               {activeTab === 'signin' ? 'Welcome Back' : 'Create Account'}
             </h2>
@@ -195,9 +195,6 @@ const Login = () => {
                   Forgot your password?
                 </Link>
               </div>
-              <p style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.85rem', color: '#6b7280' }}>
-                Test admin: <strong>admin@thriftlink.com / Admin#2026</strong> · Vendor: <strong>vendor@thriftlink.com / Vendor#2026</strong> · Buyer: <strong>buyer@thriftlink.com / Buyer#2026</strong>
-              </p>
             </form>
           )}
 

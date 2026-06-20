@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Home, ShoppingBag, Heart, User, LifeBuoy, LogOut, Menu, X, MessageSquare, ShoppingCart } from 'lucide-react';
+import logo from '../../assets/thriftlink-logo-.png';
 
 const UserLayout = () => {
   const { logout } = useAuth();
@@ -91,7 +92,7 @@ const UserLayout = () => {
       }}>
         <div style={{ padding: '0 1.5rem 2rem', borderBottom: '1px solid #f1f5f9', marginBottom: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <img src="/images/thriftlink-logo-.png" alt="Logo" style={{ height: '40px' }} />
+            <img src={logo} alt="ThriftLink" style={{ height: '72px', objectFit: 'contain', filter: 'drop-shadow(0 4px 12px rgba(22, 184, 101, 0.6)) brightness(1.1)' }} />
             <h2 style={{ color: '#0f172a', fontSize: '1.25rem', fontWeight: 'bold' }}>ThriftLink</h2>
           </div>
           <button onClick={() => setIsSidebarOpen(false)} style={{ display: 'block', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }} className="md:hidden">

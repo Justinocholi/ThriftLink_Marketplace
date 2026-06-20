@@ -119,38 +119,48 @@ const Home = () => {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="hero" style={{
-        background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-        padding: '7rem 2rem 4rem',
-        textAlign: 'center'
-      }}>
-        <div className="hero-content" style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <h1 style={{ fontSize: '2.8rem', fontWeight: '800', marginBottom: '1rem', color: '#1f2937' }}>
-            The #1 Vendor Marketplace
+      <section className="hero" style={{ padding: '8rem 2rem 5rem', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+        {/* Floating orbs for futuristic depth */}
+        <div aria-hidden style={{ position: 'absolute', top: '-100px', left: '-100px', width: '400px', height: '400px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(167,139,250,0.35) 0%, transparent 70%)', filter: 'blur(40px)', animation: 'tl-float 8s ease-in-out infinite' }} />
+        <div aria-hidden style={{ position: 'absolute', top: '-50px', right: '-150px', width: '500px', height: '500px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,217,61,0.35) 0%, transparent 70%)', filter: 'blur(40px)', animation: 'tl-float 9s ease-in-out infinite reverse' }} />
+        <div aria-hidden style={{ position: 'absolute', bottom: '-150px', left: '30%', width: '450px', height: '450px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(22,184,101,0.35) 0%, transparent 70%)', filter: 'blur(40px)', animation: 'tl-float 7s ease-in-out infinite' }} />
+
+        <div className="hero-content" style={{ maxWidth: '880px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
+          {/* Eyebrow pill */}
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.45rem 1rem', borderRadius: '999px', background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(22, 184, 101, 0.2)', boxShadow: '0 4px 12px rgba(22, 184, 101, 0.08)', fontSize: '0.82rem', fontWeight: 700, color: '#0e9a52', marginBottom: '1.5rem', letterSpacing: '0.02em' }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'linear-gradient(135deg, #1ed373, #16b865)', boxShadow: '0 0 12px rgba(22,184,101,0.6)', animation: 'tl-pulse-dot 1.8s ease-out infinite' }} />
+            Nigeria's verified WhatsApp marketplace
+          </div>
+
+          <h1 style={{ fontSize: 'clamp(2.4rem, 6vw, 4.4rem)', fontWeight: 800, lineHeight: 1.05, marginBottom: '1.25rem', letterSpacing: '-0.035em' }}>
+            Shop from <span style={{ background: 'linear-gradient(135deg, #16b865 0%, #A78BFA 60%, #FF6B6B 100%)', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>vendors you can trust</span>
           </h1>
-          <p className="hero-subtitle" style={{ fontSize: '1.1rem', color: '#6b7280', marginBottom: '2rem' }}>
-            Connect with verified vendors • Shop safely • Buy smarter
+          <p className="hero-subtitle" style={{ fontSize: 'clamp(1rem, 2vw, 1.25rem)', color: '#475569', marginBottom: '2.5rem', maxWidth: '640px', margin: '0 auto 2.5rem' }}>
+            Discover thousands of verified WhatsApp shops in one place. Browse, chat, and buy — safely.
           </p>
-          
-          <div className="trust-indicators" style={{
-            display: 'flex',
-            justifyContent: 'center',
-            gap: '2rem',
-            marginBottom: '2rem',
-            flexWrap: 'wrap'
-          }}>
-            <div className="trust-item" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#25D366', fontWeight: '600', fontSize: '0.9rem' }}>
-              <img src={checklistIcon} alt="Verified" style={{ width: '14px', height: '14px', objectFit: 'contain' }} />
-              <span>50+ Active Listings</span>
-            </div>
-            <div className="trust-item" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#25D366', fontWeight: '600', fontSize: '0.9rem' }}>
-              <img src={shieldIcon} alt="Security" style={{ width: '14px', height: '14px', objectFit: 'contain' }} />
-              <span>100% Verified Vendors</span>
-            </div>
-            <div className="trust-item" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#25D366', fontWeight: '600', fontSize: '0.9rem' }}>
-              <img src={whatsappIcon} alt="Chat" style={{ width: '14px', height: '14px', objectFit: 'contain' }} />
-              <span>Direct WhatsApp Chat</span>
-            </div>
+
+          {/* CTA pair */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '0.85rem', flexWrap: 'wrap', marginBottom: '3rem' }}>
+            <Link to="/categories" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.6rem', padding: '0.95rem 1.8rem', borderRadius: 999, background: 'linear-gradient(135deg, #1ed373 0%, #16b865 100%)', color: 'white', fontWeight: 700, fontSize: '1rem', textDecoration: 'none', boxShadow: '0 14px 28px -8px rgba(22, 184, 101, 0.45)', transition: 'transform 0.18s, box-shadow 0.18s' }}>
+              Start shopping <span style={{ fontSize: '1.2rem' }}>→</span>
+            </Link>
+            <Link to="/login" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.6rem', padding: '0.95rem 1.8rem', borderRadius: 999, background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', color: '#0f172a', fontWeight: 700, fontSize: '1rem', textDecoration: 'none', border: '1px solid rgba(15,23,42,0.08)' }}>
+              Become a vendor
+            </Link>
+          </div>
+
+          {/* Trust indicators — now floating glass cards */}
+          <div className="trust-indicators" style={{ display: 'flex', justifyContent: 'center', gap: '0.8rem', flexWrap: 'wrap' }}>
+            {[
+              { icon: checklistIcon, label: '50+ Active Listings' },
+              { icon: shieldIcon,    label: '100% Verified Vendors' },
+              { icon: whatsappIcon,  label: 'Direct WhatsApp Chat' },
+            ].map((t) => (
+              <div key={t.label} className="trust-item" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.55rem', padding: '0.55rem 1rem', borderRadius: 999, background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(15,23,42,0.06)', boxShadow: '0 6px 16px -8px rgba(15,23,42,0.10)', color: '#0e9a52', fontWeight: 600, fontSize: '0.85rem' }}>
+                <img src={t.icon} alt="" style={{ width: 14, height: 14, objectFit: 'contain' }} />
+                <span>{t.label}</span>
+              </div>
+            ))}
           </div>
         </div>
       </section>
