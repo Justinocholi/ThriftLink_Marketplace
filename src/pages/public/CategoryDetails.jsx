@@ -130,6 +130,11 @@ const CategoryDetails = () => {
         {/* Advanced Filters Drawer */}
         {showFilters && (
           <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e5e7eb', marginBottom: '2rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
+            <label style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.85rem 1rem', borderRadius: 12, background: 'linear-gradient(135deg, rgba(22,184,101,0.08), rgba(59,130,246,0.06))', border: '1.5px solid rgba(22,184,101,0.25)', cursor: 'pointer', fontWeight: 600, color: '#0f172a' }}>
+              <input type="checkbox" checked={verifiedOnly} onChange={(e) => updateFilter('verified', e.target.checked ? '1' : '')} style={{ width: 18, height: 18, accentColor: '#16b865' }} />
+              <ShieldCheck size={18} color="#16b865" />
+              <span>Show only verified vendors</span>
+            </label>
             <div>
               <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>Price Range</label>
               <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
@@ -196,57 +201,22 @@ const CategoryDetails = () => {
         )}
 
         {loading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem' }}>
-            <Loader2 className="animate-spin" size={40} color="#3b82f6" />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '1.25rem' }}>
+            {[0,1,2,3,4,5,6,7].map(i => (
+              <div key={i} style={{ borderRadius: 20, overflow: 'hidden', background: '#f1f5f9', aspectRatio: '3 / 4', position: 'relative' }}>
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%)', backgroundSize: '200% 100%', animation: 'tl-shimmer 1.4s linear infinite' }} />
+              </div>
+            ))}
+            <style>{`@keyframes tl-shimmer { 0%{background-position: 200% 0;} 100%{background-position: -200% 0;} }`}</style>
           </div>
         ) : products.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '4rem', background: 'white', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#1f2937', marginBottom: '0.5rem' }}>No products found</h3>
-            <p style={{ color: '#6b7280' }}>Try adjusting your filters or search term to find what you're looking for.</p>
+          <div style={{ textAlign: 'center', padding: '4rem 1.5rem', background: 'white', borderRadius: '20px', border: '1px solid #e5e7eb' }}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.5rem' }}>No products found.</h3>
+            <p style={{ color: '#64748b' }}>Try adjusting your filters.</p>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '2rem' }}>
-              {products.map(product => {
-                const images = JSON.parse(product.images || '[]');
-                return (
-                  <div key={product.id} style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e5e7eb', transition: 'transform 0.2s', display: 'flex', flexDirection: 'column' }}>
-                      <Link to={`/product/${product.id}`} style={{ height: '200px', background: '#f3f4f6', display: 'block', position: 'relative' }}>
-                          <img 
-                            src={images[0] || "https://via.placeholder.com/300"} 
-                            alt={product.name} 
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-                          />
-                          {product.is_verified && (
-                            <div style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', background: '#25D366', color: 'white', padding: '0.25rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                              <ChevronDown size={12} style={{ transform: 'rotate(-90deg)' }} /> Verified
-                            </div>
-                          )}
-                      </Link>
-                      <div style={{ padding: '1rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                          <h3 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1f2937', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', height: '2.4rem' }}>
-                            {product.name}
-                          </h3>
-                          <div style={{ fontSize: '1.25rem', fontWeight: '800', color: '#3b82f6', marginBottom: '0.5rem' }}>
-                            ₦{product.price.toLocaleString()}
-                          </div>
-                          <div style={{ fontSize: '0.85rem', color: '#6b7280', display: 'flex', justifyContent: 'space-between', marginTop: 'auto' }}>
-                            <span>{product.vendor_name}</span>
-                            <span>{product.vendor_state}</span>
-                          </div>
-                          <Link 
-                            to={`/product/${product.id}`}
-                            style={{ 
-                                width: '100%', marginTop: '1rem', padding: '0.6rem', textAlign: 'center',
-                                background: 'transparent', border: '1px solid #3b82f6', color: '#3b82f6', 
-                                borderRadius: '6px', fontWeight: '600', cursor: 'pointer', textDecoration: 'none'
-                            }}
-                          >
-                              View Details
-                          </Link>
-                      </div>
-                  </div>
-                );
-              })}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '1.25rem' }}>
+            {products.map(p => <ProductCard key={p.id} product={p} />)}
           </div>
         )}
       </div>
