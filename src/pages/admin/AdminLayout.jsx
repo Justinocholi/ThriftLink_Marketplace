@@ -1,16 +1,14 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { LayoutDashboard, Store, Star, Users, LogOut, Menu, X, ShieldCheck, Settings, Flag, CreditCard } from 'lucide-react';
+import { LayoutDashboard, Store, Star, Users, LogOut, ShieldCheck, Settings, Flag, CreditCard } from 'lucide-react';
 import logo from '../../assets/thriftlink-logo-.png';
+import MobileTabBar from '../../components/MobileTabBar';
 
 const AdminLayout = () => {
-  const { logout, user } = useAuth();
+  const { logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
   const handleLogout = () => {
     logout();
@@ -34,8 +32,15 @@ const AdminLayout = () => {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#f5f7fa', fontFamily: "'Inter', sans-serif" }}>
-      {/* Sidebar */}
-      <aside style={{
+      <style>{`
+        @media (max-width: 768px) {
+          .admin-sidebar { display: none !important; }
+          .admin-main { margin-left: 0 !important; padding: 1.25rem !important; padding-bottom: 96px !important; }
+        }
+      `}</style>
+
+      {/* Sidebar (desktop only) */}
+      <aside className="admin-sidebar" style={{
         width: '260px',
         background: '#0f172a',
         color: 'white',
@@ -51,7 +56,7 @@ const AdminLayout = () => {
           <img src={logo} alt="ThriftLink" style={{ height: '72px', objectFit: 'contain', filter: 'drop-shadow(0 4px 12px rgba(59, 130, 246, 0.55)) brightness(1.1)' }} />
           <span style={{ color: '#60a5fa', fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' }}>Admin</span>
         </div>
-        
+
         <nav style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
           {navItems.map((item) => (
             <Link key={item.path} to={item.path} style={{
@@ -67,7 +72,7 @@ const AdminLayout = () => {
               <span>{item.label}</span>
             </Link>
           ))}
-          
+
           <button onClick={handleLogout} style={{
             marginTop: 'auto',
             display: 'flex', alignItems: 'center', gap: '10px',
@@ -88,46 +93,31 @@ const AdminLayout = () => {
       </aside>
 
       {/* Main Content */}
-      <main style={{ 
-        marginLeft: window.innerWidth > 768 ? '260px' : '0', 
-        flex: 1, 
+      <main className="admin-main" style={{
+        marginLeft: '260px',
+        flex: 1,
         padding: '2.5rem',
-        width: '100%' 
+        width: '100%'
       }}>
-        <button 
-          onClick={toggleSidebar}
-          style={{
-            display: window.innerWidth <= 768 ? 'flex' : 'none',
-            alignItems: 'center',
-            gap: '0.5rem',
-            background: 'white',
-            border: '1px solid #e2e8f0',
-            padding: '0.5rem 1rem',
-            borderRadius: '0.375rem',
-            marginBottom: '1.5rem',
-            cursor: 'pointer'
-          }}
-        >
-          <Menu size={20} />
-          <span>Menu</span>
-        </button>
         <Outlet />
       </main>
 
-      <style>{`
-        @media (max-width: 768px) {
-          main {
-            margin-left: 0 !important;
-            padding: 1.5rem !important;
-          }
-          aside {
-            transform: translateX(-100%);
-          }
-          aside.open {
-            transform: translateX(0);
-          }
-        }
-      `}</style>
+      <MobileTabBar
+        accent="#3b82f6"
+        primary={[
+          { path: '/admin', icon: <LayoutDashboard size={22} />, label: 'Overview' },
+          { path: '/admin/vendors', icon: <Store size={22} />, label: 'Vendors' },
+          { path: '/admin/reports', icon: <Flag size={22} />, label: 'Reports' },
+          { path: '/admin/users', icon: <Users size={22} />, label: 'Users' },
+        ]}
+        more={[
+          { path: '/admin/reviews', icon: <Star size={20} />, label: 'Reviews' },
+          { path: '/admin/subscriptions', icon: <CreditCard size={20} />, label: 'Subscriptions' },
+          { path: '/admin/platform', icon: <ShieldCheck size={20} />, label: 'Platform' },
+          { path: '/admin/settings', icon: <Settings size={20} />, label: 'Settings' },
+        ]}
+        onLogout={handleLogout}
+      />
     </div>
   );
 };

@@ -3,6 +3,7 @@ import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Home, ShoppingBag, Heart, User, LifeBuoy, LogOut, Menu, X, MessageSquare, ShoppingCart } from 'lucide-react';
 import logo from '../../assets/thriftlink-logo-.png';
+import MobileTabBar from '../../components/MobileTabBar';
 
 const UserLayout = () => {
   const { logout } = useAuth();
@@ -36,20 +37,15 @@ const UserLayout = () => {
       <style>
         {`
           @media (max-width: 768px) {
-            .sidebar {
-              transform: translateX(-100%);
-              transition: transform 0.3s ease-in-out;
-            }
-            .sidebar.open {
-              transform: translateX(0);
+            .sidebar, .sidebar-overlay {
+              display: none !important;
             }
             .main-content {
               margin-left: 0 !important;
+              padding: 1.25rem !important;
+              padding-bottom: 96px !important;
             }
             .mobile-header {
-              display: flex !important;
-            }
-            .desktop-header {
               display: none !important;
             }
           }
@@ -61,7 +57,8 @@ const UserLayout = () => {
 
       {/* Mobile Overlay */}
       {isSidebarOpen && (
-        <div 
+        <div
+          className="sidebar-overlay"
           onClick={() => setIsSidebarOpen(false)}
           style={{
             position: 'fixed',
@@ -181,6 +178,22 @@ const UserLayout = () => {
 
         <Outlet />
       </main>
+
+      <MobileTabBar
+        accent="#25D366"
+        primary={[
+          { path: '/user', icon: <Home size={22} />, label: 'Home' },
+          { path: '/user/orders', icon: <ShoppingBag size={22} />, label: 'Orders' },
+          { path: '/user/messages', icon: <MessageSquare size={22} />, label: 'Messages' },
+          { path: '/cart', icon: <ShoppingCart size={22} />, label: 'Cart' },
+        ]}
+        more={[
+          { path: '/user/saved', icon: <Heart size={20} />, label: 'Saved Items' },
+          { path: '/user/profile', icon: <User size={20} />, label: 'Profile & Settings' },
+          { path: '/user/support', icon: <LifeBuoy size={20} />, label: 'Support' },
+        ]}
+        onLogout={handleLogout}
+      />
     </div>
   );
 };

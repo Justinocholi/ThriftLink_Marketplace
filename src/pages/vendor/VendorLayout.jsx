@@ -3,6 +3,7 @@ import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { LayoutDashboard, User, Package, BarChart2, ShoppingCart, MessageCircle, Settings, Crown, LogOut, Menu, X } from 'lucide-react';
 import logo from '../../assets/thriftlink-logo-.png';
+import MobileTabBar from '../../components/MobileTabBar';
 
 const VendorLayout = () => {
   const { logout } = useAuth();
@@ -37,18 +38,16 @@ const VendorLayout = () => {
       <style>
         {`
           @media (max-width: 768px) {
-            .sidebar {
-              transform: translateX(-100%);
-              transition: transform 0.3s ease-in-out;
-            }
-            .sidebar.open {
-              transform: translateX(0);
+            .sidebar, .sidebar-overlay {
+              display: none !important;
             }
             .main-content {
               margin-left: 0 !important;
+              padding: 1.25rem !important;
+              padding-bottom: 96px !important;
             }
             .mobile-header-btn {
-              display: block !important;
+              display: none !important;
             }
           }
           .mobile-header-btn {
@@ -59,7 +58,8 @@ const VendorLayout = () => {
 
       {/* Mobile Overlay */}
       {isSidebarOpen && (
-        <div 
+        <div
+          className="sidebar-overlay"
           onClick={() => setIsSidebarOpen(false)}
           style={{
             position: 'fixed',
@@ -179,6 +179,23 @@ const VendorLayout = () => {
 
         <Outlet />
       </main>
+
+      <MobileTabBar
+        accent="#3b82f6"
+        primary={[
+          { path: '/vendor', icon: <LayoutDashboard size={22} />, label: 'Home' },
+          { path: '/vendor/products', icon: <Package size={22} />, label: 'Products' },
+          { path: '/vendor/orders', icon: <ShoppingCart size={22} />, label: 'Orders' },
+          { path: '/vendor/messages', icon: <MessageCircle size={22} />, label: 'Messages' },
+        ]}
+        more={[
+          { path: '/vendor/profile', icon: <User size={20} />, label: 'Vendor Profile' },
+          { path: '/vendor/analytics', icon: <BarChart2 size={20} />, label: 'Click Analytics' },
+          { path: '/vendor/settings', icon: <Settings size={20} />, label: 'Settings' },
+          { path: '/vendor/subscription', icon: <Crown size={20} />, label: 'Subscription' },
+        ]}
+        onLogout={handleLogout}
+      />
     </div>
   );
 };
