@@ -3,7 +3,8 @@ import { useParams, Link, useSearchParams } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import { products as productsApi } from '../../services/api';
-import { Loader2, Search, Filter, SlidersHorizontal, ChevronDown } from 'lucide-react';
+import { Search, SlidersHorizontal, ShieldCheck } from 'lucide-react';
+import ProductCard from '../../components/ProductCard';
 
 const CategoryDetails = () => {
   const { id } = useParams();
@@ -20,6 +21,7 @@ const CategoryDetails = () => {
   const maxPrice = searchParams.get('max_price') || '';
   const condition = searchParams.get('condition') || '';
   const state = searchParams.get('state') || '';
+  const verifiedOnly = searchParams.get('verified') === '1';
 
   const categoryName = id === 'all' ? "All Categories" : id;
 
@@ -37,8 +39,15 @@ const CategoryDetails = () => {
         limit: 24
       };
       const data = await productsApi.list(params);
-      setProducts(data.products);
-      setTotal(data.total);
+      let list = data.products || [];
+      // Client-side filter: backend may not support "verified vendors only" yet
+      if (verifiedOnly) list = list.filter(p => p.is_verified);
+      // Client-side sort fallbacks for rating
+      if (sortBy === 'rating') {
+        list = [...list].sort((a, b) => Number(b.vendor_rating || b.rating || 0) - Number(a.vendor_rating || a.rating || 0));
+      }
+      setProducts(list);
+      setTotal(verifiedOnly ? list.length : (data.total || list.length));
     } catch (error) {
       console.error('Failed to fetch products:', error);
     } finally {
@@ -48,7 +57,7 @@ const CategoryDetails = () => {
 
   useEffect(() => {
     fetchProducts();
-  }, [id, searchTerm, sortBy, minPrice, maxPrice, condition, state]);
+  }, [id, searchTerm, sortBy, minPrice, maxPrice, condition, state, verifiedOnly]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -109,10 +118,11 @@ const CategoryDetails = () => {
               onChange={(e) => updateFilter('sort', e.target.value)}
               style={{ padding: '0.8rem 1rem', background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', fontWeight: '600', outline: 'none', cursor: 'pointer' }}
             >
-              <option value="newest">Newest First</option>
-              <option value="price_low">Price: Low to High</option>
-              <option value="price_high">Price: High to Low</option>
               <option value="popular">Most Popular</option>
+              <option value="newest">Newest</option>
+              <option value="price_low">Lowest Price</option>
+              <option value="price_high">Highest Price</option>
+              <option value="rating">Highest Rated</option>
             </select>
           </div>
         </div>

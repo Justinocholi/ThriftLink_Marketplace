@@ -32,6 +32,7 @@ import SafetyTips from './pages/public/SafetyTips';
 import VendorReviews from './pages/public/VendorReviews';
 import VendorPublicProfile from './pages/public/VendorPublicProfile';
 import CategoryDetails from './pages/public/CategoryDetails';
+import Wishlist from './pages/public/Wishlist';
 
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminOverview from './pages/admin/AdminOverview';
@@ -122,6 +123,7 @@ function App() {
                 <Route path="/category/:id" element={<CategoryDetails />} />
                 <Route path="/vendors" element={<VerifiedVendors />} />
                 <Route path="/all-categories" element={<Categories />} />
+                <Route path="/wishlist" element={<Wishlist />} />
 
                 {/* Admin Routes */}
                 <Route path="/admin" element={

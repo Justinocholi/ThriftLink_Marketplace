@@ -67,6 +67,15 @@ const ProductDetails = () => {
         console.error('Failed to fetch product:', err);
       })
       .finally(() => setLoading(false));
+
+    // Track recently viewed (cap 10, newest first, dedupe)
+    try {
+      const raw = localStorage.getItem('tl_recent');
+      const arr = raw ? JSON.parse(raw) : [];
+      const list = Array.isArray(arr) ? arr.filter(x => x !== id) : [];
+      list.unshift(id);
+      localStorage.setItem('tl_recent', JSON.stringify(list.slice(0, 10)));
+    } catch {}
   }, [id]);
 
   const images = (() => {

@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
-import { vendors as vendorsApi } from '../../services/api';
+import { vendors as vendorsApi, products as productsApi } from '../../services/api';
+import { ShieldCheck, MessageCircle, Users, Flag, Star } from 'lucide-react';
+import ProductCard from '../../components/ProductCard';
 
 // Import Assets
 import checklistIcon from '../../assets/checklist.png';
@@ -50,7 +52,17 @@ const Home = () => {
   const [location, setLocation] = useState('');
   const [vendors, setVendors] = useState([]);
   const [vendorsLoading, setVendorsLoading] = useState(true);
+  const [recent, setRecent] = useState([]);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    try {
+      const ids = JSON.parse(localStorage.getItem('tl_recent') || '[]');
+      if (!Array.isArray(ids) || !ids.length) return;
+      Promise.all(ids.slice(0, 10).map(id => productsApi.get(id).catch(() => null)))
+        .then(rs => setRecent(rs.filter(Boolean)));
+    } catch {}
+  }, []);
 
   useEffect(() => {
     // The public vendors endpoint already ranks admin-featured vendors first
@@ -115,6 +127,27 @@ const Home = () => {
             .categories-grid { grid-template-columns: 1fr 1fr !important; }
             .stats-grid { grid-template-columns: 1fr !important; }
           }
+          /* New trust-first sections */
+          .why-grid { grid-template-columns: repeat(4, 1fr); }
+          .timeline-grid { grid-template-columns: repeat(4, 1fr); }
+          .testi-grid { grid-template-columns: repeat(3, 1fr); }
+          .vendor-band-grid { grid-template-columns: 1.4fr 1fr; }
+          .why-card:hover { transform: translateY(-4px); border-color: rgba(22,184,101,0.35) !important; box-shadow: 0 16px 32px -16px rgba(15,23,42,0.12); }
+          @media (max-width: 960px) {
+            .why-grid { grid-template-columns: repeat(2, 1fr) !important; }
+            .timeline-grid { grid-template-columns: repeat(2, 1fr) !important; }
+            .testi-grid { grid-template-columns: 1fr !important; }
+            .vendor-band-grid { grid-template-columns: 1fr !important; }
+            .vendor-band-grid > div:last-child { justify-content: flex-start !important; }
+          }
+          @media (max-width: 640px) {
+            .hero { padding: 5rem 1rem 2.5rem !important; }
+            .why-grid { grid-template-columns: 1fr !important; }
+            .timeline-grid { grid-template-columns: 1fr !important; }
+            .hero-cta-row { flex-direction: column; align-items: stretch; }
+            .hero-cta-row a { width: 100%; justify-content: center; }
+            .why-tl, .protects, .testimonials, .vendor-band { padding-left: 1rem !important; padding-right: 1rem !important; }
+          }
           @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
@@ -136,41 +169,107 @@ const Home = () => {
           {/* Eyebrow pill */}
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.45rem 1rem', borderRadius: '999px', background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(22, 184, 101, 0.2)', boxShadow: '0 4px 12px rgba(22, 184, 101, 0.08)', fontSize: '0.82rem', fontWeight: 700, color: '#0e9a52', marginBottom: '1.5rem', letterSpacing: '0.02em' }}>
             <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'linear-gradient(135deg, #1ed373, #16b865)', boxShadow: '0 0 12px rgba(22,184,101,0.6)', animation: 'tl-pulse-dot 1.8s ease-out infinite' }} />
-            Nigeria's verified WhatsApp marketplace
+            Verified WhatsApp thrift vendors · Nigeria
           </div>
 
-          <h1 style={{ fontSize: 'clamp(2.4rem, 6vw, 4.4rem)', fontWeight: 800, lineHeight: 1.05, marginBottom: '1.25rem', letterSpacing: '-0.035em' }}>
-            Shop from <span style={{ background: 'linear-gradient(135deg, #16b865 0%, #A78BFA 60%, #FF6B6B 100%)', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>vendors you can trust</span>
+          <h1 style={{ fontSize: 'clamp(2rem, 5.5vw, 4rem)', fontWeight: 800, lineHeight: 1.08, marginBottom: '1.25rem', letterSpacing: '-0.035em' }}>
+            Shop confidently from <span style={{ background: 'linear-gradient(135deg, #16b865 0%, #A78BFA 60%, #FF6B6B 100%)', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>verified thrift vendors.</span>
           </h1>
-          <p className="hero-subtitle" style={{ fontSize: 'clamp(1rem, 2vw, 1.25rem)', color: '#475569', marginBottom: '2.5rem', maxWidth: '640px', margin: '0 auto 2.5rem' }}>
-            Discover thousands of verified WhatsApp shops in one place. Browse, chat, and buy — safely.
+          <p className="hero-subtitle" style={{ fontSize: 'clamp(0.98rem, 1.8vw, 1.2rem)', color: '#475569', maxWidth: '680px', margin: '0 auto 2.5rem', lineHeight: 1.55 }}>
+            Browse trusted thrift shops, chat directly on WhatsApp before you buy, and shop with confidence. ThriftLink keeps the marketplace safe.
           </p>
 
           {/* CTA pair */}
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '0.85rem', flexWrap: 'wrap', marginBottom: '3rem' }}>
-            <Link to="/categories" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.6rem', padding: '0.95rem 1.8rem', borderRadius: 999, background: 'linear-gradient(135deg, #1ed373 0%, #16b865 100%)', color: 'white', fontWeight: 700, fontSize: '1rem', textDecoration: 'none', boxShadow: '0 14px 28px -8px rgba(22, 184, 101, 0.45)', transition: 'transform 0.18s, box-shadow 0.18s' }}>
-              Start shopping <span style={{ fontSize: '1.2rem' }}>→</span>
+          <div className="hero-cta-row" style={{ display: 'flex', justifyContent: 'center', gap: '0.85rem', flexWrap: 'wrap', marginBottom: '3rem' }}>
+            <Link to="/categories" className="hero-cta-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.6rem', padding: '0.95rem 1.8rem', borderRadius: 999, background: 'linear-gradient(135deg, #1ed373 0%, #16b865 100%)', color: 'white', fontWeight: 700, fontSize: '1rem', textDecoration: 'none', boxShadow: '0 14px 28px -8px rgba(22, 184, 101, 0.45)', transition: 'transform 0.18s, box-shadow 0.18s' }}>
+              Start Shopping <span style={{ fontSize: '1.2rem' }}>→</span>
             </Link>
-            <Link to="/login" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.6rem', padding: '0.95rem 1.8rem', borderRadius: 999, background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', color: '#0f172a', fontWeight: 700, fontSize: '1rem', textDecoration: 'none', border: '1px solid rgba(15,23,42,0.08)' }}>
-              Become a vendor
+            <Link to="/login" className="hero-cta-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.6rem', padding: '0.95rem 1.8rem', borderRadius: 999, background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', color: '#0f172a', fontWeight: 700, fontSize: '1rem', textDecoration: 'none', border: '1px solid rgba(15,23,42,0.08)' }}>
+              Become a Verified Vendor
             </Link>
           </div>
 
-          {/* Trust indicators — now floating glass cards */}
+          {/* Trust pills — frosted glass with lucide icons */}
           <div className="trust-indicators" style={{ display: 'flex', justifyContent: 'center', gap: '0.8rem', flexWrap: 'wrap' }}>
             {[
-              { icon: checklistIcon, label: '50+ Active Listings' },
-              { icon: shieldIcon,    label: '100% Verified Vendors' },
-              { icon: whatsappIcon,  label: 'Direct WhatsApp Chat' },
-            ].map((t) => (
-              <div key={t.label} className="trust-item" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.55rem', padding: '0.55rem 1rem', borderRadius: 999, background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(15,23,42,0.06)', boxShadow: '0 6px 16px -8px rgba(15,23,42,0.10)', color: '#0e9a52', fontWeight: 600, fontSize: '0.85rem' }}>
-                <img src={t.icon} alt="" style={{ width: 14, height: 14, objectFit: 'contain' }} />
-                <span>{t.label}</span>
+              { Icon: ShieldCheck, label: 'Verified Vendors', color: '#16b865' },
+              { Icon: MessageCircle, label: 'Direct Messaging', color: '#3b82f6' },
+              { Icon: Users, label: 'Trusted Community', color: '#A78BFA' },
+            ].map(({ Icon, label, color }) => (
+              <div key={label} className="trust-item" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.55rem 1rem', borderRadius: 999, background: 'rgba(255,255,255,0.78)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(15,23,42,0.06)', boxShadow: '0 6px 16px -8px rgba(15,23,42,0.10)', color: '#0f172a', fontWeight: 600, fontSize: '0.85rem' }}>
+                <Icon size={16} color={color} />
+                <span>{label}</span>
               </div>
             ))}
           </div>
         </div>
       </section>
+
+      {/* Why ThriftLink */}
+      <section className="why-tl" style={{ padding: '4.5rem 2rem', background: 'white' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+            <h2 className="section-title" style={{ fontSize: '2rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.6rem' }}>Why ThriftLink?</h2>
+            <p style={{ color: '#64748b', maxWidth: 600, margin: '0 auto' }}>Built around verification, direct chat, and an active safety net.</p>
+          </div>
+          <div className="why-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.25rem' }}>
+            {[
+              { Icon: ShieldCheck, color: '#16b865', bg: 'rgba(22,184,101,0.12)', title: 'Verified Vendors', body: 'Every approved vendor goes through ID + business verification before listing.' },
+              { Icon: MessageCircle, color: '#3b82f6', bg: 'rgba(59,130,246,0.12)', title: 'Direct Messaging', body: 'Chat with vendors on WhatsApp or in-app before you spend a naira.' },
+              { Icon: Flag, color: '#FF6B6B', bg: 'rgba(255,107,107,0.12)', title: 'Safer Shopping', body: 'Built-in reporting tools and a watchful admin team keep bad actors out.' },
+              { Icon: Users, color: '#A78BFA', bg: 'rgba(167,139,250,0.14)', title: 'Community Driven', body: "Built for Nigeria's thrift community — by people who actually thrift." },
+            ].map(({ Icon, color, bg, title, body }) => (
+              <div key={title} className="why-card" style={{ background: 'white', borderRadius: 20, padding: '1.5rem 1.25rem', border: '1px solid rgba(15,23,42,0.06)', transition: 'transform .2s, border-color .2s, box-shadow .2s' }}>
+                <div style={{ width: 52, height: 52, borderRadius: '50%', background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}>
+                  <Icon size={24} color={color} />
+                </div>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.4rem' }}>{title}</h3>
+                <p style={{ fontSize: '0.95rem', color: '#64748b', lineHeight: 1.55 }}>{body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* How ThriftLink Protects You */}
+      <section className="protects" style={{ padding: '4.5rem 2rem', background: 'linear-gradient(135deg, rgba(22,184,101,0.08), rgba(167,139,250,0.06))' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+            <h2 className="section-title" style={{ fontSize: '2rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.6rem' }}>How ThriftLink Protects You</h2>
+            <p style={{ color: '#475569', maxWidth: 620, margin: '0 auto' }}>Trust isn't a slogan. It's a process — here's ours.</p>
+          </div>
+          <div className="timeline-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem', position: 'relative' }}>
+            {[
+              { n: '01', title: 'Vendors apply for verification', body: 'NIN + government ID + business details required upfront.' },
+              { n: '02', title: 'Buyers chat before purchasing', body: 'Ask questions, see real photos, confirm fit on WhatsApp.' },
+              { n: '03', title: 'Users report suspicious behavior', body: 'One tap to flag a vendor, listing, or message.' },
+              { n: '04', title: 'ThriftLink reviews and removes', body: 'Admins act on every report and remove bad actors quickly.' },
+            ].map((s) => (
+              <div key={s.n} className="timeline-step" style={{ background: 'white', borderRadius: 20, padding: '1.5rem 1.25rem', border: '1px solid rgba(15,23,42,0.06)', position: 'relative' }}>
+                <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#16b865', marginBottom: '0.5rem', letterSpacing: '-0.02em', fontFamily: "'Space Grotesk', sans-serif" }}>{s.n}</div>
+                <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.4rem' }}>{s.title}</h3>
+                <p style={{ fontSize: '0.9rem', color: '#64748b', lineHeight: 1.55 }}>{s.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Recently Viewed strip */}
+      {recent.length > 0 && (
+        <section style={{ padding: '3rem 2rem 1rem', background: '#f9fafb' }}>
+          <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+            <h2 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#0f172a', marginBottom: '1rem' }}>Recently viewed</h2>
+            <div style={{ display: 'flex', gap: '1rem', overflowX: 'auto', paddingBottom: '1rem', scrollSnapType: 'x mandatory' }}>
+              {recent.map(p => (
+                <div key={p.id} style={{ minWidth: 220, maxWidth: 220, scrollSnapAlign: 'start' }}>
+                  <ProductCard product={p} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Search Section */}
       <section className="search-section" style={{ background: 'white', padding: '3rem 2rem', borderBottom: '1px solid #e5e7eb' }}>
@@ -395,14 +494,19 @@ const Home = () => {
                         {vendor.shop_name}
                       </h3>
                       {vendor.is_verified ? (
-                        <span title="Verified" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 16, height: 16, borderRadius: '50%', background: '#3b82f6', color: 'white', fontSize: 10, fontWeight: 800 }}>✓</span>
+                        <span title="Verified vendor" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <ShieldCheck size={16} color="#fff" fill="#3b82f6" strokeWidth={2.5} />
+                        </span>
                       ) : null}
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.78rem', opacity: 0.95 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.78rem', opacity: 0.95, marginBottom: 8 }}>
                       <span>★ {Number(vendor.rating || 0).toFixed(1)}</span>
                       <span style={{ opacity: 0.5 }}>•</span>
                       <span>{vendor.product_count || vendor.total_products || 0} products</span>
                     </div>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '0.3rem 0.7rem', borderRadius: 999, background: 'rgba(255,255,255,0.95)', color: '#0e9a52', fontWeight: 700, fontSize: '0.72rem' }}>
+                      Visit Store →
+                    </span>
                   </div>
                 </div>
               );
@@ -600,6 +704,64 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+{/* Testimonials */}
+<section className="testimonials" style={{ padding: '4.5rem 2rem', background: 'white' }}>
+  <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+    <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+      <h2 className="section-title" style={{ fontSize: '2rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.6rem' }}>What our community says</h2>
+      <p style={{ color: '#64748b', maxWidth: 600, margin: '0 auto' }}>Real buyers, real vendors, real stories.</p>
+    </div>
+    <div className="testi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem' }}>
+      {[
+        { name: 'Adaeze O.', meta: 'Buyer · Lagos', seed: 'Adaeze', quote: 'I was nervous about thrift shopping online until I found ThriftLink. The vendor I bought from had real reviews and we chatted on WhatsApp first. My ankara jacket arrived exactly as shown.' },
+        { name: 'Tunde A.', meta: 'Vendor · Abuja', seed: 'Tunde', quote: 'Selling on ThriftLink doubled my reach. Buyers trust the verified badge and reach out directly — no haggling with bots.' },
+        { name: 'Chiamaka E.', meta: 'Buyer · Port Harcourt', seed: 'Chiamaka', quote: 'The reporting tool saved me from a fake account. Admin removed them within a day.' },
+      ].map(t => (
+        <div key={t.name} className="testi-card" style={{ background: 'white', borderRadius: 20, padding: '1.75rem 1.5rem', border: '1px solid rgba(15,23,42,0.06)', boxShadow: '0 4px 16px -8px rgba(15,23,42,0.08)' }}>
+          <div style={{ display: 'flex', gap: 2, marginBottom: '0.85rem' }}>
+            {[0,1,2,3,4].map(i => <Star key={i} size={16} color="#facc15" fill="#facc15" />)}
+          </div>
+          <p style={{ color: '#334155', lineHeight: 1.6, fontSize: '0.95rem', marginBottom: '1.25rem' }}>"{t.quote}"</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(t.seed)}`} alt={t.name} style={{ width: 44, height: 44, borderRadius: '50%', background: '#f1f5f9' }} />
+            <div>
+              <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.95rem' }}>{t.name}</div>
+              <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{t.meta}</div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+{/* Become a Vendor CTA band */}
+<section className="vendor-band" style={{ padding: '4rem 2rem', background: 'linear-gradient(135deg, #0e9a52 0%, #16b865 50%, #1ed373 100%)', color: 'white', position: 'relative', overflow: 'hidden' }}>
+  <div aria-hidden style={{ position: 'absolute', top: -120, right: -80, width: 320, height: 320, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.18) 0%, transparent 70%)' }} />
+  <div className="vendor-band-grid" style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '2.5rem', alignItems: 'center', position: 'relative' }}>
+    <div>
+      <h2 style={{ fontSize: 'clamp(1.6rem, 3vw, 2.2rem)', fontWeight: 800, lineHeight: 1.15, marginBottom: '1rem', color: 'white' }}>
+        Run a thrift shop? Get the verified badge.
+      </h2>
+      <p style={{ fontSize: '1.05rem', opacity: 0.95, marginBottom: '1.5rem', maxWidth: 560 }}>
+        Join a community of trusted Nigerian thrift vendors selling directly to buyers who already trust ThriftLink.
+      </p>
+      <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.6rem 1.5rem', maxWidth: 560 }}>
+        {['Reach more buyers', 'Build trust through verification', 'Chat directly with customers', 'Easily manage listings'].map(item => (
+          <li key={item} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.95rem' }}>
+            <ShieldCheck size={18} color="#facc15" /> {item}
+          </li>
+        ))}
+      </ul>
+    </div>
+    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+      <Link to="/login" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.6rem', padding: '1rem 1.75rem', borderRadius: 999, background: 'white', color: '#0e9a52', fontWeight: 800, textDecoration: 'none', boxShadow: '0 16px 32px -10px rgba(15,23,42,0.25)', fontSize: '1rem' }}>
+        Apply to Become a Verified Vendor →
+      </Link>
+    </div>
+  </div>
+</section>
 
 {/* CTA Section */}
 <section className="cta-section" style={{
