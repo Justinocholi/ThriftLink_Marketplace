@@ -6,36 +6,34 @@ import { fileURLToPath } from 'node:url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-// The Sentry plugin is only active when an auth token is provided, so the
-// default `npm run build` doesn't fail in dev or CI. Set SENTRY_AUTH_TOKEN
-// (a Sentry "Internal Integration" token with project:releases scope) plus
-// SENTRY_ORG and SENTRY_PROJECT in your CI/host env to enable source-map
-// upload and release tagging.
+// Sentry source-map upload requires three env vars at build time:
+//   SENTRY_AUTH_TOKEN  — internal-integration token with project:releases scope
+//   SENTRY_ORG         — Sentry org slug
+//   SENTRY_PROJECT     — Sentry project slug
+// When SENTRY_AUTH_TOKEN is unset the plugin is skipped entirely, so local /
+// CI builds work without any Sentry config.
 const sentryAuthToken = process.env.SENTRY_AUTH_TOKEN
 const sentryOrg = process.env.SENTRY_ORG
 const sentryProject = process.env.SENTRY_PROJECT
-const sentryEnabled = Boolean(sentryAuthToken && sentryOrg && sentryProject)
+const sentryEnabled = Boolean(sentryAuthToken)
 
 export default defineConfig({
-  // `@/foo` resolves to `src/foo` — shadcn/ui's standard alias.
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
   },
   build: {
-    // Hidden source maps are emitted alongside the bundle so the Sentry CLI
-    // can upload them, but the production HTML doesn't reference them — so
-    // they never ship to end users.
-    sourcemap: sentryEnabled ? 'hidden' : false,
+    sourcemap: true,
   },
   plugins: [
     react(),
     ...(sentryEnabled
       ? [sentryVitePlugin({
-          authToken: sentryAuthToken,
           org: sentryOrg,
           project: sentryProject,
+          authToken: sentryAuthToken,
+          sourcemaps: { assets: './dist/**' },
         })]
       : []),
   ],
