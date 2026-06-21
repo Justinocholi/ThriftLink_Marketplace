@@ -31,6 +31,7 @@ import { useToast } from '../../components/ui/Toast';
 import SafetyTips from '../../components/ui/SafetyTips';
 import ProgressiveImage from '../../components/ui/ProgressiveImage';
 import { Skeleton, SkeletonCircle } from '../../components/ui/Skeleton';
+import ProductCard from '../../components/ProductCard';
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -48,6 +49,7 @@ const ProductDetails = () => {
   const [activeImg, setActiveImg] = useState(0);
   const [saved, setSaved] = useState(false);
   const [phoneRevealed, setPhoneRevealed] = useState(false);
+  const [recentItems, setRecentItems] = useState([]);
 
   const galleryRef = useRef(null);
 
@@ -74,7 +76,16 @@ const ProductDetails = () => {
       const arr = raw ? JSON.parse(raw) : [];
       const list = Array.isArray(arr) ? arr.filter(x => x !== id) : [];
       list.unshift(id);
-      localStorage.setItem('tl_recent', JSON.stringify(list.slice(0, 10)));
+      const capped = list.slice(0, 10);
+      localStorage.setItem('tl_recent', JSON.stringify(capped));
+      // Hydrate strip from the other recent IDs (exclude current product)
+      const others = capped.filter(x => x !== id).slice(0, 8);
+      if (others.length) {
+        Promise.all(others.map(rid => productsApi.get(rid).catch(() => null)))
+          .then(rs => setRecentItems(rs.filter(Boolean)));
+      } else {
+        setRecentItems([]);
+      }
     } catch {}
   }, [id]);
 
@@ -612,6 +623,21 @@ const ProductDetails = () => {
           {phoneRevealed ? 'Saved' : 'Call'}
         </button>
       </div>
+
+      {recentItems.length > 0 && (
+        <section style={{ padding: '2rem 1.25rem 3rem', background: '#f9fafb' }}>
+          <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+            <h2 style={{ fontSize: '1.3rem', fontWeight: 700, color: '#0f172a', marginBottom: '1rem' }}>Recently viewed</h2>
+            <div style={{ display: 'flex', gap: '1rem', overflowX: 'auto', paddingBottom: '0.75rem', scrollSnapType: 'x mandatory' }}>
+              {recentItems.map(p => (
+                <div key={p.id} style={{ minWidth: 220, maxWidth: 220, scrollSnapAlign: 'start' }}>
+                  <ProductCard product={p} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       <Footer />
 
