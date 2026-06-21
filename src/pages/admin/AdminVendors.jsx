@@ -14,6 +14,14 @@ const AdminVendors = () => {
   const [error, setError] = useState('');
   const [filter, setFilter] = useState('all');
   const [acting, setActing] = useState(null);
+  const [featuredOnly, setFeaturedOnly] = useState(false);
+  const [toast, setToast] = useState('');
+  const [rankDrafts, setRankDrafts] = useState({});
+
+  const showToast = (msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(''), 2200);
+  };
 
   const load = () => {
     setLoading(true);
@@ -45,6 +53,7 @@ const AdminVendors = () => {
       setVendors(prev => prev.map(v => v.id === vendor.id
         ? { ...v, is_featured: res.is_featured, featured_rank: res.featured_rank }
         : v));
+      showToast(is_featured ? `Featured ${vendor.shop_name}` : `Removed ${vendor.shop_name} from featured`);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -52,7 +61,8 @@ const AdminVendors = () => {
     }
   };
 
-  const filtered = filter === 'all' ? vendors : vendors.filter(v => v.verification_status === filter);
+  let filtered = filter === 'all' ? vendors : vendors.filter(v => v.verification_status === filter);
+  if (featuredOnly) filtered = filtered.filter(v => v.is_featured);
 
   return (
     <div>
@@ -62,16 +72,38 @@ const AdminVendors = () => {
       </div>
 
       {error && <div style={{ background: '#fee2e2', color: '#dc2626', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem', fontSize: '0.875rem' }}>{error}</div>}
+      {toast && (
+        <div style={{ position: 'fixed', bottom: 90, left: '50%', transform: 'translateX(-50%)', background: '#0f172a', color: 'white', padding: '0.7rem 1.2rem', borderRadius: '999px', fontSize: '0.85rem', fontWeight: 600, zIndex: 100, boxShadow: '0 10px 30px rgba(0,0,0,0.25)' }}>
+          {toast}
+        </div>
+      )}
 
       <div style={{ background: 'white', borderRadius: '16px', padding: '2rem', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', paddingBottom: '1rem', borderBottom: '1px solid #f1f5f9', flexWrap: 'wrap', gap: '1rem' }}>
           <h2 style={{ fontSize: '1.5rem', color: '#0f172a', fontWeight: '700' }}>All Vendors</h2>
-          <select value={filter} onChange={e => setFilter(e.target.value)} style={{ padding: '0.625rem 1rem', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '0.9rem', background: 'white', cursor: 'pointer' }}>
-            <option value="all">All Vendors</option>
-            <option value="approved">Approved</option>
-            <option value="pending">Pending</option>
-            <option value="rejected">Rejected</option>
-          </select>
+          <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => setFeaturedOnly(v => !v)}
+              style={{
+                padding: '0.55rem 0.95rem',
+                border: '1px solid ' + (featuredOnly ? '#facc15' : '#e2e8f0'),
+                borderRadius: '999px',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                background: featuredOnly ? '#fef9c3' : 'white',
+                color: featuredOnly ? '#a16207' : '#64748b',
+                cursor: 'pointer',
+              }}
+            >
+              {featuredOnly ? '★ Featured only' : '☆ Show featured only'}
+            </button>
+            <select value={filter} onChange={e => setFilter(e.target.value)} style={{ padding: '0.625rem 1rem', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '0.9rem', background: 'white', cursor: 'pointer' }}>
+              <option value="all">All Vendors</option>
+              <option value="approved">Approved</option>
+              <option value="pending">Pending</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
         </div>
 
         {loading ? (
@@ -102,7 +134,7 @@ const AdminVendors = () => {
                       <td style={{ padding: '1rem', color: '#475569' }}>{vendor.subscription_plan || 'free'}</td>
                       <td style={{ padding: '1rem' }}>
                         {vendor.is_verified ? (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
                             <button
                               disabled={acting === vendor.id}
                               onClick={() => handleFeature(vendor, vendor.is_featured ? 0 : 1, vendor.featured_rank || 1)}
@@ -115,22 +147,44 @@ const AdminVendors = () => {
                               }}>
                               {vendor.is_featured ? '★ Featured' : '☆ Feature'}
                             </button>
-                            {vendor.is_featured ? (
-                              <input
-                                type="number"
-                                min="1"
-                                title="Rank (1 = top)"
-                                defaultValue={vendor.featured_rank || 1}
-                                onBlur={(e) => {
-                                  const r = parseInt(e.target.value, 10);
-                                  if (r && r !== vendor.featured_rank) handleFeature(vendor, 1, r);
-                                }}
-                                style={{ width: '52px', padding: '0.35rem', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '0.8rem' }}
-                              />
-                            ) : null}
+                            {vendor.is_featured && (
+                              <>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  placeholder="Rank"
+                                  title="Rank (1 = top)"
+                                  value={rankDrafts[vendor.id] ?? vendor.featured_rank ?? ''}
+                                  onChange={(e) => setRankDrafts(d => ({ ...d, [vendor.id]: e.target.value }))}
+                                  style={{ width: '60px', padding: '0.35rem', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '0.8rem' }}
+                                />
+                                <button
+                                  disabled={acting === vendor.id}
+                                  onClick={() => {
+                                    const raw = rankDrafts[vendor.id];
+                                    const r = raw === '' || raw == null ? null : parseInt(raw, 10);
+                                    handleFeature(vendor, 1, r || null);
+                                  }}
+                                  style={{
+                                    padding: '0.4rem 0.7rem', border: 'none', borderRadius: '6px', cursor: 'pointer',
+                                    background: '#3b82f6', color: 'white', fontWeight: 600, fontSize: '0.78rem',
+                                  }}
+                                >Save</button>
+                              </>
+                            )}
                           </div>
                         ) : (
-                          <span style={{ color: '#cbd5e1', fontSize: '0.8rem' }}>—</span>
+                          <button
+                            disabled
+                            title="Only verified vendors can be featured. Approve the vendor first."
+                            style={{
+                              padding: '0.4rem 0.7rem', border: '1px dashed #e2e8f0', borderRadius: '6px',
+                              background: 'white', color: '#cbd5e1', fontWeight: 600, fontSize: '0.78rem',
+                              cursor: 'not-allowed',
+                            }}
+                          >
+                            ☆ Verify first
+                          </button>
                         )}
                       </td>
                       <td style={{ padding: '1rem' }}>

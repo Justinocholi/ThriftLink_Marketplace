@@ -57,13 +57,20 @@ const Home = () => {
     // (by featured_rank), then by rating — so the home page reflects the
     // admin's curated "top vendors" automatically.
     vendorsApi
-      .list({ limit: 8 })
-      .then((data) => setVendors(Array.isArray(data?.vendors) ? data.vendors : []))
+      .list({ featured: 'true', limit: 8 })
+      .then((data) => {
+        const list = Array.isArray(data?.vendors) ? data.vendors : [];
+        if (list.length > 0) return setVendors(list);
+        // graceful fallback: any vendors at all, so the section isn't empty at launch
+        return vendorsApi.list({ limit: 8 })
+          .then(d => setVendors(Array.isArray(d?.vendors) ? d.vendors : []))
+          .catch(() => setVendors([]));
+      })
       .catch(() => setVendors([]))
       .finally(() => setVendorsLoading(false));
   }, []);
 
-  const featuredVendors = vendors.slice(0, 4);
+  const featuredVendors = vendors.slice(0, 8);
   const monthlyVendors = vendors.slice(0, 3);
 
   const handleSearch = () => {
@@ -330,7 +337,14 @@ const Home = () => {
           </h2>
           
           {vendorsLoading ? (
-            <div style={{ textAlign: 'center', color: '#6b7280', padding: '2rem' }}>Loading vendors…</div>
+            <div className="vendors-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1.25rem' }}>
+              {[0,1,2,3].map(i => (
+                <div key={i} style={{ borderRadius: 16, overflow: 'hidden', background: '#f1f5f9', aspectRatio: '1 / 1', position: 'relative' }}>
+                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%)', backgroundSize: '200% 100%', animation: 'tl-shimmer 1.4s linear infinite' }} />
+                </div>
+              ))}
+              <style>{`@keyframes tl-shimmer { 0%{background-position: 200% 0;} 100%{background-position: -200% 0;} }`}</style>
+            </div>
           ) : featuredVendors.length === 0 ? (
             <div style={{ textAlign: 'center', color: '#6b7280', padding: '2rem', maxWidth: '500px', margin: '0 auto' }}>
               No verified vendors yet. <Link to="/login" style={{ color: '#25D366', fontWeight: 600 }}>Become the first vendor →</Link>
@@ -338,101 +352,61 @@ const Home = () => {
           ) : (
           <div className="vendors-grid" style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-            gap: '1.5rem'
+            gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+            gap: '1.25rem'
           }}>
-            {featuredVendors.map(vendor => (
-              <div key={vendor.id} className="vendor-card" style={{
-                background: 'white',
-                border: '1px solid #e5e7eb',
-                borderRadius: '12px',
-                padding: '1.5rem',
-                transition: 'all 0.3s ease',
-                position: 'relative',
-                cursor: 'pointer'
-              }}
-              onClick={() => navigate(`/vendor/${vendor.id}`)}
-              >
-                <div className="vendor-header" style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-                  <div className="vendor-avatar" style={{
-                    width: '50px',
-                    height: '50px',
-                    borderRadius: '50%',
-                    background: vendor.logo ? `url(${vendor.logo}) center/cover` : gradientFor(vendor.id),
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'white',
-                    fontWeight: 'bold',
-                    fontSize: '1.2rem',
-                    flexShrink: 0
-                  }}>
-                    {!vendor.logo && initialsOf(vendor.shop_name)}
-                  </div>
-                  <div className="vendor-info">
-                    <h3 style={{ fontSize: '1.1rem', fontWeight: '600', color: '#1f2937', marginBottom: '0.2rem' }}>{vendor.shop_name}</h3>
-                    {vendor.is_verified ? (
-                      <div className="verification-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.75rem', color: '#166534', background: '#dcfce7', padding: '0.2rem 0.6rem', borderRadius: '10px' }}>
-                        <img src={checklistIcon} alt="Verified" style={{ width: '12px', height: '12px' }} /> Verified
-                      </div>
-                    ) : null}
-                  </div>
-                </div>
-
-                {(vendor.category || vendor.city || vendor.state) && (
-                  <div className="vendor-specialties" style={{ marginBottom: '1rem' }}>
-                    {[vendor.category, [vendor.city, vendor.state].filter(Boolean).join(', ')]
-                      .filter(Boolean)
-                      .map((tag) => (
-                        <span key={tag} style={{
-                          display: 'inline-block',
-                          background: '#f3f4f6',
-                          color: '#6b7280',
-                          padding: '0.3rem 0.8rem',
-                          borderRadius: '12px',
-                          fontSize: '0.8rem',
-                          marginRight: '0.5rem',
-                          marginBottom: '0.5rem'
-                        }}>{tag}</span>
-                      ))}
-                  </div>
-                )}
-
-                <div className="vendor-stats" style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', fontSize: '0.85rem', color: '#6b7280' }}>
-                  <span><strong>{Number(vendor.rating || 0).toFixed(1)}</strong> Rating</span>
-                  <span><strong>{vendor.total_reviews || 0}</strong> Reviews</span>
-                  <span><strong>{vendor.profile_views || 0}</strong> Views</span>
-                </div>
-
-                <Link
-                  to={`/vendor/${vendor.id}`}
-                  onClick={(e) => e.stopPropagation()}
-                  className="btn-whatsapp"
+            <style>{`
+              .ig-vendor-card { transition: transform .2s ease, box-shadow .2s ease; }
+              .ig-vendor-card:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 20px 40px -12px rgba(15,23,42,0.25); }
+            `}</style>
+            {featuredVendors.map(vendor => {
+              const cover = vendor.shop_banner_url || vendor.banner_url || vendor.first_product_image || vendor.logo;
+              return (
+                <div
+                  key={vendor.id}
+                  className="ig-vendor-card"
+                  onClick={() => navigate(`/vendor/${vendor.id}`)}
                   style={{
-                    background: '#25D366',
-                    color: 'white',
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.5rem',
-                    padding: '0.7rem',
-                    border: 'none',
-                    borderRadius: '6px',
-                    fontWeight: '600',
-                    fontSize: '0.85rem',
+                    position: 'relative',
+                    borderRadius: 16,
+                    overflow: 'hidden',
                     cursor: 'pointer',
-                    textDecoration: 'none',
-                    transition: 'all 0.2s ease'
+                    background: cover ? `#0f172a url(${cover}) center/cover` : gradientFor(vendor.id),
+                    aspectRatio: '1 / 1',
+                    boxShadow: '0 8px 24px -12px rgba(15,23,42,0.18)',
+                    border: '1px solid #f1f5f9',
                   }}
-                  onMouseOver={(e) => e.currentTarget.style.background = '#1fb855'}
-                  onMouseOut={(e) => e.currentTarget.style.background = '#25D366'}
                 >
-                  <img src={whatsappBtnIcon} alt="WhatsApp" style={{ width: '16px', height: '16px', filter: 'brightness(0) invert(1)' }} />
-                  View Vendor
-                </Link>
-              </div>
-            ))}
+                  {!cover && (
+                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '2.5rem', fontWeight: 800, letterSpacing: '0.05em' }}>
+                      {initialsOf(vendor.shop_name)}
+                    </div>
+                  )}
+                  {/* gradient overlay bottom-to-top */}
+                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(15,23,42,0.85) 0%, rgba(15,23,42,0.25) 45%, rgba(15,23,42,0) 70%)' }} />
+                  {vendor.is_featured ? (
+                    <div style={{ position: 'absolute', top: 10, left: 10, background: 'rgba(250,204,21,0.95)', color: '#7c4a03', padding: '0.2rem 0.55rem', borderRadius: 999, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.04em' }}>
+                      ★ FEATURED
+                    </div>
+                  ) : null}
+                  <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '0.9rem 0.9rem 0.85rem', color: 'white' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                      <h3 style={{ fontSize: '1rem', fontWeight: 700, lineHeight: 1.2, textShadow: '0 1px 6px rgba(0,0,0,0.45)' }}>
+                        {vendor.shop_name}
+                      </h3>
+                      {vendor.is_verified ? (
+                        <span title="Verified" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 16, height: 16, borderRadius: '50%', background: '#3b82f6', color: 'white', fontSize: 10, fontWeight: 800 }}>✓</span>
+                      ) : null}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.78rem', opacity: 0.95 }}>
+                      <span>★ {Number(vendor.rating || 0).toFixed(1)}</span>
+                      <span style={{ opacity: 0.5 }}>•</span>
+                      <span>{vendor.product_count || vendor.total_products || 0} products</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
           )}
         </div>

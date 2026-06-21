@@ -65,6 +65,10 @@ import Checkout from './pages/public/Checkout';
 import ForgotPassword from './pages/public/ForgotPassword';
 import ResetPassword from './pages/public/ResetPassword';
 
+import Terms from './pages/legal/Terms';
+import Privacy from './pages/legal/Privacy';
+import NotFound from './pages/NotFound';
+
 import PageviewTracker from './analytics/PageviewTracker';
 
 function App() {
@@ -98,8 +102,8 @@ function App() {
                 } />
 
                 {/* Static Pages Routes */}
-                <Route path="/legal/privacy" element={<PrivacyPolicy />} />
-                <Route path="/legal/terms" element={<TermsOfService />} />
+                <Route path="/legal/privacy" element={<Privacy />} />
+                <Route path="/legal/terms" element={<Terms />} />
                 <Route path="/legal/vendor-policy" element={<VendorPolicy />} />
                 <Route path="/legal/cookies" element={<CookiePolicy />} />
 
@@ -164,6 +168,9 @@ function App() {
                   <Route path="profile" element={<UserProfile />} />
                   <Route path="support" element={<UserSupport />} />
                 </Route>
+
+                {/* Catch-all 404 */}
+                <Route path="*" element={<NotFound />} />
               </Routes>
               <MobileBottomNav />
             </UIProvider>

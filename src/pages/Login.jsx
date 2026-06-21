@@ -99,8 +99,12 @@ const Login = () => {
   };
 
   return (
-    <div style={{ fontFamily: "'Inter', sans-serif", minHeight: '100vh', background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)', display: 'flex', alignItems: 'center' }}>
+    <div style={{ fontFamily: "'Inter', sans-serif", minHeight: '100vh', background: 'radial-gradient(1200px 600px at 10% 10%, rgba(37, 211, 102, 0.12), transparent 60%), radial-gradient(900px 500px at 90% 90%, rgba(59, 130, 246, 0.12), transparent 60%), linear-gradient(135deg, #f8fafc 0%, #eef2f7 100%)', display: 'flex', alignItems: 'center', position: 'relative', overflow: 'hidden' }}>
       <style>{`
+        @keyframes floatA { 0%,100% { transform: translate(0,0) } 50% { transform: translate(20px,-30px) } }
+        @keyframes floatB { 0%,100% { transform: translate(0,0) } 50% { transform: translate(-25px,20px) } }
+        @keyframes pulseDot { 0%,100% { opacity: 1 } 50% { opacity: 0.4 } }
+        .auth-orb { position: absolute; border-radius: 50%; filter: blur(60px); pointer-events: none; z-index: 0; }
         @media (max-width: 768px) {
           .auth-container { flex-direction: column !important; padding: 1rem !important; gap: 2rem !important; }
           .info-section { order: 2; text-align: center; }
@@ -108,11 +112,21 @@ const Login = () => {
           .info-title { font-size: 2rem !important; }
         }
       `}</style>
-      <div className="auth-container" style={{ display: 'flex', maxWidth: '1200px', margin: '0 auto', padding: '2rem', gap: '3rem', alignItems: 'center', width: '100%' }}>
+
+      {/* Floating brand-color orbs */}
+      <div className="auth-orb" style={{ width: 320, height: 320, background: 'rgba(37, 211, 102, 0.35)', top: -80, left: -60, animation: 'floatA 12s ease-in-out infinite' }} />
+      <div className="auth-orb" style={{ width: 280, height: 280, background: 'rgba(59, 130, 246, 0.3)', bottom: -60, right: -40, animation: 'floatB 14s ease-in-out infinite' }} />
+      <div className="auth-orb" style={{ width: 200, height: 200, background: 'rgba(250, 204, 21, 0.25)', top: '40%', right: '38%', animation: 'floatA 16s ease-in-out infinite' }} />
+
+      <div className="auth-container" style={{ display: 'flex', maxWidth: '1200px', margin: '0 auto', padding: '2rem', gap: '3rem', alignItems: 'center', width: '100%', position: 'relative', zIndex: 1 }}>
 
         {/* Left info panel */}
         <div className="info-section" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-          <h1 className="info-title" style={{ fontSize: '2.5rem', fontWeight: '800', color: '#1f2937', marginBottom: '1rem', lineHeight: 1.2 }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', alignSelf: 'flex-start', padding: '0.4rem 0.9rem', background: 'rgba(37, 211, 102, 0.12)', border: '1px solid rgba(37, 211, 102, 0.3)', borderRadius: '999px', marginBottom: '1.25rem', fontSize: '0.8rem', fontWeight: 600, color: '#15803d' }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', animation: 'pulseDot 1.8s ease-in-out infinite' }} />
+            Verified WhatsApp vendors · Nigeria
+          </div>
+          <h1 className="info-title" style={{ fontSize: '2.75rem', fontWeight: '800', marginBottom: '1rem', lineHeight: 1.15, background: 'linear-gradient(135deg, #0f172a 0%, #15803d 45%, #3b82f6 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
             Join Nigeria's Largest WhatsApp Marketplace
           </h1>
           <p style={{ fontSize: '1.1rem', color: '#6b7280', marginBottom: '2rem', lineHeight: 1.6 }}>
@@ -138,9 +152,10 @@ const Login = () => {
         </div>
 
         {/* Right form panel */}
-        <div className="login-section" style={{ flex: '0 0 450px', background: 'white', borderRadius: '16px', padding: '3rem', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', border: '1px solid #e5e7eb' }}>
+        <div className="login-section" style={{ flex: '0 0 450px', background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderRadius: '20px', padding: '3rem', boxShadow: '0 20px 50px rgba(15, 23, 42, 0.12), 0 1px 0 rgba(255,255,255,0.6) inset', border: '1px solid rgba(255,255,255,0.7)', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: 'linear-gradient(90deg, #25D366 0%, #3b82f6 50%, #facc15 100%)' }} />
           <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-            <img src={thriftlinkLogo} alt="Thrift Link" style={{ height: '100px', objectFit: 'contain', marginBottom: '1.5rem', filter: 'drop-shadow(0 4px 12px rgba(22, 184, 101, 0.25))' }} />
+            <img src={thriftlinkLogo} alt="Thrift Link" style={{ height: '100px', objectFit: 'contain', marginBottom: '1.5rem', mixBlendMode: 'multiply' }} />
             <h2 style={{ fontSize: '1.8rem', fontWeight: '700', color: '#1f2937', marginBottom: '0.5rem' }}>
               {activeTab === 'signin' ? 'Welcome Back' : 'Create Account'}
             </h2>
