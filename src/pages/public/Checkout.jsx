@@ -47,12 +47,26 @@ const Checkout = () => {
     <div style={{ background: '#f9fafb', minHeight: '100vh', fontFamily: "'Inter', sans-serif" }}>
       <style>{`
         @media (max-width: 860px) {
-          .checkout-wrap { padding: 5.5rem 1.25rem 3rem !important; }
+          .checkout-wrap { padding: 5.5rem 1.25rem 7rem !important; }
           .checkout-grid { grid-template-columns: 1fr !important; }
           .checkout-summary { position: static !important; top: auto !important; }
+          .checkout-card { padding: 1.25rem !important; }
+          .checkout-title { font-size: clamp(1.4rem, 5vw, 2rem) !important; }
         }
         @media (max-width: 480px) {
           .checkout-two-col { grid-template-columns: 1fr !important; }
+          .checkout-wrap { padding: 5rem 1rem 7rem !important; }
+          .checkout-card { padding: 1rem !important; border-radius: 12px !important; }
+          .checkout-place-order {
+            position: fixed !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 64px !important;
+            margin: 0 !important;
+            border-radius: 0 !important;
+            z-index: 40 !important;
+            box-shadow: 0 -2px 12px rgba(0,0,0,0.08) !important;
+          }
         }
       `}</style>
       <Navbar />
@@ -66,7 +80,7 @@ const Checkout = () => {
             <ArrowLeft size={20} />
             Back to Cart
           </button>
-          <h1 style={{ fontSize: '2rem', fontWeight: '800', color: '#1f2937' }}>Checkout</h1>
+          <h1 className="checkout-title" style={{ fontSize: '2rem', fontWeight: '800', color: '#1f2937' }}>Checkout</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="checkout-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: '2rem' }}>
@@ -74,7 +88,7 @@ const Checkout = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
             
             {/* Shipping Info */}
-            <div style={{ background: 'white', borderRadius: '16px', padding: '2rem', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: '1px solid #e5e7eb' }}>
+            <div className="checkout-card" style={{ background: 'white', borderRadius: '16px', padding: '2rem', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: '1px solid #e5e7eb' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
                 <Truck size={24} color="#3b82f6" />
                 <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#1f2937' }}>Shipping Information</h2>
@@ -132,7 +146,7 @@ const Checkout = () => {
             </div>
 
             {/* Payment Method */}
-            <div style={{ background: 'white', borderRadius: '16px', padding: '2rem', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: '1px solid #e5e7eb' }}>
+            <div className="checkout-card" style={{ background: 'white', borderRadius: '16px', padding: '2rem', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: '1px solid #e5e7eb' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
                 <CreditCard size={24} color="#3b82f6" />
                 <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#1f2937' }}>Payment Method</h2>
@@ -213,10 +227,11 @@ const Checkout = () => {
                 </div>
               </div>
 
-              <button 
+              <button
                 type="submit"
                 disabled={loading}
-                style={{ 
+                className="checkout-place-order"
+                style={{
                   width: '100%', padding: '1rem', background: '#3b82f6', color: 'white', 
                   borderRadius: '8px', fontWeight: '700', fontSize: '1rem', border: 'none', 
                   cursor: loading ? 'not-allowed' : 'pointer', transition: 'background 0.3s',

@@ -33,9 +33,25 @@ const Cart = () => {
 
   return (
     <div style={{ background: '#f9fafb', minHeight: '100vh', fontFamily: "'Inter', sans-serif" }}>
+      <style>{`
+        @media (max-width: 860px) {
+          .cart-wrap { padding: 5.5rem 1.25rem 3rem !important; }
+          .cart-grid { grid-template-columns: 1fr !important; }
+          .cart-summary { position: static !important; top: auto !important; }
+          .cart-title { font-size: clamp(1.4rem, 5vw, 2rem) !important; }
+          .cart-item { padding: 1rem !important; gap: 1rem !important; }
+          .cart-item-img { width: 80px !important; height: 80px !important; }
+        }
+        @media (max-width: 480px) {
+          .cart-wrap { padding: 5rem 1rem 3rem !important; }
+          .cart-item { flex-direction: column !important; align-items: stretch !important; }
+          .cart-item-img { width: 100% !important; height: 160px !important; }
+          .cart-summary-card { padding: 1.25rem !important; }
+        }
+      `}</style>
       <Navbar />
       
-      <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '6rem 2rem 4rem' }}>
+      <div className="cart-wrap" style={{ maxWidth: '1000px', margin: '0 auto', padding: '6rem 2rem 4rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
           <button 
             onClick={() => navigate(-1)}
@@ -44,7 +60,7 @@ const Cart = () => {
             <ArrowLeft size={20} />
             Back
           </button>
-          <h1 style={{ fontSize: '2rem', fontWeight: '800', color: '#1f2937' }}>Your Shopping Cart</h1>
+          <h1 className="cart-title" style={{ fontSize: '2rem', fontWeight: '800', color: '#1f2937' }}>Your Shopping Cart</h1>
         </div>
 
         {cartItems.length === 0 ? (
@@ -67,12 +83,12 @@ const Cart = () => {
             </Link>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '2rem' }}>
+          <div className="cart-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '2rem' }}>
             {/* Cart Items List */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {cartItems.map((item) => (
-                <div key={item.id} style={{ background: 'white', borderRadius: '12px', padding: '1.5rem', display: 'flex', gap: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: '1px solid #e5e7eb' }}>
-                  <div style={{ width: '100px', height: '100px', borderRadius: '8px', overflow: 'hidden', background: '#f3f4f6', flexShrink: 0 }}>
+                <div key={item.id} className="cart-item" style={{ background: 'white', borderRadius: '12px', padding: '1.5rem', display: 'flex', gap: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: '1px solid #e5e7eb' }}>
+                  <div className="cart-item-img" style={{ width: '100px', height: '100px', borderRadius: '8px', overflow: 'hidden', background: '#f3f4f6', flexShrink: 0 }}>
                     <img 
                       src={item.images?.[0] || 'https://via.placeholder.com/100'} 
                       alt={item.name} 
@@ -116,8 +132,8 @@ const Cart = () => {
             </div>
 
             {/* Order Summary */}
-            <div style={{ position: 'sticky', top: '6rem', height: 'fit-content' }}>
-              <div style={{ background: 'white', borderRadius: '16px', padding: '2rem', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', border: '1px solid #e5e7eb' }}>
+            <div className="cart-summary" style={{ position: 'sticky', top: '6rem', height: 'fit-content' }}>
+              <div className="cart-summary-card" style={{ background: 'white', borderRadius: '16px', padding: '2rem', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', border: '1px solid #e5e7eb' }}>
                 <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#1f2937', marginBottom: '1.5rem' }}>Order Summary</h2>
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>

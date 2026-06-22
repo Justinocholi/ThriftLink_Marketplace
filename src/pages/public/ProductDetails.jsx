@@ -655,6 +655,10 @@ const ProductDetails = () => {
           .pd-sticky-mobile { display: flex; bottom: 64px; }
           .pd-ctas { grid-template-columns: 1fr; }
         }
+        @media (max-width: 480px) {
+          .pd-grid h1 { font-size: clamp(1.25rem, 5vw, 1.6rem) !important; }
+          .pd-ctas button { padding: 0.85rem !important; font-size: 0.95rem !important; }
+        }
       `}</style>
     </div>
   );
