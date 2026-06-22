@@ -61,6 +61,7 @@ import UserSaved from './pages/user/UserSaved';
 import UserProfile from './pages/user/UserProfile';
 import UserSupport from './pages/user/UserSupport';
 import UserMessages from './pages/user/UserMessages';
+import ChatSystem from './components/ChatSystem';
 import Cart from './pages/public/Cart';
 import Checkout from './pages/public/Checkout';
 import ForgotPassword from './pages/public/ForgotPassword';
@@ -124,6 +125,14 @@ function App() {
                 <Route path="/vendors" element={<VerifiedVendors />} />
                 <Route path="/all-categories" element={<Categories />} />
                 <Route path="/wishlist" element={<Wishlist />} />
+                <Route path="/messages" element={
+                  <ProtectedRoute allowedRoles={['user', 'vendor', 'admin']}>
+                    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '1.5rem 1rem' }}>
+                      <h4 style={{ fontSize: '1.5rem', color: '#0f172a', fontWeight: 700, marginBottom: '1.5rem' }}>Messages</h4>
+                      <ChatSystem />
+                    </div>
+                  </ProtectedRoute>
+                } />
 
                 {/* Admin Routes */}
                 <Route path="/admin" element={
