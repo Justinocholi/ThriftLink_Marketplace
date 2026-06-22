@@ -242,12 +242,15 @@ router.post('/:partnerId', authenticate, async (req, res) => {
   const { content, image_url } = req.body;
   const { partnerId } = req.params;
 
+  if (!validatePartner(req, res)) return;
   if (!content && !image_url) {
     return res.status(400).json({ error: 'Message content or image is required' });
   }
 
   if (useSupabase()) {
     try {
+      const authz = await canMessageSupabase(req.user.id, partnerId);
+      if (!authz.ok) return res.status(authz.status).json({ error: authz.error });
       markOnline(null, req.user.id);
       const id = uuidv4();
       const newMessage = await messagesRepo.send({
@@ -274,6 +277,8 @@ router.post('/:partnerId', authenticate, async (req, res) => {
 
   const db = getDb();
   try {
+    const authz = await canMessageSqlite(db, req.user.id, partnerId);
+    if (!authz.ok) return res.status(authz.status).json({ error: authz.error });
     markOnline(db, req.user.id);
     const id = uuidv4();
     db.prepare(
@@ -321,6 +326,9 @@ router.post('/:partnerId', authenticate, async (req, res) => {
 
 // POST /api/messages/:partnerId/typing — heartbeat for typing indicator
 router.post('/:partnerId/typing', authenticate, (req, res) => {
+  if (!isUuid(req.params.partnerId) || req.params.partnerId === req.user.id) {
+    return res.status(400).json({ error: 'Invalid partner id' });
+  }
   typingTracker.set(`${req.user.id}:${req.params.partnerId}`, Date.now());
   markOnline(useSupabase() ? null : getDb(), req.user.id);
   realtime.emit(`user:${req.params.partnerId}`, 'typing', {

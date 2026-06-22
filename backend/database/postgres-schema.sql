@@ -271,6 +271,16 @@ create index if not exists idx_analytics_vendor on analytics_events(vendor_id);
 create index if not exists idx_subscription_payments_status on subscription_payments(status);
 create index if not exists idx_subscription_payments_vendor on subscription_payments(vendor_id);
 
+-- Hot-path composite / lookup indexes (audit follow-up).
+create index if not exists idx_messages_thread on messages(sender_id, receiver_id, created_at);
+create index if not exists idx_notifications_user_read on notifications(user_id, is_read);
+create index if not exists idx_cart_items_user on cart_items(user_id);
+create index if not exists idx_analytics_events_type_time on analytics_events(event_type, created_at);
+create index if not exists idx_products_category_available on products(category, is_available);
+create index if not exists idx_vendor_profiles_verification on vendor_profiles(verification_status);
+create index if not exists idx_reports_status on reports(status);
+create index if not exists idx_users_reset_token on users(reset_token_hash);
+
 -- IMPORTANT: the backend talks to these tables with the service_role key,
 -- which bypasses Row Level Security. We therefore do NOT enable RLS here.
 -- The anon key is never used for table access from the server. If you ever

@@ -71,16 +71,40 @@ router.post('/', authenticate, requireRole('user'), async (req, res) => {
     }
   }
 
+  // Trust nothing from the client cart payload other than product_id +
+  // quantity. Price and vendor_id come from the DB. This block runs OUTSIDE
+  // the better-sqlite3 transaction because it can return validation errors
+  // (4xx) to the caller; the actual writes happen atomically below.
+  const resolvedItems = [];
+  for (const item of cartItems) {
+    const productId = item && item.product_id;
+    const qty = Math.max(1, parseInt(item && item.quantity, 10) || 0);
+    if (!productId || qty < 1) {
+      return res.status(400).json({ error: 'Invalid cart item' });
+    }
+    const product = db.prepare(
+      'SELECT id, price, vendor_id, stock_quantity, is_available, name FROM products WHERE id = ?'
+    ).get(productId);
+    if (!product) {
+      return res.status(400).json({ error: `Product not found`, productId });
+    }
+    if (!product.is_available) {
+      return res.status(400).json({ error: `Product unavailable: ${product.name}`, productId });
+    }
+    if (product.stock_quantity < qty) {
+      return res.status(400).json({ error: `Insufficient stock for ${product.name}`, productId });
+    }
+    resolvedItems.push({
+      product_id: product.id,
+      vendor_id: product.vendor_id,
+      price: product.price,
+      quantity: qty,
+    });
+  }
+
   const transaction = db.transaction(() => {
-    const orderId = uuidv4();
-    let totalAmount = 0;
-
-    // We assume all items in one checkout might belong to different vendors
-    // But for simplicity in this schema, an order belongs to ONE vendor.
-    // If cart has items from multiple vendors, we should split the order.
-    // For now, let's group by vendor and create multiple orders.
-
-    const itemsByVendor = cartItems.reduce((acc, item) => {
+    // Group by the DB-resolved vendor (not the client's claimed vendor_id).
+    const itemsByVendor = resolvedItems.reduce((acc, item) => {
       if (!acc[item.vendor_id]) acc[item.vendor_id] = [];
       acc[item.vendor_id].push(item);
       return acc;
@@ -91,32 +115,31 @@ router.post('/', authenticate, requireRole('user'), async (req, res) => {
     for (const vendorId in itemsByVendor) {
       const vendorItems = itemsByVendor[vendorId];
       const vendorOrderId = uuidv4();
-      let vendorTotal = 0;
+      const vendorTotal = vendorItems.reduce((s, it) => s + it.price * it.quantity, 0);
 
-      vendorItems.forEach(item => {
-        vendorTotal += item.price * item.quantity;
-      });
-
-      // Create Order
       db.prepare(`
         INSERT INTO orders (id, user_id, vendor_id, total_amount, shipping_address, phone, notes, payment_method, status, payment_status)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'pending')
       `).run(vendorOrderId, req.user.id, vendorId, vendorTotal, shippingAddress, phone, notes, paymentMethod);
 
-      // Create Order Items and Update Stock
-      vendorItems.forEach(item => {
+      vendorItems.forEach((item) => {
         db.prepare(`
           INSERT INTO order_items (id, order_id, product_id, quantity, price_at_purchase)
           VALUES (?, ?, ?, ?, ?)
         `).run(uuidv4(), vendorOrderId, item.product_id, item.quantity, item.price);
 
-        // Update stock
-        db.prepare(`
-          UPDATE products SET stock_quantity = stock_quantity - ? WHERE id = ?
-        `).run(item.quantity, item.product_id);
+        // Conditional stock decrement guards against a race that would push
+        // stock negative (the pre-check above is best-effort, not a lock).
+        const upd = db.prepare(`
+          UPDATE products SET stock_quantity = stock_quantity - ?
+          WHERE id = ? AND stock_quantity >= ?
+        `).run(item.quantity, item.product_id, item.quantity);
+        if (upd.changes === 0) {
+          // Abort the whole transaction.
+          throw new Error(`INSUFFICIENT_STOCK:${item.product_id}`);
+        }
       });
 
-      // Create initial notification for vendor
       db.prepare(`
         INSERT INTO notifications (id, user_id, type, title, message)
         SELECT ?, user_id, 'order_update', 'New Order Received', ?
@@ -135,9 +158,9 @@ router.post('/', authenticate, requireRole('user'), async (req, res) => {
   try {
     const orderIds = transaction();
     
-    // Send order confirmation email (non-blocking)
+    // Send order confirmation email (non-blocking). Use DB-side prices.
     const user = db.prepare('SELECT email, name FROM users WHERE id = ?').get(req.user.id);
-    const totalAmount = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const totalAmount = resolvedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     
     sendEmail({
       to: user.email,
@@ -168,7 +191,15 @@ router.post('/', authenticate, requireRole('user'), async (req, res) => {
     res.json({ message: 'Orders created successfully', orderIds });
   } catch (error) {
     console.error('Checkout error:', error);
-    res.status(500).json({ error: 'Failed to process checkout: ' + error.message });
+    const msg = String(error?.message || '');
+    const stockMatch = msg.match(/INSUFFICIENT_STOCK:([0-9a-f-]+)/i);
+    if (stockMatch) {
+      return res.status(409).json({
+        error: 'A product in your cart sold out before checkout completed.',
+        productId: stockMatch[1],
+      });
+    }
+    res.status(500).json({ error: 'Failed to process checkout: ' + msg });
   }
 });
 

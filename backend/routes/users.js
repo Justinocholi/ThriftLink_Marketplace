@@ -125,10 +125,19 @@ router.get('/me/orders', authenticate, async (req, res) => {
   }
 });
 
-// GET /api/users/me/saved
+// GET /api/users/me/saved?page=1&limit=20
 router.get('/me/saved', authenticate, async (req, res) => {
+  const page = Math.max(1, Math.min(10000, parseInt(req.query.page, 10) || 1));
+  const limit = Math.max(1, Math.min(100, parseInt(req.query.limit, 10) || 20));
+  const offset = (page - 1) * limit;
   try {
-    if (useSupabase()) return res.json(await savedItemsRepo.listForUser(req.user.id));
+    if (useSupabase()) {
+      // savedItemsRepo.listForUser doesn't currently take pagination; pass it
+      // through if the repo grows support, otherwise slice locally.
+      const all = await savedItemsRepo.listForUser(req.user.id);
+      const items = Array.isArray(all) ? all.slice(offset, offset + limit) : all;
+      return res.json(items);
+    }
     const db = getDb();
     const saved = db.prepare(`
       SELECT s.*, p.name as product_name, p.price, p.images, p.condition,
@@ -137,7 +146,8 @@ router.get('/me/saved', authenticate, async (req, res) => {
       LEFT JOIN products p ON p.id = s.product_id
       LEFT JOIN vendor_profiles vp ON vp.id = s.vendor_id
       WHERE s.user_id = ? ORDER BY s.created_at DESC
-    `).all(req.user.id);
+      LIMIT ? OFFSET ?
+    `).all(req.user.id, limit, offset);
     res.json(saved);
   } catch (err) {
     console.error('me/saved error:', err);
