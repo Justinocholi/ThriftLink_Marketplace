@@ -37,6 +37,14 @@ const UserDashboard = () => {
 
   return (
     <div style={{ padding: '1rem', fontFamily: "'Inter', sans-serif" }}>
+      <style>{`
+        @media (max-width: 640px) {
+          .ud-main-grid { grid-template-columns: 1fr !important; gap: 1rem !important; }
+          .ud-stats-grid { grid-template-columns: 1fr !important; gap: 0.75rem !important; margin-bottom: 1.25rem !important; }
+          .ud-card { padding: 1.25rem !important; border-radius: 16px !important; }
+          .ud-stat-value { font-size: 1.5rem !important; }
+        }
+      `}</style>
       {error && (
         <div style={{ background: '#fee2e2', color: '#dc2626', padding: '1rem', borderRadius: '12px', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', border: '1px solid #fecaca' }}>
           <span style={{ fontWeight: '600' }}>Error:</span> {error}
@@ -50,7 +58,7 @@ const UserDashboard = () => {
       </div>
 
       {/* Stats Grid — branded color tiles */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
+      <div className="ud-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
         {[
           { to: '/user/orders', label: 'Total Orders',     value: loading ? '—' : orders.length,  icon: <Package size={26} />, tone: 'sky' },
           { to: '/user/saved',  label: 'Saved Items',      value: loading ? '—' : saved.length,   icon: <Heart size={26} />,   tone: 'coral' },
@@ -61,7 +69,7 @@ const UserDashboard = () => {
               <div className={`tl-stat-icon ${s.tone}`} style={{ marginBottom: 0 }}>{s.icon}</div>
               <div>
                 <p style={{ color: '#64748b', fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.25rem' }}>{s.label}</p>
-                <h4 style={{ fontSize: '2rem', fontWeight: '800', color: '#0f172a', fontFamily: "'Space Grotesk', sans-serif" }}>{s.value}</h4>
+                <h4 className="ud-stat-value" style={{ fontSize: '2rem', fontWeight: '800', color: '#0f172a', fontFamily: "'Space Grotesk', sans-serif" }}>{s.value}</h4>
               </div>
             </div>
           </Link>
@@ -69,10 +77,10 @@ const UserDashboard = () => {
       </div>
 
       {/* Main Content Sections */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '2rem' }}>
+      <div className="ud-main-grid" style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '2rem' }}>
         
         {/* Recent Orders Section */}
-        <div style={{ background: 'white', borderRadius: '24px', padding: '2rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #f1f5f9' }}>
+        <div className="ud-card" style={{ background: 'white', borderRadius: '24px', padding: '2rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #f1f5f9' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
             <h4 style={{ fontSize: '1.25rem', color: '#0f172a', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Clock size={20} color="#64748b" /> Recent Purchases
@@ -116,7 +124,7 @@ const UserDashboard = () => {
 
         {/* Quick Actions & Help */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          <div style={{ background: 'white', borderRadius: '24px', padding: '2rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #f1f5f9' }}>
+          <div className="ud-card" style={{ background: 'white', borderRadius: '24px', padding: '2rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #f1f5f9' }}>
             <h4 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#1e293b', marginBottom: '1.25rem' }}>Quick Actions</h4>
             <div style={{ display: 'grid', gap: '0.75rem' }}>
               <Link to="/user/profile" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', background: '#f8fafc', borderRadius: '12px', textDecoration: 'none', color: '#334155', fontWeight: '600' }}>

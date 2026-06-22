@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { Home, ShoppingBag, Heart, User, LifeBuoy, LogOut, Menu, X, MessageSquare, ShoppingCart } from 'lucide-react';
 import logo from '../../assets/thriftlink-logo-.png';
 import MobileTabBar from '../../components/MobileTabBar';
+import ProfileDropdown from '../../components/ProfileDropdown';
 
 const UserLayout = () => {
   const { logout } = useAuth();
@@ -51,6 +52,10 @@ const UserLayout = () => {
           }
           .mobile-header {
             display: none;
+          }
+          @media (max-width: 640px) {
+            .user-welcome-title { font-size: 1.25rem !important; }
+            .user-welcome-sub { font-size: 0.85rem !important; }
           }
         `}
       </style>
@@ -157,23 +162,13 @@ const UserLayout = () => {
               <Menu size={24} />
             </button>
             <div>
-              <h1 style={{ fontSize: '1.75rem', color: '#0f172a', fontWeight: '700', marginBottom: '0.25rem' }}>
-                Welcome back, User! 👋
+              <h1 className="user-welcome-title" style={{ fontSize: '1.75rem', color: '#0f172a', fontWeight: '700', marginBottom: '0.25rem' }}>
+                Welcome back! 👋
               </h1>
-              <p style={{ color: '#64748b' }}>Here's what's happening with your account.</p>
+              <p className="user-welcome-sub" style={{ color: '#64748b' }}>Here's what's happening with your account.</p>
             </div>
           </div>
-          <Link to="/" className="view-page-btn" style={{
-            padding: '0.75rem 1.5rem',
-            background: '#3b82f6',
-            color: 'white',
-            textDecoration: 'none',
-            borderRadius: '10px',
-            fontWeight: '600',
-            fontSize: '0.95rem',
-            transition: 'all 0.2s',
-            boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)'
-          }}>Start Shopping</Link>
+          <ProfileDropdown role="user" accent="#3b82f6" />
         </header>
 
         <Outlet />
