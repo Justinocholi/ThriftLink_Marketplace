@@ -25,6 +25,17 @@ export default defineConfig({
   },
   build: {
     sourcemap: true,
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'sentry': ['@sentry/react'],
+          'posthog': ['posthog-js'],
+          'icons': ['lucide-react'],
+        },
+      },
+    },
   },
   plugins: [
     react(),

@@ -1,3 +1,4 @@
+require('./instrument.js');
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -6,6 +7,21 @@ const rateLimit = require('express-rate-limit');
 const path = require('path');
 const http = require('http');
 const realtime = require('./realtime');
+const { getDb } = require('./database/db');
+
+let Sentry = null;
+if (process.env.SENTRY_DSN) {
+  try { Sentry = require('@sentry/node'); } catch {}
+}
+
+// Supabase client (only used for the health check when DATA_BACKEND=supabase).
+function getSupabase() {
+  try {
+    const svc = require('./services/supabaseService');
+    if (typeof svc.getSupabaseClient === 'function') return svc.getSupabaseClient();
+  } catch {}
+  return null;
+}
 
 const authRoutes = require('./routes/auth');
 const vendorRoutes = require('./routes/vendors');
@@ -121,9 +137,53 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+// Health check — pings the configured data backend so orchestrators can
+// distinguish a live process from a usable one.
+app.get('/api/health', async (req, res) => {
+  const backend = (process.env.DATA_BACKEND || 'sqlite').toLowerCase();
+  const failures = [];
+  let dbStatus = 'skipped';
+  let supabaseStatus = 'skipped';
+
+  if (backend === 'supabase') {
+    const sb = getSupabase();
+    if (!sb) {
+      supabaseStatus = 'fail';
+      failures.push('supabase:client-unavailable');
+    } else {
+      try {
+        const { error } = await sb.from('users').select('id').limit(1);
+        if (error) {
+          supabaseStatus = 'fail';
+          failures.push('supabase:query-error');
+        } else {
+          supabaseStatus = 'ok';
+        }
+      } catch {
+        supabaseStatus = 'fail';
+        failures.push('supabase:exception');
+      }
+    }
+  } else {
+    try {
+      getDb().prepare('SELECT 1').get();
+      dbStatus = 'ok';
+    } catch {
+      dbStatus = 'fail';
+      failures.push('sqlite:query-error');
+    }
+  }
+
+  if (failures.length) {
+    return res.status(503).json({ status: 'degraded', failures });
+  }
+
+  res.json({
+    status: 'ok',
+    db: dbStatus,
+    supabase: supabaseStatus,
+    uptime: Math.round(process.uptime()),
+  });
 });
 
 // 404 for unknown API routes
@@ -139,6 +199,11 @@ if (isProd) {
   app.get('*', (req, res) => {
     res.sendFile(path.join(frontendDist, 'index.html'));
   });
+}
+
+// Sentry must come after all routes and before any other error middleware.
+if (Sentry && typeof Sentry.setupExpressErrorHandler === 'function') {
+  Sentry.setupExpressErrorHandler(app);
 }
 
 // Global error handler
@@ -160,3 +225,54 @@ server.listen(PORT, () => {
   console.log(`Data backend: ${backend}`);
   if (isProd) console.log('Serving React frontend from dist/');
 });
+
+// --- Graceful shutdown ---------------------------------------------------
+let shuttingDown = false;
+function shutdown(signal) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.log(`[shutdown] received ${signal}, draining...`);
+
+  const forceTimer = setTimeout(() => {
+    console.error('[shutdown] grace period exceeded, forcing exit');
+    process.exit(1);
+  }, 25000);
+  forceTimer.unref();
+
+  // Stop accepting new HTTP connections.
+  server.close((err) => {
+    if (err) console.error('[shutdown] http server close error:', err.message);
+    else console.log('[shutdown] http server closed');
+
+    // Close Socket.IO.
+    try {
+      const io = realtime.getIO && realtime.getIO();
+      if (io && typeof io.close === 'function') {
+        io.close(() => console.log('[shutdown] socket.io closed'));
+      }
+    } catch (e) {
+      console.error('[shutdown] socket.io close error:', e.message);
+    }
+
+    // Close the SQLite handle when we own it.
+    const dataBackend = (process.env.DATA_BACKEND || 'sqlite').toLowerCase();
+    if (dataBackend !== 'supabase') {
+      try {
+        const handle = getDb();
+        if (handle && typeof handle.close === 'function') {
+          handle.close();
+          console.log('[shutdown] sqlite closed');
+        }
+      } catch (e) {
+        console.error('[shutdown] sqlite close error:', e.message);
+      }
+    }
+
+    clearTimeout(forceTimer);
+    console.log('[shutdown] done');
+    process.exit(0);
+  });
+}
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
