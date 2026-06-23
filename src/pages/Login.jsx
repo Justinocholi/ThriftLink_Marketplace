@@ -108,6 +108,7 @@ const Login = () => {
         @media (max-width: 768px) {
           .auth-container { flex-direction: column !important; padding: 1rem !important; gap: 2rem !important; }
           .info-section { order: 2; text-align: center; }
+          .info-section .info-eyebrow { align-self: center !important; margin-left: auto !important; margin-right: auto !important; }
           .login-section { order: 1; width: 100% !important; flex: unset !important; max-width: 420px; margin: 0 auto; padding: 2rem !important; }
           .info-title { font-size: 2rem !important; }
         }
@@ -122,7 +123,7 @@ const Login = () => {
 
         {/* Left info panel */}
         <div className="info-section" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', alignSelf: 'flex-start', padding: '0.4rem 0.9rem', background: 'rgba(37, 211, 102, 0.12)', border: '1px solid rgba(37, 211, 102, 0.3)', borderRadius: '999px', marginBottom: '1.25rem', fontSize: '0.8rem', fontWeight: 600, color: '#15803d' }}>
+          <div className="info-eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', alignSelf: 'flex-start', padding: '0.4rem 0.9rem', background: 'rgba(37, 211, 102, 0.12)', border: '1px solid rgba(37, 211, 102, 0.3)', borderRadius: '999px', marginBottom: '1.25rem', fontSize: '0.8rem', fontWeight: 600, color: '#15803d' }}>
             <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', animation: 'pulseDot 1.8s ease-in-out infinite' }} />
             Verified WhatsApp vendors · Nigeria
           </div>

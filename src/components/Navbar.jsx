@@ -95,16 +95,17 @@ const Navbar = () => {
         </nav>
 
         <div className="header-actions">
-          <div className="location-selector" style={{ display: 'flex', alignItems: 'center' }}>
+          {false && (
+          <div className="location-selector" style={{ display: 'none', alignItems: 'center' }}>
             <img src={gpsIcon} alt="Location" className="location-icon" style={{ position: 'absolute', marginLeft: '10px', width: '16px', height: '16px' }} />
-            <select 
-              style={{ 
-                padding: '0.5rem 0.5rem 0.5rem 2rem', 
-                border: '1px solid #e5e7eb', 
-                borderRadius: '20px', 
-                background: '#f9fafb', 
-                fontSize: '0.9rem', 
-                outline: 'none', 
+            <select
+              style={{
+                padding: '0.5rem 0.5rem 0.5rem 2rem',
+                border: '1px solid #e5e7eb',
+                borderRadius: '20px',
+                background: '#f9fafb',
+                fontSize: '0.9rem',
+                outline: 'none',
                 cursor: 'pointer',
                 appearance: 'none',
                 minWidth: '120px'
@@ -150,6 +151,7 @@ const Navbar = () => {
               <option value="Zamfara">Zamfara</option>
             </select>
           </div>
+          )}
 
           {user && (
             <span
@@ -374,6 +376,7 @@ const Navbar = () => {
       {/* Mobile Menu Styles Injection for the button since it wasn't in original CSS */}
       <style>{`
         @media (max-width: 768px) {
+          .logo-img { height: 48px !important; filter: none !important; }
           .mobile-menu-btn {
             display: block !important;
             z-index: 1100;
@@ -402,6 +405,10 @@ const Navbar = () => {
           .mobile-menu-btn {
             display: none !important;
           }
+        }
+        @media (max-width: 480px) {
+          .post-ad-btn { display: none !important; }
+          .logo-img { height: 44px !important; }
         }
       `}</style>
     </header>

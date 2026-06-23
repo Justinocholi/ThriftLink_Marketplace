@@ -78,6 +78,7 @@ const Terms = lazy(() => import('./pages/legal/Terms'));
 const Privacy = lazy(() => import('./pages/legal/Privacy'));
 
 import PageviewTracker from './analytics/PageviewTracker';
+import ScrollToTop from './components/ScrollToTop';
 
 const Fallback = (
   <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>Loading…</div>
@@ -86,6 +87,7 @@ const Fallback = (
 function App() {
   return (
     <Router>
+      <ScrollToTop />
       <PageviewTracker />
       <AuthProvider>
         <ToastProvider>

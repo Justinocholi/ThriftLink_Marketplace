@@ -107,13 +107,17 @@ const Home = () => {
           @media (max-width: 768px) {
             .hero { padding: 5.5rem 1.25rem 3rem !important; }
             .hero h1 { font-size: 2rem !important; }
-            .trust-indicators { flex-direction: column; gap: 1rem !important; }
+            .trust-indicators { flex-direction: column; gap: 1rem !important; align-items: center !important; }
+            .trust-item { width: auto; justify-content: center !important; align-self: center !important; }
+            .timeline-step { text-align: center; }
+            .timeline-step > div:first-child { margin-left: auto !important; margin-right: auto !important; }
+            .main-search { flex-direction: column; }
+            .main-search .location-input,
+            .main-search .search-btn { border-left: none !important; border-top: 1px solid rgba(15,23,42,0.06) !important; }
             .search-section, .categories, .featured-vendors,
             .top-vendors-month, .how-it-works, .stats-section, .cta-section {
               padding-left: 1.25rem !important; padding-right: 1.25rem !important;
             }
-            .main-search { flex-direction: column; }
-            .location-input { border-left: none !important; border-top: 1px solid #e5e7eb; }
             .categories-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 1rem !important; }
             .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
             .cta-buttons { flex-direction: column; align-items: center; }
@@ -196,7 +200,7 @@ const Home = () => {
               { Icon: MessageCircle, label: 'Direct Messaging', color: '#3b82f6' },
               { Icon: Users, label: 'Trusted Community', color: '#A78BFA' },
             ].map(({ Icon, label, color }) => (
-              <div key={label} className="trust-item" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.55rem 1rem', borderRadius: 999, background: 'rgba(255,255,255,0.78)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(15,23,42,0.06)', boxShadow: '0 6px 16px -8px rgba(15,23,42,0.10)', color: '#0f172a', fontWeight: 600, fontSize: '0.85rem' }}>
+              <div key={label} className="trust-item" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.55rem 1rem', borderRadius: 999, background: 'rgba(255,255,255,0.78)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(15,23,42,0.06)', boxShadow: '0 6px 16px -8px rgba(15,23,42,0.10)', color: '#0f172a', fontWeight: 600, fontSize: '0.85rem' }}>
                 <Icon size={16} color={color} />
                 <span>{label}</span>
               </div>
@@ -272,21 +276,23 @@ const Home = () => {
       )}
 
       {/* Search Section */}
-      <section className="search-section" style={{ background: 'white', padding: '3rem 2rem', borderBottom: '1px solid #e5e7eb' }}>
+      <section className="search-section" style={{ background: 'linear-gradient(135deg, rgba(37,211,102,0.05), rgba(59,130,246,0.05))', padding: '3rem 2rem', borderBottom: '1px solid #e5e7eb' }}>
         <div className="search-container" style={{ maxWidth: '1000px', margin: '0 auto' }}>
           <h2 className="search-title" style={{ textAlign: 'center', fontSize: '1.5rem', fontWeight: '700', color: '#1f2937', marginBottom: '2rem' }}>
             Find Trusted WhatsApp Vendors Near You
           </h2>
-          
+
           <div className="main-search" style={{
             display: 'flex',
             maxWidth: '800px',
             margin: '0 auto 2rem',
-            background: 'white',
-            border: '2px solid #e5e7eb',
-            borderRadius: '8px',
+            background: 'rgba(255,255,255,0.6)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255,255,255,0.8)',
+            borderRadius: '24px',
             overflow: 'hidden',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+            boxShadow: '0 20px 50px rgba(15,23,42,0.08), inset 0 1px 0 rgba(255,255,255,0.9)'
           }}>
             <input 
               type="text" 
@@ -294,13 +300,13 @@ const Home = () => {
               placeholder="What are you looking for? (e.g. iPhone, fashion, food)"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              style={{ flex: 1, padding: '1rem 1.5rem', border: 'none', outline: 'none', fontSize: '1rem' }}
+              style={{ flex: 1, padding: '1rem 1.5rem', border: 'none', outline: 'none', fontSize: '1rem', background: 'transparent' }}
             />
             <select 
               className="location-input" 
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              style={{ padding: '1rem 1.5rem', border: 'none', borderLeft: '1px solid #e5e7eb', outline: 'none', minWidth: '150px', background: '#f9fafb', cursor: 'pointer' }}
+              style={{ padding: '1rem 1.5rem', border: 'none', borderLeft: '1px solid rgba(15,23,42,0.06)', outline: 'none', minWidth: '150px', background: 'transparent', cursor: 'pointer' }}
             >
               <option value="">All Nigeria</option>
               <option value="Abia">Abia</option>
@@ -346,13 +352,17 @@ const Home = () => {
               className="search-btn" 
               style={{
                 padding: '1rem 2rem',
-                background: '#25D366',
+                background: 'linear-gradient(135deg, #16a34a 0%, #25D366 100%)',
                 color: 'white',
                 border: 'none',
+                borderLeft: '1px solid rgba(15,23,42,0.06)',
                 cursor: 'pointer',
                 fontWeight: '600',
-                transition: 'background 0.3s ease'
+                boxShadow: '0 8px 24px rgba(34,197,94,0.35), inset 0 1px 0 rgba(255,255,255,0.4)',
+                transition: 'transform 0.2s ease, box-shadow 0.2s ease'
               }}
+              onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; }}
+              onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; }}
             >
               Search
             </button>
@@ -362,14 +372,19 @@ const Home = () => {
             {['Phones', 'Laptops', 'Shoes', 'Bags', 'Services'].map(filter => (
               <Link to={`/categories?q=${filter}`} key={filter} className="filter-chip" style={{
                 padding: '0.5rem 1rem',
-                background: '#f3f4f6',
+                background: 'rgba(255,255,255,0.7)',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+                border: '1px solid rgba(15,23,42,0.06)',
                 borderRadius: '20px',
                 fontSize: '0.85rem',
-                color: '#6b7280',
+                color: '#374151',
                 textDecoration: 'none',
-                transition: 'all 0.3s ease',
+                transition: 'all 0.2s ease',
                 display: 'inline-block'
-              }}>
+              }}
+              onMouseOver={(e) => { e.currentTarget.style.borderColor = '#25D366'; e.currentTarget.style.color = '#0e9a52'; }}
+              onMouseOut={(e) => { e.currentTarget.style.borderColor = 'rgba(15,23,42,0.06)'; e.currentTarget.style.color = '#374151'; }}>
                 {filter}
               </Link>
             ))}
