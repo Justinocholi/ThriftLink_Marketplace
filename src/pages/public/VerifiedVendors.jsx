@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import { vendors as vendorsApi } from '../../services/api';
+import { cldUrl } from '../../utils/cloudinary';
 
 import shieldIcon from '../../assets/shield.png';
 import starIcon from '../../assets/star.png';
@@ -105,11 +106,18 @@ const VerifiedVendors = () => {
         </div>
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '4rem', color: '#64748b' }}>Loading vendors...</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
+            {[0,1,2,3,4,5].map(i => (
+              <div key={i} style={{ borderRadius: 20, height: 240, background: '#f1f5f9', position: 'relative', overflow: 'hidden' }}>
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%)', backgroundSize: '200% 100%', animation: 'tl-shimmer 1.4s linear infinite' }} />
+              </div>
+            ))}
+            <style>{`@keyframes tl-shimmer { 0%{background-position: 200% 0;} 100%{background-position: -200% 0;} }`}</style>
+          </div>
         ) : vendorList.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '4rem', color: '#94a3b8' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🏪</div>
-            <p>No vendors found</p>
+          <div style={{ textAlign: 'center', padding: '4rem 1.5rem', background: 'white', borderRadius: 20, border: '1px solid #e5e7eb' }}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.5rem' }}>No vendors found.</h3>
+            <p style={{ color: '#64748b' }}>Try adjusting your filters.</p>
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
@@ -125,7 +133,7 @@ const VerifiedVendors = () => {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
                     <div style={{ width: '54px', height: '54px', borderRadius: '50%', flexShrink: 0, overflow: 'hidden', background: 'linear-gradient(135deg, #25D366, #128C7E)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', fontSize: '1.2rem' }}>
                       {vendor.logo
-                        ? <img src={vendor.logo} alt={vendor.shop_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ? <img src={cldUrl(vendor.logo, 400)} alt={vendor.shop_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         : initials}
                     </div>
                     <div>

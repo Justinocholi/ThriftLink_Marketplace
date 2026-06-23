@@ -263,19 +263,32 @@ router.delete('/me/products/:productId', authenticate, requireRole('vendor'), as
       ? await vendorsRepo.getByUserId(req.user.id)
       : db.prepare('SELECT id FROM vendor_profiles WHERE user_id = ?').get(req.user.id);
 
+    let archived = false;
     if (onSupabase) {
       const existing = await productsRepo.listByVendor(vendor?.id);
       if (!existing.some((p) => p.id === req.params.productId)) {
         return res.status(404).json({ error: 'Product not found' });
       }
-      await productsRepo.remove(req.params.productId, vendor.id);
+      // Best-effort hard delete; if FK against order_items prevents it, soft-delete.
+      try {
+        await productsRepo.remove(req.params.productId, vendor.id);
+      } catch (e) {
+        await productsRepo.update(req.params.productId, vendor.id, { is_available: 0 });
+        archived = true;
+      }
     } else {
       const product = db.prepare('SELECT * FROM products WHERE id = ? AND vendor_id = ?').get(req.params.productId, vendor?.id);
       if (!product) return res.status(404).json({ error: 'Product not found' });
-      db.prepare('DELETE FROM products WHERE id = ?').run(req.params.productId);
+      const refCount = db.prepare('SELECT COUNT(*) as c FROM order_items WHERE product_id = ?').get(req.params.productId)?.c || 0;
+      if (refCount > 0) {
+        db.prepare("UPDATE products SET is_available = 0, updated_at = datetime('now') WHERE id = ?").run(req.params.productId);
+        archived = true;
+      } else {
+        db.prepare('DELETE FROM products WHERE id = ?').run(req.params.productId);
+      }
     }
     realtime.emit('*', 'product:removed', { id: req.params.productId });
-    res.json({ message: 'Product deleted' });
+    res.json({ message: archived ? 'Product archived (has existing orders)' : 'Product removed' });
   } catch (err) {
     console.error('me/products delete error:', err);
     res.status(500).json({ error: 'Failed to delete product' });

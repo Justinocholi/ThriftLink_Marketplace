@@ -95,6 +95,17 @@ const VendorDashboard = () => {
 
   return (
     <div style={{ fontFamily: "'Inter', sans-serif" }}>
+      <style>{`
+        @media (max-width: 640px) {
+          .vd-main-grid { grid-template-columns: 1fr !important; gap: 1rem !important; }
+          .vd-stats-grid { grid-template-columns: 1fr 1fr !important; gap: 0.75rem !important; margin-bottom: 1.25rem !important; }
+          .vd-card { padding: 1.25rem !important; border-radius: 16px !important; }
+          .vd-stat-value { font-size: 1.4rem !important; }
+        }
+        @media (max-width: 400px) {
+          .vd-stats-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
       {error && (
         <div style={{ background: '#fee2e2', color: '#dc2626', padding: '1rem', borderRadius: '12px', marginBottom: '1.5rem', border: '1px solid #fecaca' }}>
           {error}
@@ -186,7 +197,7 @@ const VendorDashboard = () => {
       </div>
 
       {/* Stats Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
+      <div className="vd-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
         {stats.map((s, i) => (
           <div key={i} className={`tl-stat-tile brand-${s.tone}`}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
@@ -196,14 +207,14 @@ const VendorDashboard = () => {
               </div>
             </div>
             <p style={{ color: '#64748b', fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.25rem' }}>{s.label}</p>
-            <h4 style={{ fontSize: '2rem', fontWeight: '800', color: '#0f172a', fontFamily: "'Space Grotesk', sans-serif" }}>{s.value}</h4>
+            <h4 className="vd-stat-value" style={{ fontSize: '2rem', fontWeight: '800', color: '#0f172a', fontFamily: "'Space Grotesk', sans-serif" }}>{s.value}</h4>
           </div>
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '2rem' }}>
+      <div className="vd-main-grid" style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '2rem' }}>
         {/* Recent Orders */}
-        <div style={{ background: 'white', borderRadius: '24px', padding: '2rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #f1f5f9' }}>
+        <div className="vd-card" style={{ background: 'white', borderRadius: '24px', padding: '2rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #f1f5f9' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
             <h4 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Clock size={20} color="#64748b" /> Recent Orders
@@ -236,7 +247,7 @@ const VendorDashboard = () => {
 
         {/* Store Health / Quick Tips */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          <div style={{ background: 'white', borderRadius: '24px', padding: '2rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #f1f5f9' }}>
+          <div className="vd-card" style={{ background: 'white', borderRadius: '24px', padding: '2rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #f1f5f9' }}>
             <h4 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#1e293b', marginBottom: '1.25rem' }}>Store Health</h4>
             <div style={{ display: 'grid', gap: '1.25rem' }}>
               <div>

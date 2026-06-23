@@ -26,6 +26,15 @@ function ensureIndexes(database) {
     ON users(supabase_user_id)
     WHERE supabase_user_id IS NOT NULL;
   `);
+  // These indexes reference columns added via safeAddColumn, so they must be
+  // created AFTER the migrations above run. Architecture-audit follow-up.
+  try {
+    database.exec(`
+      CREATE INDEX IF NOT EXISTS idx_users_reset_token ON users(reset_token_hash);
+    `);
+  } catch (err) {
+    console.warn('Failed to create idx_users_reset_token:', err.message);
+  }
 }
 
 function getDb() {

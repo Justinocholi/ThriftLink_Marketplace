@@ -30,8 +30,13 @@ function markOnline(userId) {
 }
 
 function init(server, opts = {}) {
+  if (typeof opts.origin !== 'function') {
+    // Fail loud: reflecting any Origin via `true` lets browser pages from
+    // arbitrary sites attempt authenticated Socket.IO upgrades.
+    throw new Error('realtime.init requires opts.origin to be a CORS origin check function');
+  }
   io = new Server(server, {
-    cors: { origin: opts.origin || true, credentials: true },
+    cors: { origin: opts.origin, credentials: true },
     pingInterval: 20000,
     pingTimeout: 25000,
   });
@@ -69,21 +74,32 @@ function init(server, opts = {}) {
     });
 
     // ---- Read receipts relay (client tells us they opened the thread) ----
+    // Authorization: the UPDATE already pins receiver_id = userId (from the
+    // authenticated socket), so a malicious client cannot mark messages
+    // addressed to anyone else as read. We additionally validate that
+    // partnerId is a UUID to avoid SQL/PostgREST surprises, and refuse if
+    // partnerId === userId (self-message thread doesn't exist).
     socket.on('message:read', ({ partnerId }) => {
-      if (!partnerId) return;
+      if (!partnerId || typeof partnerId !== 'string') return;
+      const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!UUID_RE.test(partnerId) || partnerId === userId) return;
       try {
-        getDb()
+        const result = getDb()
           .prepare(`
             UPDATE messages
             SET is_read = 1, read_at = datetime('now')
             WHERE sender_id = ? AND receiver_id = ? AND is_read = 0
           `)
           .run(partnerId, userId);
+        // Only emit if we actually updated rows the requester was authorized
+        // to mark read (receiver_id = userId).
+        if (result.changes > 0) {
+          io.to(`user:${partnerId}`).emit('message:read', {
+            by: userId,
+            readAt: new Date().toISOString(),
+          });
+        }
       } catch {}
-      io.to(`user:${partnerId}`).emit('message:read', {
-        by: userId,
-        readAt: new Date().toISOString(),
-      });
     });
 
     socket.on('disconnect', () => {

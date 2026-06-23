@@ -34,31 +34,43 @@ const AdminOverview = () => {
 
   return (
     <div style={{ fontFamily: "'Inter', sans-serif" }}>
+      <style>{`
+        @media (max-width: 640px) {
+          .ao-stats-grid { grid-template-columns: 1fr 1fr !important; gap: 0.75rem !important; margin-bottom: 1.25rem !important; }
+          .ao-main-grid { grid-template-columns: 1fr !important; gap: 1rem !important; }
+          .ao-card { padding: 1.25rem !important; border-radius: 16px !important; }
+          .ao-stat-value { font-size: 1.35rem !important; }
+          .ao-title { font-size: 1.35rem !important; }
+        }
+        @media (max-width: 400px) {
+          .ao-stats-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
       {/* Page Header */}
       <div style={{ marginBottom: '2.5rem' }}>
-        <h2 style={{ fontSize: '1.75rem', fontWeight: '800', color: '#1e293b', marginBottom: '0.5rem' }}>Platform Overview</h2>
+        <h2 className="ao-title" style={{ fontSize: '1.75rem', fontWeight: '800', color: '#1e293b', marginBottom: '0.5rem' }}>Platform Overview</h2>
         <p style={{ color: '#64748b' }}>High-level performance metrics and system-wide statistics.</p>
       </div>
 
       {error && <div style={{ background: '#fee2e2', color: '#dc2626', padding: '1rem', borderRadius: '12px', marginBottom: '1.5rem', border: '1px solid #fecaca' }}>{error}</div>}
 
       {/* Stats Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
+      <div className="ao-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
         {cards.map((card, i) => (
-          <div key={i} style={{ background: 'white', borderRadius: '20px', padding: '1.5rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #f1f5f9' }}>
+          <div key={i} className="ao-card" style={{ background: 'white', borderRadius: '20px', padding: '1.5rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #f1f5f9' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
               <div style={{ background: card.bg, color: card.color, padding: '0.75rem', borderRadius: '12px' }}>{card.icon}</div>
               <TrendingUp size={16} color="#cbd5e1" />
             </div>
             <p style={{ color: '#64748b', fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.25rem' }}>{card.label}</p>
-            <h4 style={{ fontSize: '1.75rem', fontWeight: '800', color: '#0f172a' }}>{card.value.toLocaleString()}</h4>
+            <h4 className="ao-stat-value" style={{ fontSize: '1.75rem', fontWeight: '800', color: '#0f172a' }}>{card.value.toLocaleString()}</h4>
           </div>
         ))}
       </div>
 
       {/* Quick Access Actions */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-        <div style={{ background: 'white', borderRadius: '24px', padding: '2rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #f1f5f9' }}>
+      <div className="ao-main-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+        <div className="ao-card" style={{ background: 'white', borderRadius: '24px', padding: '2rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #f1f5f9' }}>
           <h4 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#1e293b', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <AlertCircle size={20} color="#f59e0b" /> Critical Tasks
           </h4>

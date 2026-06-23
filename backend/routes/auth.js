@@ -30,7 +30,7 @@ function signToken(user) {
   return jwt.sign(
     { id: user.id, email: user.email, role: user.role, name: user.name },
     process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN }
+    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
   );
 }
 
@@ -426,6 +426,24 @@ router.put('/change-password', authenticate, async (req, res) => {
   }
 });
 
+// Per-email forgot-password rate limit: max 3 requests / 15 min / email.
+// In-memory only — fine for a single process; resets on restart.
+const FORGOT_WINDOW_MS = 15 * 60 * 1000;
+const FORGOT_MAX = 3;
+const forgotAttempts = new Map(); // email -> { count, resetAt }
+const GENERIC_FORGOT_RESPONSE = { message: 'If that email is registered, a reset link has been sent.' };
+
+function forgotPasswordRateLimited(email) {
+  const now = Date.now();
+  const entry = forgotAttempts.get(email);
+  if (!entry || entry.resetAt <= now) {
+    forgotAttempts.set(email, { count: 1, resetAt: now + FORGOT_WINDOW_MS });
+    return false;
+  }
+  entry.count += 1;
+  return entry.count > FORGOT_MAX;
+}
+
 // POST /api/auth/forgot-password — sends reset email
 // Strategy: prefer Supabase's resetPasswordForEmail (delivers via Supabase's mailer).
 // Fall back to local token + SMTP if Supabase isn't configured.
@@ -434,6 +452,12 @@ router.post('/forgot-password', async (req, res) => {
     const email = normalizeEmail(req.body.email);
     if (!email) return res.status(400).json({ error: 'Email is required' });
 
+    // Always return the same generic response, including when rate-limited,
+    // so we don't leak which emails are registered or under attack.
+    if (forgotPasswordRateLimited(email)) {
+      return res.json(GENERIC_FORGOT_RESPONSE);
+    }
+
     const onSupabase = useSupabase();
     const db = onSupabase ? null : getDb();
     const user = onSupabase
@@ -441,7 +465,7 @@ router.post('/forgot-password', async (req, res) => {
       : db.prepare('SELECT id, email, name, supabase_user_id FROM users WHERE email = ?').get(email);
 
     // Always respond with success to avoid leaking which emails are registered.
-    const okResponse = { message: 'If that email is registered, a reset link has been sent.' };
+    const okResponse = GENERIC_FORGOT_RESPONSE;
     if (!user) return res.json(okResponse);
 
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';

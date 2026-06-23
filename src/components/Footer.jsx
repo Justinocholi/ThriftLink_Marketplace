@@ -1,102 +1,101 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
+import { MessageCircle, Twitter, Instagram } from 'lucide-react';
 import logo from '../assets/thriftlink-logo-.png';
-import shieldIcon from '../assets/shield.png';
-import checklistIcon from '../assets/checklist.png';
+
+const COL_TITLE = {
+  fontSize: '0.85rem',
+  fontWeight: 800,
+  color: '#0f172a',
+  textTransform: 'uppercase',
+  letterSpacing: '0.08em',
+  marginBottom: '0.85rem'
+};
+const LINK_STYLE = {
+  color: '#475569',
+  textDecoration: 'none',
+  fontSize: '0.9rem',
+  fontWeight: 500,
+  display: 'block',
+  padding: '0.3rem 0',
+  transition: 'color 0.15s'
+};
 
 const Footer = () => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-
-  const handleVendorRegister = (e) => {
-    e.preventDefault();
-    if (!user) {
-      navigate('/login');
-    } else if (user.role === 'vendor') {
-      navigate('/vendor');
-    } else {
-      // Logic for user -> vendor upgrade could go here
-      navigate('/vendor/guide');
-    }
-  };
-
-  const handleGetVerified = (e) => {
-    e.preventDefault();
-    if (!user) {
-      navigate('/login');
-    } else if (user.role === 'vendor') {
-      navigate('/vendor/subscription');
-    } else {
-      navigate('/vendor/guide');
-    }
-  };
-
   return (
-    <footer className="footer">
-      <div className="section-container">
-        <div className="footer-content">
-          <div className="footer-section">
-            <div className="logo footer-logo">
-              <img src={logo} alt="Thrift Link Logo" />
-            </div>
+    <footer style={{ background: '#f8fafc', borderTop: '1px solid #e2e8f0', color: '#475569', fontFamily: "'Inter', sans-serif" }}>
+      <style>{`
+        .tl-footer-grid { display: grid; grid-template-columns: 1.5fr repeat(4, 1fr); gap: 2.5rem; padding: 3rem 1.5rem 2rem; max-width: 1280px; margin: 0 auto; }
+        .tl-footer-link:hover { color: #25D366 !important; }
+        .tl-footer-social { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 999px; background: white; border: 1px solid #e2e8f0; color: #475569; transition: all 0.15s; }
+        .tl-footer-social:hover { color: #25D366; border-color: #25D366; transform: translateY(-1px); }
+        @media (max-width: 900px) {
+          .tl-footer-grid { grid-template-columns: 1fr 1fr; gap: 2rem; padding: 2.25rem 1.25rem 1.5rem; }
+          .tl-footer-brand { grid-column: 1 / -1; }
+        }
+        @media (max-width: 400px) {
+          .tl-footer-grid { grid-template-columns: 1fr; }
+        }
+      `}</style>
 
-            <p>The most trusted WhatsApp vendor marketplace. Connecting buyers with verified sellers since 2024.</p>
-            <div className="trust-indicators">
-              <div className="trust-item">
-                <span className="icon">
-                  <img src={shieldIcon} alt="Shield" className="icon-sm" />
-                </span>
-                <span>Secure Platform</span>
-              </div>
-              <div className="trust-item">
-                <span className="icon">
-                  <img src={checklistIcon} alt="Check" className="icon-sm" />
-                </span>
-                <span>Verified Vendors</span>
-              </div>
-            </div>
+      <div className="tl-footer-grid">
+        <div className="tl-footer-brand">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.85rem' }}>
+            <img src={logo} alt="ThriftLink" style={{ height: 56, objectFit: 'contain' }} />
+            <span style={{ fontWeight: 800, color: '#0f172a', fontSize: '1.15rem' }}>ThriftLink</span>
           </div>
-          <div className="footer-section">
-            <h4>For Buyers</h4>
-            <div className="footer-links">
-              <Link to="/vendors">Browse Vendors</Link>
-              <Link to="/all-categories">Shop by Category</Link>
-              <Link to="/buyer/safety">Safety Tips</Link>
-              <Link to="/buyer/reviews">Vendor Reviews</Link>
-            </div>
-          </div>
-          <div className="footer-section">
-            <h4>For Vendors</h4>
-            <div className="footer-links">
-              <a href="#" onClick={handleVendorRegister}>Register as Vendor</a>
-              <a href="#" onClick={handleGetVerified}>Get Verified</a>
-              <Link to="/vendor/pricing">Pricing Plans</Link>
-              <Link to="/vendor/guide">Vendor Guide</Link>
-            </div>
-          </div>
-          <div className="footer-section">
-            <h4>Support</h4>
-            <div className="footer-links">
-              <Link to="/support/help">Help Center</Link>
-              <Link to="/support/contact">Contact Us</Link>
-              <Link to="/support/faq">FAQ</Link>
-              <Link to="/support/report">Report Issues</Link>
-            </div>
-          </div>
-          <div className="footer-section">
-            <h4>Legal</h4>
-            <div className="footer-links">
-              <Link to="/legal/privacy">Privacy Policy</Link>
-              <Link to="/legal/terms">Terms of Service</Link>
-              <Link to="/legal/vendor-policy">Vendor Policy</Link>
-              <Link to="/legal/cookies">Cookie Policy</Link>
-            </div>
-          </div>
+          <p style={{ color: '#64748b', fontSize: '0.95rem', lineHeight: 1.55, maxWidth: 360 }}>
+            Verified WhatsApp thrift vendors · Nigeria
+          </p>
         </div>
-        <div className="footer-bottom">
-          <p>© {new Date().getFullYear()} Thrift Link Nigeria. All rights reserved. | Made with ❤️ in Nigeria</p>
+
+        <div>
+          <div style={COL_TITLE}>Marketplace</div>
+          <Link className="tl-footer-link" to="/categories" style={LINK_STYLE}>Browse</Link>
+          <Link className="tl-footer-link" to="/all-categories" style={LINK_STYLE}>Categories</Link>
+          <Link className="tl-footer-link" to="/vendors" style={LINK_STYLE}>Verified Vendors</Link>
+          <Link className="tl-footer-link" to="/vendor/guide" style={LINK_STYLE}>Become a Vendor</Link>
         </div>
+
+        <div>
+          <div style={COL_TITLE}>Support</div>
+          <Link className="tl-footer-link" to="/support/help" style={LINK_STYLE}>Help</Link>
+          <Link className="tl-footer-link" to="/support/faq" style={LINK_STYLE}>FAQ</Link>
+          <Link className="tl-footer-link" to="/support/contact" style={LINK_STYLE}>Contact</Link>
+          <Link className="tl-footer-link" to="/support/report" style={LINK_STYLE}>Report Issue</Link>
+        </div>
+
+        <div>
+          <div style={COL_TITLE}>Legal</div>
+          <Link className="tl-footer-link" to="/legal/terms" style={LINK_STYLE}>Terms</Link>
+          <Link className="tl-footer-link" to="/legal/privacy" style={LINK_STYLE}>Privacy</Link>
+          <Link className="tl-footer-link" to="/legal/cookies" style={LINK_STYLE}>Cookies</Link>
+          <Link className="tl-footer-link" to="/legal/vendor-policy" style={LINK_STYLE}>Vendor Policy</Link>
+        </div>
+
+        <div>
+          <div style={COL_TITLE}>Connect</div>
+          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.85rem' }}>
+            <a className="tl-footer-social" href="https://wa.me/2348000000000" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">
+              <MessageCircle size={18} />
+            </a>
+            <a className="tl-footer-social" href="https://twitter.com/thriftlink_ng" target="_blank" rel="noopener noreferrer" aria-label="Twitter / X">
+              <Twitter size={18} />
+            </a>
+            <a className="tl-footer-social" href="https://instagram.com/thriftlink_ng" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+              <Instagram size={18} />
+            </a>
+          </div>
+          <a className="tl-footer-link" href="https://wa.me/2348000000000" target="_blank" rel="noopener noreferrer" style={LINK_STYLE}>WhatsApp business</a>
+        </div>
+      </div>
+
+      <div style={{ borderTop: '1px solid #e2e8f0', padding: '1rem 1.5rem', maxWidth: 1280, margin: '0 auto', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}>
+        <div style={{ color: '#64748b', fontSize: '0.85rem' }}>© 2026 ThriftLink. All rights reserved.</div>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.3rem 0.7rem', borderRadius: 999, background: 'white', border: '1px solid #e2e8f0', fontSize: '0.78rem', fontWeight: 700, color: '#0f172a' }}>
+          <span style={{ width: 8, height: 8, borderRadius: 999, background: '#25D366' }} />
+          Made in Nigeria
+        </span>
       </div>
     </footer>
   );

@@ -30,7 +30,9 @@ import { useAuthGate } from '../../context/UIContext';
 import { useToast } from '../../components/ui/Toast';
 import SafetyTips from '../../components/ui/SafetyTips';
 import ProgressiveImage from '../../components/ui/ProgressiveImage';
+import { cldUrl } from '../../utils/cloudinary';
 import { Skeleton, SkeletonCircle } from '../../components/ui/Skeleton';
+import ProductCard from '../../components/ProductCard';
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -48,6 +50,7 @@ const ProductDetails = () => {
   const [activeImg, setActiveImg] = useState(0);
   const [saved, setSaved] = useState(false);
   const [phoneRevealed, setPhoneRevealed] = useState(false);
+  const [recentItems, setRecentItems] = useState([]);
 
   const galleryRef = useRef(null);
 
@@ -67,6 +70,24 @@ const ProductDetails = () => {
         console.error('Failed to fetch product:', err);
       })
       .finally(() => setLoading(false));
+
+    // Track recently viewed (cap 10, newest first, dedupe)
+    try {
+      const raw = localStorage.getItem('tl_recent');
+      const arr = raw ? JSON.parse(raw) : [];
+      const list = Array.isArray(arr) ? arr.filter(x => x !== id) : [];
+      list.unshift(id);
+      const capped = list.slice(0, 10);
+      localStorage.setItem('tl_recent', JSON.stringify(capped));
+      // Hydrate strip from the other recent IDs (exclude current product)
+      const others = capped.filter(x => x !== id).slice(0, 8);
+      if (others.length) {
+        Promise.all(others.map(rid => productsApi.get(rid).catch(() => null)))
+          .then(rs => setRecentItems(rs.filter(Boolean)));
+      } else {
+        setRecentItems([]);
+      }
+    } catch {}
   }, [id]);
 
   const images = (() => {
@@ -285,7 +306,7 @@ const ProductDetails = () => {
                       key={i}
                       style={{ flex: '0 0 100%', height: '100%', scrollSnapAlign: 'start' }}
                     >
-                      <ProgressiveImage src={img} alt={`${product.name} ${i + 1}`} lazy={i > 0} />
+                      <ProgressiveImage src={cldUrl(img, 800)} alt={`${product.name} ${i + 1}`} lazy={i > 0} />
                     </div>
                   ))}
                 </div>
@@ -354,7 +375,7 @@ const ProductDetails = () => {
                       }}
                     >
                       <img
-                        src={img}
+                        src={cldUrl(img, 200)}
                         alt=""
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                       />
@@ -604,6 +625,21 @@ const ProductDetails = () => {
         </button>
       </div>
 
+      {recentItems.length > 0 && (
+        <section style={{ padding: '2rem 1.25rem 3rem', background: '#f9fafb' }}>
+          <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+            <h2 style={{ fontSize: '1.3rem', fontWeight: 700, color: '#0f172a', marginBottom: '1rem' }}>Recently viewed</h2>
+            <div style={{ display: 'flex', gap: '1rem', overflowX: 'auto', paddingBottom: '0.75rem', scrollSnapType: 'x mandatory' }}>
+              {recentItems.map(p => (
+                <div key={p.id} style={{ minWidth: 220, maxWidth: 220, scrollSnapAlign: 'start' }}>
+                  <ProductCard product={p} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       <Footer />
 
       <style>{`
@@ -619,6 +655,10 @@ const ProductDetails = () => {
         @media (max-width: 768px) {
           .pd-sticky-mobile { display: flex; bottom: 64px; }
           .pd-ctas { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 480px) {
+          .pd-grid h1 { font-size: clamp(1.25rem, 5vw, 1.6rem) !important; }
+          .pd-ctas button { padding: 0.85rem !important; font-size: 0.95rem !important; }
         }
       `}</style>
     </div>

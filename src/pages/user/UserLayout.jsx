@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { Home, ShoppingBag, Heart, User, LifeBuoy, LogOut, Menu, X, MessageSquare, ShoppingCart } from 'lucide-react';
 import logo from '../../assets/thriftlink-logo-.png';
 import MobileTabBar from '../../components/MobileTabBar';
+import ProfileDropdown from '../../components/ProfileDropdown';
 
 const UserLayout = () => {
   const { logout } = useAuth();
@@ -44,6 +45,8 @@ const UserLayout = () => {
               margin-left: 0 !important;
               padding: 1.25rem !important;
               padding-bottom: 96px !important;
+              overflow-x: hidden !important;
+              max-width: 100% !important;
             }
             .mobile-header {
               display: none !important;
@@ -52,6 +55,15 @@ const UserLayout = () => {
           .mobile-header {
             display: none;
           }
+          @media (max-width: 640px) {
+            .user-welcome-title { font-size: 1.25rem !important; }
+            .user-welcome-sub { font-size: 0.85rem !important; }
+          }
+          @media (max-width: 768px) {
+            .user-welcome-block { display: none !important; }
+            .user-header-mobile-title { display: block !important; }
+          }
+          .user-header-mobile-title { display: none; }
         `}
       </style>
 
@@ -156,24 +168,15 @@ const UserLayout = () => {
             >
               <Menu size={24} />
             </button>
-            <div>
-              <h1 style={{ fontSize: '1.75rem', color: '#0f172a', fontWeight: '700', marginBottom: '0.25rem' }}>
-                Welcome back, User! 👋
+            <div className="user-welcome-block">
+              <h1 className="user-welcome-title" style={{ fontSize: '1.75rem', color: '#0f172a', fontWeight: '700', marginBottom: '0.25rem' }}>
+                Welcome back! 👋
               </h1>
-              <p style={{ color: '#64748b' }}>Here's what's happening with your account.</p>
+              <p className="user-welcome-sub" style={{ color: '#64748b' }}>Here's what's happening with your account.</p>
             </div>
+            <h1 className="user-header-mobile-title" style={{ fontSize: '1.15rem', color: '#0f172a', fontWeight: 700, margin: 0 }}>ThriftLink</h1>
           </div>
-          <Link to="/" className="view-page-btn" style={{
-            padding: '0.75rem 1.5rem',
-            background: '#3b82f6',
-            color: 'white',
-            textDecoration: 'none',
-            borderRadius: '10px',
-            fontWeight: '600',
-            fontSize: '0.95rem',
-            transition: 'all 0.2s',
-            boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)'
-          }}>Start Shopping</Link>
+          <ProfileDropdown role="user" accent="#3b82f6" />
         </header>
 
         <Outlet />

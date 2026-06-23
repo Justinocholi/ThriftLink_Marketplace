@@ -279,12 +279,30 @@ router.get('/reports', async (req, res) => {
   try {
     if (useSupabase()) {
       const rows = await reportsRepo.adminList({ status });
-      const reports = await Promise.all(rows.map(async (r) => {
+      // Batch-fetch targets to avoid N+1 round trips.
+      const productIds = [...new Set(rows.filter(r => r.target_type === 'product').map(r => r.target_id).filter(Boolean))];
+      const vendorIds = [...new Set(rows.filter(r => r.target_type === 'vendor').map(r => r.target_id).filter(Boolean))];
+      const productMap = new Map();
+      const vendorMap = new Map();
+      let supabaseData = null;
+      try { supabaseData = require('../db/supabaseData'); } catch {}
+      if (supabaseData && (productIds.length || vendorIds.length)) {
+        const db = supabaseData.getDataClient();
+        if (productIds.length) {
+          const { data } = await db.from('products').select('id,name').in('id', productIds);
+          for (const p of (data || [])) productMap.set(p.id, p.name);
+        }
+        if (vendorIds.length) {
+          const { data } = await db.from('vendor_profiles').select('id,shop_name').in('id', vendorIds);
+          for (const v of (data || [])) vendorMap.set(v.id, v.shop_name);
+        }
+      }
+      const reports = rows.map((r) => {
         let target_name = null;
-        if (r.target_type === 'product') target_name = (await productsRepo.getById(r.target_id))?.name || null;
-        else if (r.target_type === 'vendor') target_name = (await vendorsRepo.getById(r.target_id))?.shop_name || null;
+        if (r.target_type === 'product') target_name = productMap.get(r.target_id) || null;
+        else if (r.target_type === 'vendor') target_name = vendorMap.get(r.target_id) || null;
         return { ...r, target_name };
-      }));
+      });
       return res.json({ reports, total: reports.length, page: parseInt(page), pages: 1 });
     }
     const db = getDb();

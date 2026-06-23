@@ -108,6 +108,7 @@ const Login = () => {
         @media (max-width: 768px) {
           .auth-container { flex-direction: column !important; padding: 1rem !important; gap: 2rem !important; }
           .info-section { order: 2; text-align: center; }
+          .info-section .info-eyebrow { align-self: center !important; margin-left: auto !important; margin-right: auto !important; }
           .login-section { order: 1; width: 100% !important; flex: unset !important; max-width: 420px; margin: 0 auto; padding: 2rem !important; }
           .info-title { font-size: 2rem !important; }
         }
@@ -122,7 +123,7 @@ const Login = () => {
 
         {/* Left info panel */}
         <div className="info-section" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', alignSelf: 'flex-start', padding: '0.4rem 0.9rem', background: 'rgba(37, 211, 102, 0.12)', border: '1px solid rgba(37, 211, 102, 0.3)', borderRadius: '999px', marginBottom: '1.25rem', fontSize: '0.8rem', fontWeight: 600, color: '#15803d' }}>
+          <div className="info-eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', alignSelf: 'flex-start', padding: '0.4rem 0.9rem', background: 'rgba(37, 211, 102, 0.12)', border: '1px solid rgba(37, 211, 102, 0.3)', borderRadius: '999px', marginBottom: '1.25rem', fontSize: '0.8rem', fontWeight: 600, color: '#15803d' }}>
             <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', animation: 'pulseDot 1.8s ease-in-out infinite' }} />
             Verified WhatsApp vendors · Nigeria
           </div>
@@ -220,7 +221,7 @@ const Login = () => {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1.5rem' }}>
                 {[{ key: 'user', icon: cartIcon, label: 'I want to buy', sub: 'Browse and shop' }, { key: 'vendor', icon: briefcaseIcon, label: 'I want to sell', sub: 'Become a vendor' }].map(({ key, icon, label, sub }) => (
                   <div key={key} onClick={() => setSignupRole(key)} style={{ padding: '1rem', border: `2px solid ${signupRole === key ? '#25D366' : '#e5e7eb'}`, borderRadius: '12px', cursor: 'pointer', textAlign: 'center', background: signupRole === key ? '#f0fdf4' : 'white' }}>
-                    <img src={icon} alt="" style={{ width: '28px', height: '28px', marginBottom: '0.4rem' }} />
+                    <img src={icon} alt="" style={{ width: '28px', height: '28px', display: 'block', margin: '0 auto 0.4rem' }} />
                     <div style={{ fontWeight: '600', color: '#1f2937', fontSize: '0.875rem' }}>{label}</div>
                     <div style={{ color: '#6b7280', fontSize: '0.75rem' }}>{sub}</div>
                   </div>

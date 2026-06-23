@@ -179,6 +179,8 @@ CREATE INDEX IF NOT EXISTS idx_messages_sender ON messages(sender_id);
 CREATE INDEX IF NOT EXISTS idx_messages_receiver ON messages(receiver_id);
 CREATE INDEX IF NOT EXISTS idx_saved_items_user ON saved_items(user_id);
 CREATE INDEX IF NOT EXISTS idx_analytics_vendor ON analytics_events(vendor_id);
+-- Audit-follow-up indexes live at the bottom of this file (after all tables
+-- are declared). Some reference tables declared further down (reports).
 
 -- Reports table (for reporting scams/issues)
 CREATE TABLE IF NOT EXISTS reports (
@@ -220,3 +222,14 @@ CREATE TABLE IF NOT EXISTS subscription_payments (
 );
 CREATE INDEX IF NOT EXISTS idx_subscription_payments_status ON subscription_payments(status);
 CREATE INDEX IF NOT EXISTS idx_subscription_payments_vendor ON subscription_payments(vendor_id);
+
+-- Hot-path composite / lookup indexes (audit follow-up). Placed after all
+-- tables so each referenced table is guaranteed to exist.
+CREATE INDEX IF NOT EXISTS idx_messages_thread ON messages(sender_id, receiver_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_notifications_user_read ON notifications(user_id, is_read);
+CREATE INDEX IF NOT EXISTS idx_cart_items_user ON cart_items(user_id);
+CREATE INDEX IF NOT EXISTS idx_analytics_events_type_time ON analytics_events(event_type, created_at);
+CREATE INDEX IF NOT EXISTS idx_products_category_available ON products(category, is_available);
+CREATE INDEX IF NOT EXISTS idx_vendor_profiles_verification ON vendor_profiles(verification_status);
+CREATE INDEX IF NOT EXISTS idx_reports_status ON reports(status);
+-- idx_users_reset_token is created in db.js#ensureIndexes (column added via safeAddColumn).

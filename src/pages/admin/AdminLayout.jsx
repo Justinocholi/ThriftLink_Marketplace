@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { LayoutDashboard, Store, Star, Users, LogOut, ShieldCheck, Settings, Flag, CreditCard } from 'lucide-react';
 import logo from '../../assets/thriftlink-logo-.png';
 import MobileTabBar from '../../components/MobileTabBar';
+import ProfileDropdown from '../../components/ProfileDropdown';
 
 const AdminLayout = () => {
   const { logout } = useAuth();
@@ -35,7 +36,7 @@ const AdminLayout = () => {
       <style>{`
         @media (max-width: 768px) {
           .admin-sidebar { display: none !important; }
-          .admin-main { margin-left: 0 !important; padding: 1.25rem !important; padding-bottom: 96px !important; }
+          .admin-main { margin-left: 0 !important; padding: 1.25rem !important; padding-bottom: 96px !important; overflow-x: hidden !important; max-width: 100% !important; }
         }
       `}</style>
 
@@ -99,6 +100,9 @@ const AdminLayout = () => {
         padding: '2.5rem',
         width: '100%'
       }}>
+        <header style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <ProfileDropdown role="admin" accent="#3b82f6" />
+        </header>
         <Outlet />
       </main>
 

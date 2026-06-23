@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { LayoutDashboard, User, Package, BarChart2, ShoppingCart, MessageCircle, Settings, Crown, LogOut, Menu, X } from 'lucide-react';
 import logo from '../../assets/thriftlink-logo-.png';
 import MobileTabBar from '../../components/MobileTabBar';
+import ProfileDropdown from '../../components/ProfileDropdown';
 
 const VendorLayout = () => {
   const { logout } = useAuth();
@@ -45,6 +46,8 @@ const VendorLayout = () => {
               margin-left: 0 !important;
               padding: 1.25rem !important;
               padding-bottom: 96px !important;
+              overflow-x: hidden !important;
+              max-width: 100% !important;
             }
             .mobile-header-btn {
               display: none !important;
@@ -52,6 +55,10 @@ const VendorLayout = () => {
           }
           .mobile-header-btn {
             display: none;
+          }
+          @media (max-width: 640px) {
+            .vendor-header { padding: 1rem !important; border-radius: 12px !important; margin-bottom: 1rem !important; }
+            .vendor-header-title { font-size: 1.15rem !important; }
           }
         `}
       </style>
@@ -134,7 +141,7 @@ const VendorLayout = () => {
 
       {/* Main Content */}
       <main className="main-content" style={{ marginLeft: '260px', flex: 1, padding: '2rem', transition: 'margin-left 0.3s ease-in-out' }}>
-        <header style={{
+        <header className="vendor-header" style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -158,23 +165,11 @@ const VendorLayout = () => {
             >
               <Menu size={24} />
             </button>
-            <h3 style={{ fontSize: '1.75rem', color: '#0f172a', fontWeight: '700' }}>
+            <h3 className="vendor-header-title" style={{ fontSize: '1.75rem', color: '#0f172a', fontWeight: '700' }}>
               {navItems.find(i => isActive(i.path))?.label || 'Vendor Dashboard'}
             </h3>
           </div>
-          <Link to="/" className="view-page-btn" style={{
-            width: '40px',
-            height: '40px',
-            borderRadius: '50%',
-            background: '#f3f4f6',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            border: '1px solid #e5e7eb',
-            textDecoration: 'none'
-          }}>
-            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Vendor" alt="Vendor" style={{ width: '100%', height: '100%', borderRadius: '50%' }} />
-          </Link>
+          <ProfileDropdown role="vendor" accent="#3b82f6" />
         </header>
 
         <Outlet />
