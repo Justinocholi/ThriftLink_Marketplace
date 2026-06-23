@@ -84,8 +84,23 @@ function corsOriginCheck(origin, cb) {
 // Security headers. crossOriginResourcePolicy is relaxed so Cloudinary /
 // cross-origin <img> loads aren't blocked; CSP is left off here because the
 // SPA is served separately by Vite in dev and a CDN in prod.
+// CSP: enable in production only. Dev keeps it off so Vite's HMR + inline
+// dev tooling aren't blocked.
+const cspConfig = isProd ? {
+  useDefaults: true,
+  directives: {
+    'default-src': ["'self'"],
+    'script-src': ["'self'", "'unsafe-inline'", 'https://us-assets.i.posthog.com', 'https://us.i.posthog.com', 'https://*.sentry.io', 'https://browser.sentry-cdn.com'],
+    'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+    'font-src': ["'self'", 'data:', 'https://fonts.gstatic.com'],
+    'img-src': ["'self'", 'data:', 'blob:', 'https://res.cloudinary.com', 'https://api.dicebear.com'],
+    'connect-src': ["'self'", 'https://*.supabase.co', 'wss://*.supabase.co', 'https://us.i.posthog.com', 'https://*.sentry.io', 'https://res.cloudinary.com'],
+    'frame-ancestors': ["'none'"],
+  },
+} : false;
+
 app.use(helmet({
-  contentSecurityPolicy: false,
+  contentSecurityPolicy: cspConfig,
   crossOriginResourcePolicy: { policy: 'cross-origin' },
 }));
 

@@ -5,6 +5,7 @@ import Footer from '../../components/Footer';
 import { vendors as vendorsApi, products as productsApi } from '../../services/api';
 import { ShieldCheck, MessageCircle, Users, Flag, Star } from 'lucide-react';
 import ProductCard from '../../components/ProductCard';
+import { cldUrl } from '../../utils/cloudinary';
 
 // Import Assets
 import checklistIcon from '../../assets/checklist.png';
@@ -485,7 +486,7 @@ const Home = () => {
                     borderRadius: 16,
                     overflow: 'hidden',
                     cursor: 'pointer',
-                    background: cover ? `#0f172a url(${cover}) center/cover` : gradientFor(vendor.id),
+                    background: cover ? `#0f172a url(${cldUrl(cover, 400)}) center/cover` : gradientFor(vendor.id),
                     aspectRatio: '1 / 1',
                     boxShadow: '0 8px 24px -12px rgba(15,23,42,0.18)',
                     border: '1px solid #f1f5f9',
@@ -594,7 +595,7 @@ const Home = () => {
                   width: '80px',
                   height: '80px',
                   borderRadius: '50%',
-                  background: vendor.logo ? `url(${vendor.logo}) center/cover` : gradientFor(vendor.id),
+                  background: vendor.logo ? `url(${cldUrl(vendor.logo, 400)}) center/cover` : gradientFor(vendor.id),
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',

@@ -5,6 +5,9 @@ const { authenticate } = require('../middleware/auth');
 const realtime = require('../realtime');
 const reviewsRepo = require('../repos/reviewsRepo');
 const vendorsRepo = require('../repos/vendorsRepo');
+const { getDataClient, unwrap } = (() => {
+  try { return require('../db/supabaseData'); } catch { return { getDataClient: null, unwrap: null }; }
+})();
 
 const router = express.Router();
 const useSupabase = () => process.env.DATA_BACKEND === 'supabase';
@@ -54,6 +57,16 @@ router.post('/vendor/:vendorId', authenticate, async (req, res) => {
     if (useSupabase()) {
       const vendor = await vendorsRepo.getById(vendorId);
       if (!vendor) return res.status(404).json({ error: 'Vendor not found' });
+      // Require a non-cancelled order with this vendor before allowing a review.
+      if (getDataClient) {
+        const db = getDataClient();
+        const order = unwrap(
+          await db.from('orders').select('id').eq('user_id', req.user.id).eq('vendor_id', vendorId).neq('status', 'cancelled').limit(1).maybeSingle()
+        );
+        if (!order) {
+          return res.status(403).json({ error: 'You can only review vendors you have ordered from.' });
+        }
+      }
       if (await reviewsRepo.alreadyReviewed(vendorId, req.user.id)) {
         return res.status(409).json({ error: 'You have already reviewed this vendor' });
       }
@@ -67,6 +80,12 @@ router.post('/vendor/:vendorId', authenticate, async (req, res) => {
       const db = getDb();
       const vendor = db.prepare('SELECT id FROM vendor_profiles WHERE id = ?').get(vendorId);
       if (!vendor) return res.status(404).json({ error: 'Vendor not found' });
+      const priorOrder = db.prepare(
+        "SELECT id FROM orders WHERE user_id = ? AND vendor_id = ? AND status != 'cancelled' LIMIT 1"
+      ).get(req.user.id, vendorId);
+      if (!priorOrder) {
+        return res.status(403).json({ error: 'You can only review vendors you have ordered from.' });
+      }
       const existing = db.prepare('SELECT id FROM reviews WHERE vendor_id = ? AND user_id = ?').get(vendorId, req.user.id);
       if (existing) return res.status(409).json({ error: 'You have already reviewed this vendor' });
       const id = uuidv4();

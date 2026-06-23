@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, ShieldCheck, Star, MapPin } from 'lucide-react';
+import { cldUrl } from '../utils/cloudinary';
 
 const WISHLIST_KEY = 'tl_wishlist';
 
@@ -76,7 +77,7 @@ const ProductCard = ({ product }) => {
         .tl-pcard:hover .tl-pcard-img img { transform: scale(1.05); }
       `}</style>
       <div className="tl-pcard-img" style={{ position: 'relative', aspectRatio: '1 / 1', background: '#f1f5f9', overflow: 'hidden' }}>
-        <img src={cover} alt={product.name} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform .4s ease' }} />
+        <img src={cldUrl(cover, 400)} alt={product.name} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform .4s ease' }} />
         <button
           onClick={handleFav}
           aria-label={favorited ? 'Remove from wishlist' : 'Add to wishlist'}

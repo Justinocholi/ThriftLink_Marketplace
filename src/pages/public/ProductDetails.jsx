@@ -30,6 +30,7 @@ import { useAuthGate } from '../../context/UIContext';
 import { useToast } from '../../components/ui/Toast';
 import SafetyTips from '../../components/ui/SafetyTips';
 import ProgressiveImage from '../../components/ui/ProgressiveImage';
+import { cldUrl } from '../../utils/cloudinary';
 import { Skeleton, SkeletonCircle } from '../../components/ui/Skeleton';
 import ProductCard from '../../components/ProductCard';
 
@@ -305,7 +306,7 @@ const ProductDetails = () => {
                       key={i}
                       style={{ flex: '0 0 100%', height: '100%', scrollSnapAlign: 'start' }}
                     >
-                      <ProgressiveImage src={img} alt={`${product.name} ${i + 1}`} lazy={i > 0} />
+                      <ProgressiveImage src={cldUrl(img, 800)} alt={`${product.name} ${i + 1}`} lazy={i > 0} />
                     </div>
                   ))}
                 </div>
@@ -374,7 +375,7 @@ const ProductDetails = () => {
                       }}
                     >
                       <img
-                        src={img}
+                        src={cldUrl(img, 200)}
                         alt=""
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                       />

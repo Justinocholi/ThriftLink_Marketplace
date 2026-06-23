@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import { vendors as vendorsApi } from '../../services/api';
+import { cldUrl } from '../../utils/cloudinary';
 
 import shieldIcon from '../../assets/shield.png';
 import starIcon from '../../assets/star.png';
@@ -132,7 +133,7 @@ const VerifiedVendors = () => {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
                     <div style={{ width: '54px', height: '54px', borderRadius: '50%', flexShrink: 0, overflow: 'hidden', background: 'linear-gradient(135deg, #25D366, #128C7E)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', fontSize: '1.2rem' }}>
                       {vendor.logo
-                        ? <img src={vendor.logo} alt={vendor.shop_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ? <img src={cldUrl(vendor.logo, 400)} alt={vendor.shop_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         : initials}
                     </div>
                     <div>
