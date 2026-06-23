@@ -36,7 +36,7 @@ const AdminLayout = () => {
       <style>{`
         @media (max-width: 768px) {
           .admin-sidebar { display: none !important; }
-          .admin-main { margin-left: 0 !important; padding: 1.25rem !important; padding-bottom: 96px !important; }
+          .admin-main { margin-left: 0 !important; padding: 1.25rem !important; padding-bottom: 96px !important; overflow-x: hidden !important; max-width: 100% !important; }
         }
       `}</style>
 

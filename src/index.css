@@ -1599,6 +1599,13 @@ h1, h2, h3, .section-title, .hero h1 {
     position: relative;
     overflow: hidden;
     box-shadow: 0 16px 40px -16px rgba(22, 184, 101, 0.4);
+    max-width: 100%;
+    box-sizing: border-box;
+}
+@media (max-width: 640px) {
+    .tl-dash-hero { padding: 1.25rem; border-radius: 18px; }
+    .tl-dash-hero h1, .tl-dash-hero h2 { font-size: clamp(1.25rem, 5vw, 1.75rem) !important; }
+    .tl-dash-hero p { font-size: 0.95rem; }
 }
 .tl-dash-hero::before {
     content: '';

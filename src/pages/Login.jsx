@@ -221,7 +221,7 @@ const Login = () => {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1.5rem' }}>
                 {[{ key: 'user', icon: cartIcon, label: 'I want to buy', sub: 'Browse and shop' }, { key: 'vendor', icon: briefcaseIcon, label: 'I want to sell', sub: 'Become a vendor' }].map(({ key, icon, label, sub }) => (
                   <div key={key} onClick={() => setSignupRole(key)} style={{ padding: '1rem', border: `2px solid ${signupRole === key ? '#25D366' : '#e5e7eb'}`, borderRadius: '12px', cursor: 'pointer', textAlign: 'center', background: signupRole === key ? '#f0fdf4' : 'white' }}>
-                    <img src={icon} alt="" style={{ width: '28px', height: '28px', marginBottom: '0.4rem' }} />
+                    <img src={icon} alt="" style={{ width: '28px', height: '28px', display: 'block', margin: '0 auto 0.4rem' }} />
                     <div style={{ fontWeight: '600', color: '#1f2937', fontSize: '0.875rem' }}>{label}</div>
                     <div style={{ color: '#6b7280', fontSize: '0.75rem' }}>{sub}</div>
                   </div>

@@ -46,6 +46,8 @@ const VendorLayout = () => {
               margin-left: 0 !important;
               padding: 1.25rem !important;
               padding-bottom: 96px !important;
+              overflow-x: hidden !important;
+              max-width: 100% !important;
             }
             .mobile-header-btn {
               display: none !important;
