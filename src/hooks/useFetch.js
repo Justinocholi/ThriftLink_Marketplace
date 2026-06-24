@@ -19,7 +19,6 @@ export function useFetch(fn, deps = [], { enabled = true } = {}) {
     } finally {
       setLoading(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled, ...deps]);
 
   useEffect(() => { run(); }, [run]);
