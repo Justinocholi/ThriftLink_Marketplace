@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ChevronDown, User, Settings, LogOut, Store, ShoppingBag, ShieldCheck } from 'lucide-react';
+import { ChevronDown, User, Settings, LogOut, Store, ShoppingBag, ShieldCheck, Home } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 /**
@@ -102,6 +102,9 @@ const ProfileDropdown = ({ role = 'user', accent = '#3b82f6' }) => {
             </Link>
             <Link to={contextLink.to} onClick={() => setOpen(false)} style={itemStyle}>
               {React.cloneElement(contextLink.icon, { color: '#64748b' })} {contextLink.label}
+            </Link>
+            <Link to="/" onClick={() => setOpen(false)} style={itemStyle}>
+              <Home size={16} color="#64748b" /> Back to marketplace
             </Link>
           </div>
           <div style={{ borderTop: '1px solid #f1f5f9', padding: '0.35rem 0' }}>
