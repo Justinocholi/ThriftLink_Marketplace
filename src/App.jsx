@@ -6,6 +6,7 @@ import { UIProvider } from './context/UIContext';
 import { RealtimeProvider } from './context/RealtimeContext';
 import { ToastProvider } from './components/ui/Toast';
 import MobileBottomNav from './components/ui/MobileBottomNav';
+import InstallPrompt from './components/InstallPrompt';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // Eager: landing surfaces
@@ -204,6 +205,7 @@ function App() {
               </Routes>
               </Suspense>
               <MobileBottomNav />
+              <InstallPrompt />
             </UIProvider>
           </CartProvider>
           </RealtimeProvider>
