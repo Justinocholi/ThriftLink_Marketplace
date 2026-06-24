@@ -10,11 +10,15 @@ const CATEGORIES = [
 
 const CONDITIONS = ['new', 'like_new', 'good', 'fair'];
 
+const UNVERIFIED_LIMIT = 3;
+
 const VendorProducts = () => {
   const [products, setProducts] = useState([]);
+  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
+  const [capError, setCapError] = useState(false);
   const [message, setMessage] = useState('');
   const [imageFiles, setImageFiles] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
@@ -30,7 +34,14 @@ const VendorProducts = () => {
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { loadProducts(); }, []);
+  useEffect(() => {
+    loadProducts();
+    vendorMe.getProfile().then(setProfile).catch(() => {});
+  }, []);
+
+  const isApproved = profile?.verification_status === 'approved';
+  const showCapChip = !!profile && !isApproved;
+  const reachedCap = !isApproved && products.length >= UNVERIFIED_LIMIT;
 
   const handleFormChange = e => setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
 
@@ -46,7 +57,7 @@ const VendorProducts = () => {
       setError('Name, price, and category are required');
       return;
     }
-    setUploading(true); setError(''); setMessage('');
+    setUploading(true); setError(''); setMessage(''); setCapError(false);
     try {
       const fd = new FormData();
       fd.append('name', form.name);
@@ -65,6 +76,7 @@ const VendorProducts = () => {
       loadProducts();
     } catch (err) {
       setError(err.message);
+      if (/Unverified vendors can list up to/i.test(err.message || '')) setCapError(true);
     } finally {
       setUploading(false);
     }
@@ -93,11 +105,38 @@ const VendorProducts = () => {
 
   return (
     <div style={{ background: 'white', borderRadius: '16px', padding: '2rem', marginBottom: '2rem', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-      <h4 style={{ fontSize: '1.25rem', color: '#0f172a', fontWeight: '700', marginBottom: '1.5rem', paddingBottom: '1rem', borderBottom: '1px solid #f1f5f9' }}>
-        Add New Product
-      </h4>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', gap: '1rem', flexWrap: 'wrap' }}>
+        <h4 style={{ fontSize: '1.25rem', color: '#0f172a', fontWeight: '700', margin: 0 }}>
+          Add New Product
+        </h4>
+        {showCapChip && (
+          <span style={{
+            background: reachedCap ? '#fef2f2' : '#fef9c3',
+            color: reachedCap ? '#b91c1c' : '#854d0e',
+            border: `1px solid ${reachedCap ? '#fecaca' : '#fde68a'}`,
+            padding: '0.35rem 0.75rem', borderRadius: '999px', fontSize: '0.75rem', fontWeight: 600,
+          }}>
+            {Math.min(products.length, UNVERIFIED_LIMIT)} / {UNVERIFIED_LIMIT} listings used — verify your shop to unlock unlimited
+          </span>
+        )}
+      </div>
+      <div style={{ borderBottom: '1px solid #f1f5f9', marginBottom: '1.5rem' }} />
 
-      {message && <div style={{ background: '#dcfce7', color: '#166534', padding: '0.75rem 1rem', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.875rem' }}>{message}</div>}
+      {(capError || reachedCap) && !isApproved && (
+        <div style={{ background: '#fff7ed', border: '1px solid #fed7aa', color: '#9a3412', padding: '1rem 1.25rem', borderRadius: '10px', marginBottom: '1rem', fontSize: '0.875rem' }}>
+          <div style={{ fontWeight: 700, marginBottom: '0.25rem' }}>
+            You've reached the {UNVERIFIED_LIMIT}-product limit for unverified shops.
+          </div>
+          <div style={{ marginBottom: '0.5rem' }}>
+            Complete KYC verification to list unlimited products and earn the verified badge.
+          </div>
+          <a href="/vendor/profile" style={{ color: '#c2410c', fontWeight: 600, textDecoration: 'underline' }}>
+            Complete KYC verification →
+          </a>
+        </div>
+      )}
+
+      {message &&<div style={{ background: '#dcfce7', color: '#166534', padding: '0.75rem 1rem', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.875rem' }}>{message}</div>}
       {error && <div style={{ background: '#fee2e2', color: '#dc2626', padding: '0.75rem 1rem', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.875rem' }}>{error}</div>}
 
       <form onSubmit={handleUpload} style={{ display: 'grid', gap: '1rem', marginBottom: '2.5rem' }}>

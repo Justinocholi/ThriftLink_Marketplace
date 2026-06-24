@@ -6,7 +6,60 @@ const { authenticate, requireRole } = require('../middleware/auth');
 const { sendEmail, templates } = require('../services/emailService');
 const realtime = require('../realtime');
 const ordersRepo = require('../repos/ordersRepo');
+const messagesRepo = require('../repos/messagesRepo');
 const useSupabase = () => process.env.DATA_BACKEND === 'supabase';
+
+// Build the formatted in-app DM body that gets sent to a vendor when a buyer
+// completes checkout. Keeps the same shape as the WhatsApp message so the
+// vendor sees a familiar layout in their inbox.
+function buildVendorOrderDm({ buyerName, items, total, shippingAddress, phone, notes, orderId }) {
+  const lines = [];
+  lines.push(`🛍️ New order from ${buyerName || 'a buyer'}`);
+  lines.push('');
+  items.forEach((it, i) => {
+    const qty = it.quantity || 1;
+    const subtotal = (Number(it.price) || 0) * qty;
+    const title = it.name || it.product_name || 'Item';
+    lines.push(`${i + 1}. ${title} × ${qty} — ₦${subtotal.toLocaleString()}`);
+  });
+  lines.push('');
+  lines.push(`Total: ₦${Number(total).toLocaleString()}`);
+  if (shippingAddress) lines.push(`\nDelivery: ${shippingAddress}`);
+  if (phone) lines.push(`Phone: ${phone}`);
+  if (notes) lines.push(`Notes: ${notes}`);
+  lines.push('');
+  lines.push(`Order ID: ${String(orderId).slice(0, 8)}`);
+  return lines.join('\n');
+}
+
+// Inserts a DM from buyer → vendor with the formatted order list, then emits
+// realtime events to both ends. Never throws — order creation must not fail
+// because the auto-DM did.
+async function sendOrderDm({ buyerId, buyerName, vendorUserId, content, supabase }) {
+  if (!vendorUserId || vendorUserId === buyerId) return;
+  try {
+    const id = uuidv4();
+    let newMessage;
+    if (supabase) {
+      newMessage = await messagesRepo.send({
+        id, senderId: buyerId, receiverId: vendorUserId, content, imageUrl: null,
+      });
+    } else {
+      const db = getDb();
+      db.prepare(
+        'INSERT INTO messages (id, sender_id, receiver_id, content, image_url) VALUES (?, ?, ?, ?, ?)'
+      ).run(id, buyerId, vendorUserId, content, null);
+      newMessage = db.prepare('SELECT * FROM messages WHERE id = ?').get(id);
+    }
+    realtime.emit(
+      [`user:${vendorUserId}`, `user:${buyerId}`],
+      'message:new',
+      { ...newMessage, sender_name: buyerName }
+    );
+  } catch (err) {
+    console.error('Auto-DM order to vendor failed:', err);
+  }
+}
 
 // SQLite handle is created on demand inside each handler so the sqlite db
 // file is never opened in supabase mode.
@@ -50,6 +103,23 @@ router.post('/', authenticate, requireRole('user'), async (req, res) => {
             type: 'order_update', title: 'New Order',
             message: `New order #${oid.slice(0, 8)} for ₦${Number(ord.total_amount).toLocaleString()}`,
             link: '/vendor/orders', created_at: new Date().toISOString(),
+          });
+          // Auto-DM the formatted order list to the vendor inbox.
+          const dmContent = buildVendorOrderDm({
+            buyerName: user?.name || req.user.name,
+            items: (ord.items || []).map((it) => ({
+              name: it.product_name || it.name, quantity: it.quantity, price: it.price_at_purchase || it.price,
+            })),
+            total: ord.total_amount,
+            shippingAddress, phone, notes,
+            orderId: oid,
+          });
+          await sendOrderDm({
+            buyerId: req.user.id,
+            buyerName: user?.name || req.user.name,
+            vendorUserId,
+            content: dmContent,
+            supabase: true,
           });
         }
         realtime.emit(`user:${req.user.id}`, 'order:new', ord);
@@ -177,13 +247,13 @@ router.post('/', authenticate, requireRole('user'), async (req, res) => {
 
     // Realtime: clear buyer cart + notify each vendor of new order.
     realtime.emit(`user:${req.user.id}`, 'cart:updated', []);
-    orderIds.forEach((oid) => {
+    for (const oid of orderIds) {
       const ord = db.prepare(`
         SELECT o.*, vp.user_id as vendor_user_id, vp.shop_name as vendor_name
         FROM orders o JOIN vendor_profiles vp ON vp.id = o.vendor_id
         WHERE o.id = ?
       `).get(oid);
-      if (!ord) return;
+      if (!ord) continue;
       realtime.emit(`user:${ord.vendor_user_id}`, 'order:new', ord);
       realtime.emit(`user:${ord.vendor_user_id}`, 'notification:new', {
         type: 'order_update',
@@ -192,9 +262,31 @@ router.post('/', authenticate, requireRole('user'), async (req, res) => {
         link: '/vendor/orders',
         created_at: new Date().toISOString(),
       });
+      // Auto-DM the formatted order list to the vendor inbox.
+      if (ord.vendor_user_id) {
+        const items = db.prepare(`
+          SELECT oi.quantity, oi.price_at_purchase as price, p.name
+          FROM order_items oi JOIN products p ON p.id = oi.product_id
+          WHERE oi.order_id = ?
+        `).all(oid);
+        const dmContent = buildVendorOrderDm({
+          buyerName: user?.name || req.user.name,
+          items,
+          total: ord.total_amount,
+          shippingAddress, phone, notes,
+          orderId: oid,
+        });
+        await sendOrderDm({
+          buyerId: req.user.id,
+          buyerName: user?.name || req.user.name,
+          vendorUserId: ord.vendor_user_id,
+          content: dmContent,
+          supabase: false,
+        });
+      }
       realtime.emit(`user:${req.user.id}`, 'order:new', ord);
       realtime.emit('role:admin', 'order:new', ord);
-    });
+    }
 
     res.json({ message: 'Orders created successfully', orderIds });
   } catch (error) {
