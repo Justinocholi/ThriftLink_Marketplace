@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, ShieldCheck, Star, MapPin } from 'lucide-react';
+import { Heart, ShieldCheck, Star, MapPin, ShoppingCart, Check, Loader2 } from 'lucide-react';
 import { cldUrl } from '../utils/cloudinary';
+import { useCart } from '../context/CartContext';
+import { useAuthGate } from '../context/UIContext';
+import { useToast } from './ui/Toast';
 
 const WISHLIST_KEY = 'tl_wishlist';
 
@@ -35,6 +38,11 @@ const parseImages = (raw) => {
 
 const ProductCard = ({ product }) => {
   const [favorited, setFavorited] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [added, setAdded] = useState(false);
+  const { addToCart } = useCart();
+  const { requireAuth } = useAuthGate();
+  const toast = useToast();
 
   useEffect(() => {
     setFavorited(getWishlist().includes(product.id));
@@ -49,6 +57,27 @@ const ProductCard = ({ product }) => {
     const now = toggleWishlist(product.id);
     setFavorited(now);
   }, [product.id]);
+
+  const handleAdd = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    requireAuth({
+      label: 'add this item to your cart',
+      onAuthed: async () => {
+        setAdding(true);
+        try {
+          await addToCart(product.id, 1);
+          setAdded(true);
+          toast.success('Added to cart');
+          setTimeout(() => setAdded(false), 1500);
+        } catch (err) {
+          toast.error(err.message || 'Failed to add to cart');
+        } finally {
+          setAdding(false);
+        }
+      },
+    });
+  }, [product.id, addToCart, requireAuth, toast]);
 
   const images = parseImages(product.images);
   const cover = images[0] || product.image || 'https://via.placeholder.com/400?text=ThriftLink';
@@ -92,6 +121,25 @@ const ProductCard = ({ product }) => {
           }}
         >
           <Heart size={18} color={favorited ? '#FF6B6B' : '#0f172a'} fill={favorited ? '#FF6B6B' : 'none'} />
+        </button>
+        <button
+          onClick={handleAdd}
+          disabled={adding || product.stock_quantity === 0}
+          aria-label="Add to cart"
+          title={product.stock_quantity === 0 ? 'Out of stock' : 'Add to cart'}
+          style={{
+            position: 'absolute', bottom: 10, right: 10,
+            width: 40, height: 40, borderRadius: '50%',
+            border: 'none', cursor: adding ? 'wait' : 'pointer',
+            background: added ? '#16a34a' : '#16b865',
+            color: 'white',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 4px 10px rgba(15,23,42,0.18)',
+            opacity: product.stock_quantity === 0 ? 0.5 : 1,
+            transition: 'background .2s ease, transform .15s ease',
+          }}
+        >
+          {adding ? <Loader2 size={18} className="animate-spin" /> : added ? <Check size={18} /> : <ShoppingCart size={18} />}
         </button>
       </div>
       <div style={{ padding: '0.9rem 1rem 1rem', display: 'flex', flexDirection: 'column', gap: 6, flex: 1 }}>

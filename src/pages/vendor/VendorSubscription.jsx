@@ -77,7 +77,6 @@ const PlanCard = ({ plan, currentPlan, onUpgrade }) => {
 };
 
 const UpgradeModal = ({ plan, narration, paymentAccount, onClose, onSubmitted }) => {
-  const [reference, setReference] = useState('');
   const [note, setNote] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [copied, setCopied] = useState('');
@@ -94,7 +93,9 @@ const UpgradeModal = ({ plan, narration, paymentAccount, onClose, onSubmitted })
     setError('');
     setSubmitting(true);
     try {
-      const res = await subsApi.submitPayment({ plan: plan.id, reference: reference.trim(), note });
+      // No transfer reference required — backend records a synthetic one for
+      // the audit trail. Admin still verifies by checking the bank statement.
+      const res = await subsApi.submitPayment({ plan: plan.id, reference: '', note });
       onSubmitted(res);
     } catch (err) {
       setError(err.message || 'Failed to submit');
@@ -128,7 +129,7 @@ const UpgradeModal = ({ plan, narration, paymentAccount, onClose, onSubmitted })
         </div>
         <div style={{ padding: '1.5rem 2rem' }}>
           <p style={{ color: '#64748b', marginBottom: '1.25rem', fontSize: '0.9rem' }}>
-            Transfer the exact amount to the account below using the narration shown, then paste your transfer reference.
+            Transfer the exact amount to the account below using the narration shown, then tap "I've made the transfer". Our team will confirm the payment against the bank within 1 business day.
           </p>
           <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: '1rem 1.25rem', marginBottom: '1.5rem' }}>
             {rows.map((r) => (
@@ -150,17 +151,6 @@ const UpgradeModal = ({ plan, narration, paymentAccount, onClose, onSubmitted })
 
           <form onSubmit={submit}>
             <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.4rem', color: '#374151' }}>
-              Transfer reference *
-            </label>
-            <input
-              type="text"
-              required
-              value={reference}
-              onChange={(e) => setReference(e.target.value)}
-              placeholder="e.g. FT123456789"
-              style={{ width: '100%', padding: '0.75rem', border: '1px solid #e2e8f0', borderRadius: 8, marginBottom: '1rem' }}
-            />
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.4rem', color: '#374151' }}>
               Note (optional)
             </label>
             <textarea
@@ -176,10 +166,10 @@ const UpgradeModal = ({ plan, narration, paymentAccount, onClose, onSubmitted })
             )}
             <button
               type="submit"
-              disabled={submitting || !reference.trim()}
-              style={{ width: '100%', padding: '0.9rem', background: '#3b82f6', color: 'white', borderRadius: 8, fontWeight: 700, border: 'none', cursor: submitting ? 'not-allowed' : 'pointer' }}
+              disabled={submitting}
+              style={{ width: '100%', padding: '0.9rem', background: '#16a34a', color: 'white', borderRadius: 8, fontWeight: 700, border: 'none', cursor: submitting ? 'not-allowed' : 'pointer' }}
             >
-              {submitting ? 'Submitting…' : 'Submit transfer reference'}
+              {submitting ? 'Submitting…' : "I've made the transfer"}
             </button>
           </form>
         </div>

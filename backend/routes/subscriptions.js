@@ -62,9 +62,15 @@ router.post('/payment-reference', authenticate, requireRole('vendor'), (req, res
   if (!target || !isPaidPlan(plan)) {
     return res.status(400).json({ error: 'Invalid plan. Must be basic or pro.' });
   }
-  const ref = String(reference || '').trim();
-  if (ref.length < 3 || ref.length > 120) {
-    return res.status(400).json({ error: 'A valid transfer reference is required.' });
+  // Reference is now optional — vendors just confirm they paid and admin
+  // verifies against the bank statement. We still record a unique reference
+  // so the subscription_payments row stays queryable for the audit trail.
+  let ref = String(reference || '').trim();
+  if (!ref) {
+    ref = `SELF-${uuidv4().slice(0, 8).toUpperCase()}`;
+  }
+  if (ref.length > 120) {
+    return res.status(400).json({ error: 'Reference is too long.' });
   }
 
   return (async () => {
