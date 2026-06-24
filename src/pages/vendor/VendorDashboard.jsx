@@ -1,37 +1,30 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { vendorMe } from '../../services/api';
 import { Eye, MessageSquare, TrendingUp, Star, Package, ShoppingCart, ArrowUpRight, ArrowDownRight, Clock, CheckCircle2, Circle, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useFetch, useFocusRefetch } from '../../hooks/useFetch';
+import ErrorState from '../../components/ErrorState';
 
 const VendorDashboard = () => {
-  const [analytics, setAnalytics] = useState(null);
-  const [recentOrders, setRecentOrders] = useState([]);
-  const [profile, setProfile] = useState(null);
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [a, o, p, pr] = await Promise.all([
-          vendorMe.getAnalytics(),
-          vendorMe.getOrders(),
-          vendorMe.getProfile().catch(() => null),
-          vendorMe.getProducts().catch(() => [])
-        ]);
-        setAnalytics(a);
-        setRecentOrders(o.slice(0, 5));
-        setProfile(p);
-        setProducts(Array.isArray(pr) ? pr : []);
-      } catch (e) {
-        setError(e.message);
-      } finally {
-        setLoading(false);
-      }
+  const { data, error, loading, retry } = useFetch(async () => {
+    const [a, o, p, pr] = await Promise.all([
+      vendorMe.getAnalytics(),
+      vendorMe.getOrders(),
+      vendorMe.getProfile().catch(() => null),
+      vendorMe.getProducts().catch(() => [])
+    ]);
+    return {
+      analytics: a,
+      recentOrders: (o || []).slice(0, 5),
+      profile: p,
+      products: Array.isArray(pr) ? pr : []
     };
-    fetchData();
   }, []);
+  useFocusRefetch(retry);
+  const analytics = data?.analytics || null;
+  const recentOrders = data?.recentOrders || [];
+  const profile = data?.profile || null;
+  const products = data?.products || [];
 
   // Onboarding checklist
   const profileDone = Boolean(profile && profile.business_name && profile.business_description);
@@ -87,6 +80,8 @@ const VendorDashboard = () => {
     { label: 'Store Rating',    value: totals.rating > 0 ? totals.rating.toFixed(1) : 'New', icon: <Star size={24} />, tone: 'lavender', trend: '0%', isUp: true },
   ];
 
+  if (error) return <ErrorState error={error} onRetry={retry} title="Couldn't load your dashboard" />;
+
   if (loading) return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px' }}>
       <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-green-600"></div>
@@ -106,12 +101,6 @@ const VendorDashboard = () => {
           .vd-stats-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
-      {error && (
-        <div style={{ background: '#fee2e2', color: '#dc2626', padding: '1rem', borderRadius: '12px', marginBottom: '1.5rem', border: '1px solid #fecaca' }}>
-          {error}
-        </div>
-      )}
-
       {/* Onboarding checklist — shown until all required steps done */}
       {!loading && !allRequiredDone && (
         <div style={{

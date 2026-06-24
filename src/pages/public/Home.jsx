@@ -446,7 +446,9 @@ const Home = () => {
             Top Rated Vendors
           </h2>
           
-          {vendorsLoading ? (
+          {vendorsError ? (
+            <ErrorState error={vendorsError} onRetry={retryVendors} title="Couldn't load vendors" />
+          ) : vendorsLoading ? (
             <div className="vendors-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1.25rem' }}>
               {[0,1,2,3].map(i => (
                 <div key={i} style={{ borderRadius: 16, overflow: 'hidden', background: '#f1f5f9', aspectRatio: '1 / 1', position: 'relative' }}>
@@ -789,7 +791,7 @@ const Home = () => {
       Join thousands of vendors selling on Thrift Link today.
     </p>
     <div className="cta-buttons" style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-      <Link to="/vendor/register" className="btn" style={{
+      <Link to={ROUTES.vendorRegister} className="btn" style={{
         padding: '0.8rem 2rem',
         background: '#25D366',
         color: 'white',

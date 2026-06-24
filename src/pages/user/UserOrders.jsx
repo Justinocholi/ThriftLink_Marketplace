@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { orders as ordersApi } from '../../services/api';
 import { Loader2, Package, MessageCircle } from 'lucide-react';
 import { useRealtimeEvent } from '../../context/RealtimeContext';
+import { useFetch } from '../../hooks/useFetch';
+import ErrorState from '../../components/ErrorState';
 
 const STATUS_STYLE = {
   pending:   { background: '#e5e7eb', color: '#374151', label: 'Pending' },
@@ -56,23 +58,9 @@ const StepIndicator = ({ status }) => {
 };
 
 const UserOrders = () => {
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const data = await ordersApi.getMyOrders();
-        setOrders(data);
-      } catch (e) {
-        setError(e.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchOrders();
-  }, []);
+  const { data, error, loading, retry, setData } = useFetch(() => ordersApi.getMyOrders(), []);
+  const orders = data || [];
+  const setOrders = (updater) => setData(prev => typeof updater === 'function' ? updater(prev || []) : updater);
 
   // Realtime: receive vendor's status updates
   useRealtimeEvent('order:status', (payload) => {
@@ -90,6 +78,8 @@ const UserOrders = () => {
     }));
   });
 
+  if (error) return <ErrorState error={error} onRetry={retry} title="Couldn't load your orders" />;
+
   if (loading) return (
     <div style={{ padding: '4rem', textAlign: 'center' }}>
       <Loader2 className="animate-spin" size={40} color="#3b82f6" />
@@ -104,8 +94,6 @@ const UserOrders = () => {
           Order History ({orders.length})
         </h4>
       </div>
-
-      {error && <div style={{ background: '#fee2e2', color: '#dc2626', padding: '0.75rem 1rem', borderRadius: '8px', marginBottom: '1.5rem', fontSize: '0.875rem' }}>{error}</div>}
 
       {orders.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '4rem 2rem' }}>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import PasswordField from '../components/PasswordField';
 import thriftlinkLogo from '../assets/thriftlink-logo.png';
 import magnifierIcon from '../assets/magnifier.png';
 import whatsappIcon from '../assets/whatsapp (1).png';
@@ -44,10 +45,15 @@ const Login = () => {
   // When Supabase's confirmation link redirects back to /login?confirmed=1,
   // greet the user so they know to sign in normally now.
   useEffect(() => {
-    if (new URLSearchParams(location.search).get('confirmed') === '1') {
+    const sp = new URLSearchParams(location.search);
+    if (sp.get('confirmed') === '1') {
       setNotice('Email confirmed! You can sign in now.');
       setActiveTab('signin');
     }
+    const tab = sp.get('tab');
+    if (tab === 'signup' || tab === 'signin') setActiveTab(tab);
+    const role = sp.get('role');
+    if (role === 'vendor' || role === 'user') setSignupRole(role);
   }, [location.search]);
 
   const redirectAfterAuth = (role) => {
@@ -196,12 +202,7 @@ const Login = () => {
               </div>
               <div style={{ marginBottom: '1.5rem' }}>
                 <label style={{ display: 'block', fontWeight: '600', color: '#374151', marginBottom: '0.4rem', fontSize: '0.875rem' }}>Password</label>
-                <div style={{ position: 'relative' }}>
-                  <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} style={inputStyle} placeholder="Your password" autoComplete="current-password" />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#6b7280', cursor: 'pointer', fontSize: '0.85rem' }}>
-                    {showPassword ? 'Hide' : 'Show'}
-                  </button>
-                </div>
+                <PasswordField value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Your password" autoComplete="current-password" />
               </div>
               <button type="submit" disabled={loading} style={{ width: '100%', padding: '1rem', background: loading ? '#86efac' : '#25D366', color: 'white', border: 'none', borderRadius: '8px', fontSize: '1rem', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer' }}>
                 {loading ? 'Signing in...' : 'Sign In'}
@@ -241,11 +242,11 @@ const Login = () => {
               </div>
               <div style={{ marginBottom: '1rem' }}>
                 <label style={{ display: 'block', fontWeight: '600', color: '#374151', marginBottom: '0.4rem', fontSize: '0.875rem' }}>Password</label>
-                <input type="password" value={regPassword} onChange={(e) => setRegPassword(e.target.value)} style={inputStyle} placeholder="Min 6 characters" />
+                <PasswordField value={regPassword} onChange={(e) => setRegPassword(e.target.value)} placeholder="Min 6 characters" autoComplete="new-password" minLength={6} />
               </div>
               <div style={{ marginBottom: '1.5rem' }}>
                 <label style={{ display: 'block', fontWeight: '600', color: '#374151', marginBottom: '0.4rem', fontSize: '0.875rem' }}>Confirm Password</label>
-                <input type="password" value={regConfirm} onChange={(e) => setRegConfirm(e.target.value)} style={inputStyle} placeholder="Repeat password" />
+                <PasswordField value={regConfirm} onChange={(e) => setRegConfirm(e.target.value)} placeholder="Repeat password" autoComplete="new-password" />
               </div>
               <button type="submit" disabled={loading} style={{ width: '100%', padding: '1rem', background: loading ? '#86efac' : '#25D366', color: 'white', border: 'none', borderRadius: '8px', fontSize: '1rem', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer' }}>
                 {loading ? 'Creating account...' : 'Create Account'}
