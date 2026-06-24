@@ -11,3 +11,6 @@ dist
 backend/test/.tmp/
 .tmp/
 .env.local
+ios/
+android/
+.capacitor/

@@ -6,6 +6,9 @@ import { vendors as vendorsApi, products as productsApi } from '../../services/a
 import { ShieldCheck, MessageCircle, Users, Flag, Star } from 'lucide-react';
 import ProductCard from '../../components/ProductCard';
 import { cldUrl } from '../../utils/cloudinary';
+import { useFetch } from '../../hooks/useFetch';
+import ErrorState from '../../components/ErrorState';
+import { ROUTES } from '../../routes';
 
 // Import Assets
 import checklistIcon from '../../assets/checklist.png';
@@ -51,10 +54,20 @@ const MONTHLY_COLORS = ['#3b82f6', '#ec4899', '#f97316'];
 const Home = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [location, setLocation] = useState('');
-  const [vendors, setVendors] = useState([]);
-  const [vendorsLoading, setVendorsLoading] = useState(true);
   const [recent, setRecent] = useState([]);
   const navigate = useNavigate();
+
+  const { data: vendorsData, error: vendorsError, loading: vendorsLoading, retry: retryVendors } = useFetch(
+    async () => {
+      const data = await vendorsApi.list({ featured: 'true', limit: 8 });
+      const list = Array.isArray(data?.vendors) ? data.vendors : [];
+      if (list.length > 0) return list;
+      const d = await vendorsApi.list({ limit: 8 });
+      return Array.isArray(d?.vendors) ? d.vendors : [];
+    },
+    []
+  );
+  const vendors = vendorsData || [];
 
   useEffect(() => {
     try {
@@ -63,24 +76,6 @@ const Home = () => {
       Promise.all(ids.slice(0, 10).map(id => productsApi.get(id).catch(() => null)))
         .then(rs => setRecent(rs.filter(Boolean)));
     } catch {}
-  }, []);
-
-  useEffect(() => {
-    // The public vendors endpoint already ranks admin-featured vendors first
-    // (by featured_rank), then by rating — so the home page reflects the
-    // admin's curated "top vendors" automatically.
-    vendorsApi
-      .list({ featured: 'true', limit: 8 })
-      .then((data) => {
-        const list = Array.isArray(data?.vendors) ? data.vendors : [];
-        if (list.length > 0) return setVendors(list);
-        // graceful fallback: any vendors at all, so the section isn't empty at launch
-        return vendorsApi.list({ limit: 8 })
-          .then(d => setVendors(Array.isArray(d?.vendors) ? d.vendors : []))
-          .catch(() => setVendors([]));
-      })
-      .catch(() => setVendors([]))
-      .finally(() => setVendorsLoading(false));
   }, []);
 
   const featuredVendors = vendors.slice(0, 8);

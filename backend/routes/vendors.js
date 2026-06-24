@@ -125,7 +125,7 @@ router.put('/me/profile', authenticate, requireRole('vendor'), async (req, res) 
 });
 
 // POST /api/vendors/me/logo
-router.post('/me/logo', authenticate, requireRole('vendor'), upload.single('logo'), async (req, res) => {
+router.post('/me/logo', authenticate, requireRole('vendor'), upload.single('logo'), upload.verifyMime('image'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
     const uploaded = await storeUploadedFile(req.file, { folder: 'thriftlink/vendors/logos' });
@@ -162,7 +162,7 @@ router.get('/me/products', authenticate, requireRole('vendor'), async (req, res)
 });
 
 // POST /api/vendors/me/products
-router.post('/me/products', authenticate, requireRole('vendor'), upload.array('images', 5), async (req, res) => {
+router.post('/me/products', authenticate, requireRole('vendor'), upload.array('images', 5), upload.verifyMime('image'), async (req, res) => {
   try {
     const { name, description, price, original_price, category, condition, stock_quantity } = req.body;
     if (!name || !price || !category) {
@@ -509,6 +509,7 @@ router.post(
   authenticate,
   requireRole('vendor'),
   upload.single('id_document'),
+  upload.verifyMime('document'),
   async (req, res) => {
     try {
       const { errors, data } = validateKyc(req.body);

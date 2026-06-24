@@ -339,7 +339,7 @@ router.post('/:partnerId/typing', authenticate, (req, res) => {
 });
 
 // POST /api/messages/upload-image — upload an image attachment, returns hosted URL
-router.post('/upload-image', authenticate, upload.single('image'), async (req, res) => {
+router.post('/upload-image', authenticate, upload.single('image'), upload.verifyMime('image'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No image provided' });
 

@@ -90,7 +90,7 @@ router.put('/me/profile', authenticate, async (req, res) => {
 });
 
 // POST /api/users/me/avatar
-router.post('/me/avatar', authenticate, upload.single('avatar'), async (req, res) => {
+router.post('/me/avatar', authenticate, upload.single('avatar'), upload.verifyMime('image'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
     const uploaded = await storeUploadedFile(req.file, { folder: 'thriftlink/users/avatars' });
