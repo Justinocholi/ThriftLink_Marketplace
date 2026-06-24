@@ -173,8 +173,23 @@ router.post('/me/products', authenticate, requireRole('vendor'), upload.array('i
     const db = onSupabase ? null : getDb();
     const vendor = onSupabase
       ? await vendorsRepo.getByUserId(req.user.id)
-      : db.prepare('SELECT id FROM vendor_profiles WHERE user_id = ?').get(req.user.id);
+      : db.prepare('SELECT id, verification_status FROM vendor_profiles WHERE user_id = ?').get(req.user.id);
     if (!vendor) return res.status(404).json({ error: 'Vendor profile not found' });
+
+    // Cap unverified vendors at 3 product listings. Editing/deleting still allowed.
+    if (vendor.verification_status !== 'approved') {
+      const existing = onSupabase
+        ? (await productsRepo.listByVendor(vendor.id)) || []
+        : db.prepare('SELECT COUNT(*) as c FROM products WHERE vendor_id = ?').get(vendor.id);
+      const current = onSupabase ? existing.length : (existing?.c || 0);
+      if (current >= 3) {
+        return res.status(403).json({
+          error: 'Unverified vendors can list up to 3 products. Complete KYC verification to list more.',
+          limit: 3,
+          current,
+        });
+      }
+    }
 
     const images = req.files?.length
       ? (await storeUploadedFiles(req.files, () => ({ folder: 'thriftlink/products' }))).map((file) => file.url)
