@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Shield, Lock, Bell, Mail, Loader2, Save, User } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { userMe } from '../../services/api';
+import PasswordField from '../../components/PasswordField';
 
 const AdminSettings = () => {
   const { user, updateUser } = useAuth();
@@ -98,16 +99,16 @@ const AdminSettings = () => {
           <form onSubmit={handleUpdatePassword} style={{ display: 'grid', gap: '1.5rem', maxWidth: '500px' }}>
             <div>
               <label style={labelStyle}>Current Password</label>
-              <input type="password" name="currentPassword" value={passwordForm.currentPassword} onChange={handlePasswordChange} style={inputStyle} placeholder="••••••••" required />
+              <PasswordField name="currentPassword" value={passwordForm.currentPassword} onChange={handlePasswordChange} placeholder="••••••••" autoComplete="current-password" required />
             </div>
             <div style={{ height: '1px', background: '#f1f5f9', margin: '0.5rem 0' }}></div>
             <div>
               <label style={labelStyle}>New Password</label>
-              <input type="password" name="newPassword" value={passwordForm.newPassword} onChange={handlePasswordChange} style={inputStyle} placeholder="Minimum 6 characters" required />
+              <PasswordField name="newPassword" value={passwordForm.newPassword} onChange={handlePasswordChange} placeholder="Minimum 6 characters" autoComplete="new-password" minLength={6} required />
             </div>
             <div>
               <label style={labelStyle}>Confirm New Password</label>
-              <input type="password" name="confirmPassword" value={passwordForm.confirmPassword} onChange={handlePasswordChange} style={inputStyle} placeholder="Confirm new password" required />
+              <PasswordField name="confirmPassword" value={passwordForm.confirmPassword} onChange={handlePasswordChange} placeholder="Confirm new password" autoComplete="new-password" required />
             </div>
             
             <div style={{ paddingTop: '1rem', display: 'flex', justifyContent: 'flex-end' }}>

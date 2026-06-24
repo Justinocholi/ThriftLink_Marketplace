@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Home, ShoppingBag, Heart, User, LifeBuoy, LogOut, Menu, X, MessageSquare, ShoppingCart } from 'lucide-react';
+import { Home, ShoppingBag, Heart, User, LifeBuoy, LogOut, Menu, X, MessageSquare, ShoppingCart, ArrowLeft } from 'lucide-react';
 import logo from '../../assets/thriftlink-logo-.png';
 import MobileTabBar from '../../components/MobileTabBar';
 import ProfileDropdown from '../../components/ProfileDropdown';
@@ -13,6 +13,16 @@ const UserLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+
+  useEffect(() => {
+    if (isSidebarOpen) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      const onKey = (e) => { if (e.key === 'Escape') setIsSidebarOpen(false); };
+      window.addEventListener('keydown', onKey);
+      return () => { document.body.style.overflow = prev; window.removeEventListener('keydown', onKey); };
+    }
+  }, [isSidebarOpen]);
 
   const handleLogout = () => {
     logout();
@@ -38,8 +48,12 @@ const UserLayout = () => {
       <style>
         {`
           @media (max-width: 768px) {
-            .sidebar, .sidebar-overlay {
-              display: none !important;
+            .sidebar {
+              transform: translateX(-100%);
+              box-shadow: 4px 0 24px rgba(0,0,0,0.15);
+            }
+            .sidebar.open {
+              transform: translateX(0) !important;
             }
             .main-content {
               margin-left: 0 !important;
@@ -49,10 +63,16 @@ const UserLayout = () => {
               max-width: 100% !important;
             }
             .mobile-header {
-              display: none !important;
+              display: inline-flex !important;
+            }
+            .sidebar-close-btn {
+              display: inline-flex !important;
             }
           }
           .mobile-header {
+            display: none;
+          }
+          .sidebar-close-btn {
             display: none;
           }
           @media (max-width: 640px) {
@@ -79,7 +99,7 @@ const UserLayout = () => {
             right: 0,
             bottom: 0,
             background: 'rgba(0,0,0,0.5)',
-            zIndex: 9
+            zIndex: 19
           }}
         />
       )}
@@ -96,19 +116,35 @@ const UserLayout = () => {
         height: '100vh',
         left: 0,
         top: 0,
-        zIndex: 10,
+        zIndex: 20,
         transition: 'transform 0.3s ease-in-out'
       }}>
-        <div style={{ padding: '0 1.5rem 2rem', borderBottom: '1px solid #f1f5f9', marginBottom: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ padding: '0 1.5rem 1.5rem', borderBottom: '1px solid #f1f5f9', marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <img src={logo} alt="ThriftLink" style={{ height: '72px', objectFit: 'contain', filter: 'drop-shadow(0 4px 12px rgba(22, 184, 101, 0.6)) brightness(1.1)' }} />
             <h2 style={{ color: '#0f172a', fontSize: '1.25rem', fontWeight: 'bold' }}>ThriftLink</h2>
           </div>
-          <button onClick={() => setIsSidebarOpen(false)} style={{ display: 'block', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }} className="md:hidden">
+          <button onClick={() => setIsSidebarOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }} className="sidebar-close-btn">
             <X size={24} />
           </button>
         </div>
-        
+
+        <Link to="/" onClick={() => setIsSidebarOpen(false)} style={{
+          display: 'flex', alignItems: 'center', gap: '8px',
+          margin: '0 1rem 1rem',
+          padding: '0.625rem 0.875rem',
+          color: '#16b865',
+          background: '#ecfdf5',
+          border: '1px solid #d1fae5',
+          borderRadius: '8px',
+          textDecoration: 'none',
+          fontSize: '0.875rem',
+          fontWeight: 600
+        }}>
+          <ArrowLeft size={16} />
+          <span>Back to ThriftLink</span>
+        </Link>
+
         <nav style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
           {navItems.map((item) => (
             <Link key={item.path} to={item.path} onClick={() => setIsSidebarOpen(false)} style={{
@@ -185,12 +221,13 @@ const UserLayout = () => {
       <MobileTabBar
         accent="#25D366"
         primary={[
-          { path: '/user', icon: <Home size={22} />, label: 'Home' },
+          { path: '/', icon: <Home size={22} />, label: 'Marketplace' },
+          { path: '/user', icon: <ShoppingBag size={22} />, label: 'Dashboard' },
           { path: '/user/orders', icon: <ShoppingBag size={22} />, label: 'Orders' },
           { path: '/user/messages', icon: <MessageSquare size={22} />, label: 'Messages' },
-          { path: '/cart', icon: <ShoppingCart size={22} />, label: 'Cart' },
         ]}
         more={[
+          { path: '/cart', icon: <ShoppingCart size={20} />, label: 'My Cart' },
           { path: '/user/saved', icon: <Heart size={20} />, label: 'Saved Items' },
           { path: '/user/profile', icon: <User size={20} />, label: 'Profile & Settings' },
           { path: '/user/support', icon: <LifeBuoy size={20} />, label: 'Support' },

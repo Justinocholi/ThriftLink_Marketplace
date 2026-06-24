@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { passwordReset } from '../../services/api';
+import PasswordField from '../../components/PasswordField';
 
 const wrap = { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem', background: '#f9fafb', fontFamily: "'Inter', sans-serif" };
 const card = { background: 'white', borderRadius: 16, padding: '2.5rem', maxWidth: 460, width: '100%', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' };
@@ -97,12 +98,14 @@ const ResetPassword = () => {
           <label style={{ display: 'block', fontWeight: 600, color: '#374151', marginBottom: '0.4rem', fontSize: '0.875rem' }}>
             New password
           </label>
-          <input type="password" required value={pw} onChange={(e) => setPw(e.target.value)} style={{ ...input, marginBottom: '1rem' }} autoComplete="new-password" />
+          <div style={{ marginBottom: '1rem' }}>
+            <PasswordField required value={pw} onChange={(e) => setPw(e.target.value)} autoComplete="new-password" placeholder="New password" minLength={6} />
+          </div>
 
           <label style={{ display: 'block', fontWeight: 600, color: '#374151', marginBottom: '0.4rem', fontSize: '0.875rem' }}>
             Confirm new password
           </label>
-          <input type="password" required value={pw2} onChange={(e) => setPw2(e.target.value)} style={input} autoComplete="new-password" />
+          <PasswordField required value={pw2} onChange={(e) => setPw2(e.target.value)} autoComplete="new-password" placeholder="Confirm password" />
 
           {error && (
             <div style={{ color: '#991b1b', background: '#fee2e2', padding: '0.6rem 0.75rem', borderRadius: 8, fontSize: '0.85rem', marginTop: '1rem' }}>

@@ -5,13 +5,12 @@ import Footer from '../../components/Footer';
 import { products as productsApi } from '../../services/api';
 import { Search, SlidersHorizontal, ShieldCheck, X } from 'lucide-react';
 import ProductCard from '../../components/ProductCard';
+import { useFetch } from '../../hooks/useFetch';
+import ErrorState from '../../components/ErrorState';
 
 const CategoryDetails = () => {
   const { id } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [total, setTotal] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
 
@@ -34,39 +33,27 @@ const CategoryDetails = () => {
 
   const categoryName = id === 'all' ? "All Categories" : id;
 
-  const fetchProducts = async () => {
-    setLoading(true);
-    try {
-      const params = {
-        category: id === 'all' ? '' : categoryName,
-        search: searchTerm,
-        sort: sortBy,
-        min_price: minPrice,
-        max_price: maxPrice,
-        condition: condition,
-        state: state,
-        limit: 24
-      };
-      const data = await productsApi.list(params);
-      let list = data.products || [];
-      // Client-side filter: backend may not support "verified vendors only" yet
-      if (verifiedOnly) list = list.filter(p => p.is_verified);
-      // Client-side sort fallbacks for rating
-      if (sortBy === 'rating') {
-        list = [...list].sort((a, b) => Number(b.vendor_rating || b.rating || 0) - Number(a.vendor_rating || a.rating || 0));
-      }
-      setProducts(list);
-      setTotal(verifiedOnly ? list.length : (data.total || list.length));
-    } catch (error) {
-      console.error('Failed to fetch products:', error);
-    } finally {
-      setLoading(false);
+  const { data: fetched, error, loading, retry } = useFetch(async () => {
+    const params = {
+      category: id === 'all' ? '' : categoryName,
+      search: searchTerm,
+      sort: sortBy,
+      min_price: minPrice,
+      max_price: maxPrice,
+      condition: condition,
+      state: state,
+      limit: 24
+    };
+    const data = await productsApi.list(params);
+    let list = data.products || [];
+    if (verifiedOnly) list = list.filter(p => p.is_verified);
+    if (sortBy === 'rating') {
+      list = [...list].sort((a, b) => Number(b.vendor_rating || b.rating || 0) - Number(a.vendor_rating || a.rating || 0));
     }
-  };
-
-  useEffect(() => {
-    fetchProducts();
+    return { products: list, total: verifiedOnly ? list.length : (data.total || list.length) };
   }, [id, searchTerm, sortBy, minPrice, maxPrice, condition, state, verifiedOnly]);
+  const products = fetched?.products || [];
+  const total = fetched?.total || 0;
 
   // Lock body scroll while bottom sheet is open
   useEffect(() => {
@@ -270,7 +257,9 @@ const CategoryDetails = () => {
           </div>
         )}
 
-        {loading ? (
+        {error ? (
+          <ErrorState error={error} onRetry={retry} title="Couldn't load products" />
+        ) : loading ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '1.25rem' }}>
             {[0,1,2,3,4,5,6,7].map(i => (
               <div key={i} style={{ borderRadius: 20, overflow: 'hidden', background: '#f1f5f9', aspectRatio: '3 / 4', position: 'relative' }}>

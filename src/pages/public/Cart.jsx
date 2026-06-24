@@ -152,20 +152,23 @@ const Cart = () => {
                   </div>
                 </div>
 
-                <button 
+                <button
                   onClick={handleCheckout}
-                  style={{ 
-                    width: '100%', padding: '1rem', background: '#3b82f6', color: 'white', 
-                    borderRadius: '8px', fontWeight: '700', fontSize: '1rem', border: 'none', 
-                    cursor: 'pointer', transition: 'background 0.3s' 
+                  style={{
+                    width: '100%', padding: '1rem', background: '#25D366', color: 'white',
+                    borderRadius: '999px', fontWeight: '700', fontSize: '1rem', border: 'none',
+                    cursor: 'pointer', transition: 'background 0.3s',
+                    boxShadow: '0 4px 12px rgba(37, 211, 102, 0.35)'
                   }}
                 >
-                  Proceed to Checkout
+                  Continue to WhatsApp checkout
                 </button>
-                
-                <p style={{ textAlign: 'center', fontSize: '0.85rem', color: '#9ca3af', marginTop: '1rem' }}>
-                  Prices include taxes where applicable
-                </p>
+
+                <div style={{ marginTop: '1rem', padding: '0.85rem', background: '#f0fdf4', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
+                  <p style={{ fontSize: '0.8rem', color: '#065f46', lineHeight: 1.5, margin: 0 }}>
+                    ThriftLink doesn't process payments. You'll send your order directly to the vendor on WhatsApp, and pay them on delivery or via direct transfer.
+                  </p>
+                </div>
               </div>
             </div>
           </div>

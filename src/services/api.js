@@ -83,7 +83,7 @@ export const vendorMe = {
   deleteProduct: (id) => request(`/vendors/me/products/${id}`, { method: 'DELETE' }),
   getAnalytics: () => request('/vendors/me/analytics'),
   getOrders: () => request('/vendors/me/orders'),
-  updateOrderStatus: (id, status) => request(`/vendors/me/orders/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) }),
+  updateOrderStatus: (id, status, note) => request(`/vendors/me/orders/${id}/status`, { method: 'PUT', body: JSON.stringify({ status, note }) }),
 };
 
 // --- Products (public) ---
@@ -144,8 +144,11 @@ export const orders = {
   create: (data) => request('/orders', { method: 'POST', body: JSON.stringify(data) }),
   getMyOrders: () => request('/orders/my-orders'),
   get: (id) => request(`/orders/${id}`),
-  updateStatus: (id, status) => request(`/orders/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) }),
+  updateStatus: (id, status, note) => request(`/orders/${id}/status`, { method: 'PUT', body: JSON.stringify({ status, note }) }),
 };
+
+// Alias to match `ordersAPI.updateStatus(...)` naming convention used elsewhere.
+export const ordersAPI = orders;
 
 // --- Subscriptions (vendor premium plans, manual bank transfer) ---
 export const subscriptions = {

@@ -140,6 +140,14 @@ router.post('/', authenticate, requireRole('user'), async (req, res) => {
         }
       });
 
+      // Initial status history entry.
+      try {
+        db.prepare(`
+          INSERT INTO order_status_history (id, order_id, status, note, changed_by_user_id)
+          VALUES (?, ?, 'pending', 'Order placed', ?)
+        `).run(uuidv4(), vendorOrderId, req.user.id);
+      } catch (e) { /* table may not exist on old DBs */ }
+
       db.prepare(`
         INSERT INTO notifications (id, user_id, type, title, message)
         SELECT ?, user_id, 'order_update', 'New Order Received', ?
@@ -223,7 +231,7 @@ router.get('/my-orders', authenticate, requireRole('user'), async (req, res) => 
       ORDER BY o.created_at DESC
     `).all(req.user.id);
 
-    // Fetch items for each order
+    // Fetch items + status history for each order
     const ordersWithItems = orders.map(order => {
       const items = db.prepare(`
         SELECT oi.*, p.name as product_name, p.images
@@ -231,9 +239,21 @@ router.get('/my-orders', authenticate, requireRole('user'), async (req, res) => 
         JOIN products p ON oi.product_id = p.id
         WHERE oi.order_id = ?
       `).all(order.id);
-      
+
+      let status_history = [];
+      try {
+        status_history = db.prepare(`
+          SELECT id, status, note, created_at
+          FROM order_status_history
+          WHERE order_id = ?
+          ORDER BY created_at DESC
+          LIMIT 5
+        `).all(order.id);
+      } catch (e) { /* ignore */ }
+
       return {
         ...order,
+        status_history,
         items: items.map(item => ({
           ...item,
           images: JSON.parse(item.images || '[]')
@@ -293,10 +313,27 @@ router.get('/:id', authenticate, async (req, res) => {
   }
 });
 
+// Allowed status transitions. `pending → confirmed → shipped → delivered`.
+// Cancellation only allowed from pending/confirmed (admin can cancel after shipped).
+const FORWARD = { pending: 'confirmed', confirmed: 'shipped', shipped: 'delivered' };
+function isValidTransition(from, to, isAdmin) {
+  if (from === to) return false;
+  if (to === 'cancelled') {
+    if (from === 'pending' || from === 'confirmed') return true;
+    if (from === 'shipped' && isAdmin) return true;
+    return false;
+  }
+  return FORWARD[from] === to;
+}
+
 // Update order status (Vendor/Admin only)
 router.put('/:id/status', authenticate, async (req, res) => {
-  const { status } = req.body;
+  const { status, note } = req.body;
   const { id } = req.params;
+  const validStatuses = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'];
+  if (!validStatuses.includes(status)) {
+    return res.status(400).json({ error: 'Invalid status' });
+  }
 
   if (useSupabase()) {
     try {
@@ -304,8 +341,12 @@ router.put('/:id/status', authenticate, async (req, res) => {
       if (!order) return res.status(404).json({ error: 'Order not found' });
       const vendor = await require('../repos/vendorsRepo').getByUserId(req.user.id);
       const isVendor = vendor && vendor.id === order.vendor_id;
-      if (!isVendor && req.user.role !== 'admin') {
+      const isAdmin = req.user.role === 'admin';
+      if (!isVendor && !isAdmin) {
         return res.status(403).json({ error: 'Unauthorized to update this order' });
+      }
+      if (!isValidTransition(order.status, status, isAdmin)) {
+        return res.status(400).json({ error: `Cannot transition from ${order.status} to ${status}` });
       }
       await ordersRepo.setStatus(id, status);
       const notifId = uuidv4();
@@ -313,10 +354,12 @@ router.put('/:id/status', authenticate, async (req, res) => {
       await require('../repos/notificationsRepo').create({
         id: notifId, userId: order.user_id, type: 'order_update', title: 'Order Status Updated', message: notifMsg,
       });
+      const updatedAt = new Date().toISOString();
       realtime.emit(`user:${order.user_id}`, 'order:updated', { id, status });
+      realtime.emit(`user:${order.user_id}`, 'order:status', { order_id: id, status, updated_at: updatedAt, note: note || null });
       realtime.emit(`user:${order.user_id}`, 'notification:new', {
         id: notifId, type: 'order_update', title: 'Order Status Updated', message: notifMsg,
-        link: '/user/orders', created_at: new Date().toISOString(),
+        link: '/user/orders', created_at: updatedAt,
       });
       return res.json({ message: 'Order status updated' });
     } catch (error) {
@@ -331,11 +374,24 @@ router.put('/:id/status', authenticate, async (req, res) => {
 
     // Check permission (must be the vendor of this order or admin)
     const isVendor = db.prepare('SELECT id FROM vendor_profiles WHERE user_id = ? AND id = ?').get(req.user.id, order.vendor_id);
-    if (!isVendor && req.user.role !== 'admin') {
+    const isAdmin = req.user.role === 'admin';
+    if (!isVendor && !isAdmin) {
       return res.status(403).json({ error: 'Unauthorized to update this order' });
     }
 
+    if (!isValidTransition(order.status, status, isAdmin)) {
+      return res.status(400).json({ error: `Cannot transition from ${order.status} to ${status}` });
+    }
+
     db.prepare('UPDATE orders SET status = ?, updated_at = datetime(\'now\') WHERE id = ?').run(status, id);
+
+    // Record status history (table may not exist on very old DBs).
+    try {
+      db.prepare(`
+        INSERT INTO order_status_history (id, order_id, status, note, changed_by_user_id)
+        VALUES (?, ?, ?, ?, ?)
+      `).run(uuidv4(), id, status, note || null, req.user.id);
+    } catch (e) { /* ignore */ }
 
     // Notify user
     const notifId = uuidv4();
@@ -345,14 +401,16 @@ router.put('/:id/status', authenticate, async (req, res) => {
       VALUES (?, ?, 'order_update', 'Order Status Updated', ?)
     `).run(notifId, order.user_id, notifMsg);
 
+    const updatedAt = new Date().toISOString();
     realtime.emit(`user:${order.user_id}`, 'order:updated', { id, status });
+    realtime.emit(`user:${order.user_id}`, 'order:status', { order_id: id, status, updated_at: updatedAt, note: note || null });
     realtime.emit(`user:${order.user_id}`, 'notification:new', {
       id: notifId,
       type: 'order_update',
       title: 'Order Status Updated',
       message: notifMsg,
       link: '/user/orders',
-      created_at: new Date().toISOString(),
+      created_at: updatedAt,
     });
 
     res.json({ message: 'Order status updated' });

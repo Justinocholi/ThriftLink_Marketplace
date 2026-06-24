@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { userMe } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { User, Shield, Bell, MapPin, Camera, Loader2, Save } from 'lucide-react';
+import PasswordField from '../../components/PasswordField';
+import { useFocusRefetch } from '../../hooks/useFetch';
 
 const NIGERIA_STATES = [
   'Abia','Adamawa','Akwa Ibom','Anambra','Bauchi','Bayelsa','Benue','Borno','Cross River',
@@ -22,7 +24,7 @@ const UserProfile = () => {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
-  useEffect(() => {
+  const loadProfile = useCallback(() => {
     userMe.getProfile()
       .then(p => {
         setForm({ name: p.name || '', phone: p.phone || '', state: p.state || '', city: p.city || '' });
@@ -31,6 +33,9 @@ const UserProfile = () => {
       .catch(e => setError(e.message))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => { loadProfile(); }, [loadProfile]);
+  useFocusRefetch(loadProfile);
 
   const handleChange = e => setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
   const handlePasswordChange = e => setPasswordForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -197,16 +202,16 @@ const UserProfile = () => {
           <form onSubmit={handleUpdatePassword} style={{ display: 'grid', gap: '1.5rem', maxWidth: '500px' }}>
             <div>
               <label style={labelStyle}>Current Password</label>
-              <input type="password" name="currentPassword" value={passwordForm.currentPassword} onChange={handlePasswordChange} style={inputStyle} placeholder="••••••••" required />
+              <PasswordField name="currentPassword" value={passwordForm.currentPassword} onChange={handlePasswordChange} placeholder="••••••••" autoComplete="current-password" required />
             </div>
             <div style={{ height: '1px', background: '#f1f5f9', margin: '0.5rem 0' }}></div>
             <div>
               <label style={labelStyle}>New Password</label>
-              <input type="password" name="newPassword" value={passwordForm.newPassword} onChange={handlePasswordChange} style={inputStyle} placeholder="Minimum 6 characters" required />
+              <PasswordField name="newPassword" value={passwordForm.newPassword} onChange={handlePasswordChange} placeholder="Minimum 6 characters" autoComplete="new-password" minLength={6} required />
             </div>
             <div>
               <label style={labelStyle}>Confirm New Password</label>
-              <input type="password" name="confirmPassword" value={passwordForm.confirmPassword} onChange={handlePasswordChange} style={inputStyle} placeholder="Confirm new password" required />
+              <PasswordField name="confirmPassword" value={passwordForm.confirmPassword} onChange={handlePasswordChange} placeholder="Confirm new password" autoComplete="new-password" required />
             </div>
             
             <div style={{ paddingTop: '1rem', display: 'flex', justifyContent: 'flex-end' }}>

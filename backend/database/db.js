@@ -74,6 +74,23 @@ function getDb() {
     safeAddColumn(db, 'users', 'reset_token_hash', 'reset_token_hash TEXT');
     safeAddColumn(db, 'users', 'reset_token_expires_at', 'reset_token_expires_at TEXT');
 
+    // Order status history (added in a later migration; create defensively for older DBs).
+    try {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS order_status_history (
+          id TEXT PRIMARY KEY,
+          order_id TEXT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+          status TEXT NOT NULL CHECK(status IN ('pending', 'confirmed', 'shipped', 'delivered', 'cancelled')),
+          note TEXT,
+          changed_by_user_id TEXT REFERENCES users(id),
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_order_status_history_order ON order_status_history(order_id, created_at);
+      `);
+    } catch (err) {
+      console.warn('Failed to ensure order_status_history table:', err.message);
+    }
+
     ensureIndexes(db);
   }
   return db;

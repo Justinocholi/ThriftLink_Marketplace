@@ -93,6 +93,17 @@ CREATE TABLE IF NOT EXISTS orders (
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+-- Order status history (audit trail of status transitions)
+CREATE TABLE IF NOT EXISTS order_status_history (
+  id TEXT PRIMARY KEY,
+  order_id TEXT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+  status TEXT NOT NULL CHECK(status IN ('pending', 'confirmed', 'shipped', 'delivered', 'cancelled')),
+  note TEXT,
+  changed_by_user_id TEXT REFERENCES users(id),
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_order_status_history_order ON order_status_history(order_id, created_at);
+
 -- Order items table
 CREATE TABLE IF NOT EXISTS order_items (
   id TEXT PRIMARY KEY,

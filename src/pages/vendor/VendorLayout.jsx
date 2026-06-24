@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { LayoutDashboard, User, Package, BarChart2, ShoppingCart, MessageCircle, Settings, Crown, LogOut, Menu, X } from 'lucide-react';
+import { LayoutDashboard, User, Package, BarChart2, ShoppingCart, MessageCircle, Settings, Crown, LogOut, Menu, X, Home, ArrowLeft } from 'lucide-react';
 import logo from '../../assets/thriftlink-logo-.png';
 import MobileTabBar from '../../components/MobileTabBar';
 import ProfileDropdown from '../../components/ProfileDropdown';
@@ -13,6 +13,16 @@ const VendorLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+
+  useEffect(() => {
+    if (isSidebarOpen) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      const onKey = (e) => { if (e.key === 'Escape') setIsSidebarOpen(false); };
+      window.addEventListener('keydown', onKey);
+      return () => { document.body.style.overflow = prev; window.removeEventListener('keydown', onKey); };
+    }
+  }, [isSidebarOpen]);
 
   const handleLogout = () => {
     logout();
@@ -39,8 +49,12 @@ const VendorLayout = () => {
       <style>
         {`
           @media (max-width: 768px) {
-            .sidebar, .sidebar-overlay {
-              display: none !important;
+            .sidebar {
+              transform: translateX(-100%);
+              box-shadow: 4px 0 24px rgba(0,0,0,0.25);
+            }
+            .sidebar.open {
+              transform: translateX(0) !important;
             }
             .main-content {
               margin-left: 0 !important;
@@ -50,7 +64,7 @@ const VendorLayout = () => {
               max-width: 100% !important;
             }
             .mobile-header-btn {
-              display: none !important;
+              display: inline-flex !important;
             }
           }
           .mobile-header-btn {
@@ -75,7 +89,7 @@ const VendorLayout = () => {
             right: 0,
             bottom: 0,
             background: 'rgba(0,0,0,0.5)',
-            zIndex: 9
+            zIndex: 19
           }}
         />
       )}
@@ -92,10 +106,10 @@ const VendorLayout = () => {
         height: '100vh',
         left: 0,
         top: 0,
-        zIndex: 10,
+        zIndex: 20,
         transition: 'transform 0.3s ease-in-out'
       }}>
-        <div style={{ padding: '0 1.5rem 2rem', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', marginBottom: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ padding: '0 1.5rem 1.5rem', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <img src={logo} alt="ThriftLink" style={{ height: '72px', objectFit: 'contain', filter: 'drop-shadow(0 4px 12px rgba(22, 184, 101, 0.6)) brightness(1.1)' }} />
           </div>
@@ -104,6 +118,22 @@ const VendorLayout = () => {
           </button>
         </div>
         
+        <Link to="/" onClick={() => setIsSidebarOpen(false)} style={{
+          display: 'flex', alignItems: 'center', gap: '8px',
+          margin: '0 1rem 1rem',
+          padding: '0.625rem 0.875rem',
+          color: '#60a5fa',
+          background: 'rgba(59, 130, 246, 0.1)',
+          border: '1px solid rgba(59, 130, 246, 0.25)',
+          borderRadius: '8px',
+          textDecoration: 'none',
+          fontSize: '0.875rem',
+          fontWeight: 600
+        }}>
+          <ArrowLeft size={16} />
+          <span>Back to ThriftLink</span>
+        </Link>
+
         <nav style={{ display: 'flex', flexDirection: 'column', flex: 1, overflowY: 'auto' }}>
           {navItems.map((item) => (
             <Link key={item.path} to={item.path} onClick={() => setIsSidebarOpen(false)} style={{
@@ -178,12 +208,13 @@ const VendorLayout = () => {
       <MobileTabBar
         accent="#3b82f6"
         primary={[
-          { path: '/vendor', icon: <LayoutDashboard size={22} />, label: 'Home' },
+          { path: '/', icon: <Home size={22} />, label: 'Marketplace' },
+          { path: '/vendor', icon: <LayoutDashboard size={22} />, label: 'Dashboard' },
           { path: '/vendor/products', icon: <Package size={22} />, label: 'Products' },
           { path: '/vendor/orders', icon: <ShoppingCart size={22} />, label: 'Orders' },
-          { path: '/vendor/messages', icon: <MessageCircle size={22} />, label: 'Messages' },
         ]}
         more={[
+          { path: '/vendor/messages', icon: <MessageCircle size={20} />, label: 'Messages' },
           { path: '/vendor/profile', icon: <User size={20} />, label: 'Vendor Profile' },
           { path: '/vendor/analytics', icon: <BarChart2 size={20} />, label: 'Click Analytics' },
           { path: '/vendor/settings', icon: <Settings size={20} />, label: 'Settings' },

@@ -6,6 +6,7 @@ import { UIProvider } from './context/UIContext';
 import { RealtimeProvider } from './context/RealtimeContext';
 import { ToastProvider } from './components/ui/Toast';
 import MobileBottomNav from './components/ui/MobileBottomNav';
+import InstallPrompt from './components/InstallPrompt';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // Eager: landing surfaces
@@ -23,6 +24,7 @@ const VendorPublicProfile = lazy(() => import('./pages/public/VendorPublicProfil
 const CategoryDetails = lazy(() => import('./pages/public/CategoryDetails'));
 const Cart = lazy(() => import('./pages/public/Cart'));
 const Checkout = lazy(() => import('./pages/public/Checkout'));
+const OrderConfirmation = lazy(() => import('./pages/public/OrderConfirmation'));
 
 // Lazy: static public pages
 const PrivacyPolicy = lazy(() => import('./pages/public/PrivacyPolicy'));
@@ -115,6 +117,11 @@ function App() {
                     <Checkout />
                   </ProtectedRoute>
                 } />
+                <Route path="/order-confirmation/:orderId" element={
+                  <ProtectedRoute allowedRoles={['user']}>
+                    <OrderConfirmation />
+                  </ProtectedRoute>
+                } />
 
                 {/* Static Pages Routes */}
                 <Route path="/legal/privacy" element={<Privacy />} />
@@ -198,6 +205,7 @@ function App() {
               </Routes>
               </Suspense>
               <MobileBottomNav />
+              <InstallPrompt />
             </UIProvider>
           </CartProvider>
           </RealtimeProvider>
