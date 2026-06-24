@@ -76,17 +76,44 @@ router.post('/payment-reference', authenticate, requireRole('vendor'), (req, res
   return (async () => {
   try {
     let profileId, existingPendingId;
+    let fullProfile;
     if (useSupabase()) {
-      const profile = await vendorsRepo.getByUserId(req.user.id);
-      if (!profile) return res.status(404).json({ error: 'Vendor profile not found' });
-      profileId = profile.id;
+      fullProfile = await vendorsRepo.getByUserId(req.user.id);
+      if (!fullProfile) return res.status(404).json({ error: 'Vendor profile not found' });
+      profileId = fullProfile.id;
+    } else {
+      const db = getDb();
+      fullProfile = db.prepare(
+        'SELECT id, shop_name, description, whatsapp_number, business_name, business_description, verification_status FROM vendor_profiles WHERE user_id = ?'
+      ).get(req.user.id);
+      if (!fullProfile) return res.status(404).json({ error: 'Vendor profile not found' });
+      profileId = fullProfile.id;
+    }
+
+    // Gate: vendor profile must be complete + KYC approved before subscribing.
+    // We treat shop_name/description as the public profile (per VendorProfile.jsx form),
+    // but also accept business_name/business_description if those are set instead.
+    const businessName = fullProfile.business_name || fullProfile.shop_name;
+    const businessDescription = fullProfile.business_description || fullProfile.description;
+    const missing = [];
+    if (!businessName) missing.push('business_name');
+    if (!businessDescription) missing.push('business_description');
+    if (!fullProfile.whatsapp_number) missing.push('whatsapp_number');
+    if (missing.length) {
+      return res.status(403).json({ error: 'Complete your business profile before subscribing.', missing });
+    }
+    if (fullProfile.verification_status !== 'approved') {
+      return res.status(403).json({
+        error: 'KYC verification required before subscribing. Submit and wait for admin approval.',
+        verification_status: fullProfile.verification_status || 'not_started',
+      });
+    }
+
+    if (useSupabase()) {
       const existing = await subscriptionsRepo.pendingForVendor(profileId);
       existingPendingId = existing?.id;
     } else {
       const db = getDb();
-      const profile = db.prepare('SELECT id FROM vendor_profiles WHERE user_id = ?').get(req.user.id);
-      if (!profile) return res.status(404).json({ error: 'Vendor profile not found' });
-      profileId = profile.id;
       existingPendingId = db.prepare("SELECT id FROM subscription_payments WHERE vendor_id = ? AND status = 'pending'").get(profileId)?.id;
     }
 

@@ -59,12 +59,18 @@ const ProductDetails = () => {
     productsApi
       .get(id)
       .then(async (data) => {
-        setProduct(data);
+        // Backend returns { product, related }; older code paths may return the product directly.
+        const prod = data && data.product ? data.product : data;
+        setProduct(prod);
+        if (!prod) return;
         // Async secondary load — reviews don't block initial paint.
-        reviewsApi
-          .getForVendor(data.vendor_id)
-          .then((rev) => setReviews(rev.reviews || []))
-          .catch(() => {});
+        const vendorIdForReviews = prod.vendor_profile_id || prod.vendor_id;
+        if (vendorIdForReviews) {
+          reviewsApi
+            .getForVendor(vendorIdForReviews)
+            .then((rev) => setReviews(rev.reviews || []))
+            .catch(() => {});
+        }
       })
       .catch((err) => {
         console.error('Failed to fetch product:', err);
@@ -83,7 +89,7 @@ const ProductDetails = () => {
       const others = capped.filter(x => x !== id).slice(0, 8);
       if (others.length) {
         Promise.all(others.map(rid => productsApi.get(rid).catch(() => null)))
-          .then(rs => setRecentItems(rs.filter(Boolean)));
+          .then(rs => setRecentItems(rs.filter(Boolean).map(r => (r && r.product ? r.product : r))));
       } else {
         setRecentItems([]);
       }

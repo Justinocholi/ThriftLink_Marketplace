@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { vendorMe } from '../../services/api';
-import { Store, MapPin, Camera, Loader2, Save, Instagram, MessageSquare, Info } from 'lucide-react';
+import VendorKycSection from './VendorKycSection';
+import { Store, MapPin, Camera, Loader2, Save, Instagram, MessageSquare, Info, ShieldCheck, FileText, Upload, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
 
 const NIGERIA_STATES = [
   'Abia','Adamawa','Akwa Ibom','Anambra','Bauchi','Bayelsa','Benue','Borno','Cross River',
@@ -188,6 +189,10 @@ const VendorProfile = () => {
           </div>
         </form>
 
+      </div>
+
+      <div style={{ marginTop: '2rem' }}>
+        <VendorKycSection />
       </div>
     </div>
   );
