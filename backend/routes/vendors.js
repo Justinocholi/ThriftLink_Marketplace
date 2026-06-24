@@ -512,8 +512,13 @@ router.post(
   upload.verifyMime('document'),
   async (req, res) => {
     try {
+      // Strict NIN check first — spec requires exactly 11 digits with a precise error message.
+      const ninRaw = typeof req.body.nin === 'string' ? req.body.nin.trim() : '';
+      if (!/^\d{11}$/.test(ninRaw)) {
+        return res.status(400).json({ error: 'NIN must be exactly 11 digits' });
+      }
       const { errors, data } = validateKyc(req.body);
-      if (errors.length) return res.status(400).json({ errors });
+      if (errors.length) return res.status(400).json({ error: errors[0], errors });
 
       const onSupabase = useSupabase();
       const db = onSupabase ? null : getDb();
@@ -529,7 +534,7 @@ router.post(
       }
       const finalDocUrl = documentUrl || profile.id_document_url || null;
       if (!finalDocUrl) {
-        return res.status(400).json({ error: 'A photo of your ID document is required.' });
+        return res.status(400).json({ error: 'ID document is required' });
       }
 
       if (onSupabase) {

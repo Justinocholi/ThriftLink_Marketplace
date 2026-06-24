@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Check, Copy, X } from 'lucide-react';
-import { subscriptions as subsApi } from '../../services/api';
+import { Check, Copy, X, AlertTriangle } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { subscriptions as subsApi, vendorMe } from '../../services/api';
 
 const card = {
   background: 'white',
@@ -185,19 +186,35 @@ const VendorSubscription = () => {
   const [openPlan, setOpenPlan] = useState(null);
   const [banner, setBanner] = useState('');
   const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState(null);
 
   const refresh = async () => {
     try {
-      const [plansRes, meRes] = await Promise.all([subsApi.getPlans(), subsApi.getMine()]);
+      const [plansRes, meRes, profileRes] = await Promise.all([
+        subsApi.getPlans(),
+        subsApi.getMine(),
+        vendorMe.getProfile().catch(() => null),
+      ]);
       setPlans(plansRes.plans);
       setPaymentAccount(plansRes.paymentAccount);
       setMe(meRes);
+      setProfile(profileRes);
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
     }
   };
+
+  const missingProfile = profile ? (
+    [
+      !(profile.business_name || profile.shop_name) && 'business name',
+      !(profile.business_description || profile.description) && 'business description',
+      !profile.whatsapp_number && 'WhatsApp number',
+    ].filter(Boolean)
+  ) : [];
+  const kycApproved = profile?.verification_status === 'approved';
+  const eligible = profile && missingProfile.length === 0 && kycApproved;
 
   useEffect(() => { refresh(); }, []);
 
@@ -219,6 +236,30 @@ const VendorSubscription = () => {
       {banner && (
         <div style={{ ...card, background: '#ecfdf5', border: '1px solid #a7f3d0', color: '#065f46', padding: '1rem 1.5rem' }}>
           {banner}
+        </div>
+      )}
+
+      {!eligible && profile && (
+        <div style={{ ...card, background: '#fef3c7', border: '1px solid #fde68a', color: '#92400e', padding: '1.25rem 1.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+            <AlertTriangle size={22} color="#b45309" style={{ flexShrink: 0, marginTop: 2 }} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 800, marginBottom: 4 }}>Profile incomplete — finish setup first</div>
+              <div style={{ fontSize: '0.9rem', lineHeight: 1.5 }}>
+                {missingProfile.length > 0 && (
+                  <div>Add your {missingProfile.join(', ')} on the profile page.</div>
+                )}
+                {!kycApproved && (
+                  <div>
+                    KYC status: <strong>{profile.verification_status || 'not started'}</strong>. Submit your NIN + ID document and wait for admin approval before subscribing.
+                  </div>
+                )}
+              </div>
+              <Link to="/vendor/profile" style={{ display: 'inline-block', marginTop: '0.75rem', padding: '0.55rem 1rem', background: '#b45309', color: 'white', borderRadius: 8, textDecoration: 'none', fontWeight: 700, fontSize: '0.85rem' }}>
+                Go to profile →
+              </Link>
+            </div>
+          </div>
         </div>
       )}
 
@@ -261,6 +302,10 @@ const VendorSubscription = () => {
               plan={p}
               currentPlan={me?.plan}
               onUpgrade={(plan) => {
+                if (!eligible) {
+                  setBanner('Complete your profile and KYC approval before subscribing.');
+                  return;
+                }
                 if (pending) {
                   setBanner('You already have a pending submission. Wait for review before submitting another.');
                   return;

@@ -84,6 +84,8 @@ export const vendorMe = {
   getAnalytics: () => request('/vendors/me/analytics'),
   getOrders: () => request('/vendors/me/orders'),
   updateOrderStatus: (id, status, note) => request(`/vendors/me/orders/${id}/status`, { method: 'PUT', body: JSON.stringify({ status, note }) }),
+  getKyc: () => request('/vendors/me/kyc'),
+  submitKyc: (formData) => upload('/vendors/me/kyc', formData),
 };
 
 // --- Products (public) ---

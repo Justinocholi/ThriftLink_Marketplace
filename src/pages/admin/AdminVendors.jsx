@@ -12,7 +12,7 @@ const AdminVendors = () => {
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [filter, setFilter] = useState('all');
+  const [filter, setFilter] = useState('pending');
   const [acting, setActing] = useState(null);
   const [featuredOnly, setFeaturedOnly] = useState(false);
   const [toast, setToast] = useState('');
@@ -61,7 +61,17 @@ const AdminVendors = () => {
     }
   };
 
-  let filtered = filter === 'all' ? vendors : vendors.filter(v => v.verification_status === filter);
+  const kycSummary = (v) => {
+    const hasNin = Boolean(v.nin);
+    const hasDoc = Boolean(v.id_document_url);
+    if (!hasNin && !hasDoc) return { key: 'not_started', label: 'Not started', icon: '🚫', bg: '#f1f5f9', fg: '#64748b' };
+    if (v.verification_status === 'approved') return { key: 'approved', label: 'Approved', icon: '✅', bg: '#dcfce7', fg: '#15803d' };
+    if (v.verification_status === 'rejected') return { key: 'rejected', label: 'Rejected', icon: '❌', bg: '#fee2e2', fg: '#dc2626' };
+    return { key: 'pending', label: 'Pending review', icon: '⏳', bg: '#fef3c7', fg: '#b45309' };
+  };
+  const maskNin = (n) => (n ? `${'*'.repeat(Math.max(0, n.length - 4))}${n.slice(-4)}` : '—');
+
+  let filtered = filter === 'all' ? vendors : vendors.filter(v => kycSummary(v).key === filter);
   if (featuredOnly) filtered = filtered.filter(v => v.is_featured);
 
   return (
@@ -97,12 +107,30 @@ const AdminVendors = () => {
             >
               {featuredOnly ? '★ Featured only' : '☆ Show featured only'}
             </button>
-            <select value={filter} onChange={e => setFilter(e.target.value)} style={{ padding: '0.625rem 1rem', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '0.9rem', background: 'white', cursor: 'pointer' }}>
-              <option value="all">All Vendors</option>
-              <option value="approved">Approved</option>
-              <option value="pending">Pending</option>
-              <option value="rejected">Rejected</option>
-            </select>
+            <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginRight: 4 }}>KYC:</span>
+              {[
+                { v: 'all', label: 'All' },
+                { v: 'pending', label: '⏳ Pending review' },
+                { v: 'approved', label: '✅ Approved' },
+                { v: 'rejected', label: '❌ Rejected' },
+                { v: 'not_started', label: '🚫 Not started' },
+              ].map((opt) => (
+                <button
+                  key={opt.v}
+                  onClick={() => setFilter(opt.v)}
+                  style={{
+                    padding: '0.45rem 0.85rem',
+                    border: '1px solid ' + (filter === opt.v ? '#0f172a' : '#e2e8f0'),
+                    borderRadius: 999, fontSize: '0.8rem', fontWeight: 600,
+                    background: filter === opt.v ? '#0f172a' : 'white',
+                    color: filter === opt.v ? 'white' : '#475569', cursor: 'pointer',
+                  }}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -113,7 +141,7 @@ const AdminVendors = () => {
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: '#f8fafc', textAlign: 'left' }}>
-                  {['Shop Name', 'Category', 'State', 'Status', 'Plan', 'Featured', 'Actions'].map(h => (
+                  {['Shop Name', 'Category', 'State', 'KYC', 'NIN', 'ID Doc', 'Status', 'Plan', 'Featured', 'Actions'].map(h => (
                     <th key={h} style={{ padding: '1rem', borderBottom: '1px solid #e2e8f0', color: '#64748b', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase' }}>{h}</th>
                   ))}
                 </tr>
@@ -121,11 +149,25 @@ const AdminVendors = () => {
               <tbody>
                 {filtered.map(vendor => {
                   const st = STATUS_STYLE[vendor.verification_status] || STATUS_STYLE.pending;
+                  const ks = kycSummary(vendor);
                   return (
                     <tr key={vendor.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                       <td style={{ padding: '1rem', color: '#0f172a', fontWeight: '600' }}>{vendor.shop_name}</td>
                       <td style={{ padding: '1rem', color: '#475569' }}>{vendor.category || '—'}</td>
                       <td style={{ padding: '1rem', color: '#475569' }}>{vendor.state || '—'}</td>
+                      <td style={{ padding: '1rem' }}>
+                        <span style={{ background: ks.bg, color: ks.fg, padding: '0.3rem 0.65rem', borderRadius: '999px', fontSize: '0.78rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.3rem', whiteSpace: 'nowrap' }}>
+                          <span>{ks.icon}</span> {ks.label}
+                        </span>
+                      </td>
+                      <td style={{ padding: '1rem', color: '#475569', fontFamily: 'monospace', fontSize: '0.85rem' }}>{maskNin(vendor.nin)}</td>
+                      <td style={{ padding: '1rem' }}>
+                        {vendor.id_document_url ? (
+                          <a href={vendor.id_document_url} target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', fontSize: '0.85rem', fontWeight: 600 }}>View ID →</a>
+                        ) : (
+                          <span style={{ color: '#cbd5e1', fontSize: '0.85rem' }}>—</span>
+                        )}
+                      </td>
                       <td style={{ padding: '1rem' }}>
                         <span style={{ ...st, padding: '0.375rem 0.75rem', borderRadius: '6px', fontSize: '0.8rem', fontWeight: '600', display: 'inline-block' }}>
                           {vendor.verification_status || 'pending'}
