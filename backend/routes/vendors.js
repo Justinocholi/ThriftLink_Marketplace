@@ -348,11 +348,25 @@ router.get('/me/orders', authenticate, requireRole('vendor'), async (req, res) =
     if (onSupabase) {
       return res.json(await ordersRepo.listForVendor(vendor.id));
     }
-    res.json(db.prepare(`
+    const list = db.prepare(`
       SELECT o.*, u.name as buyer_name, u.phone as buyer_phone
       FROM orders o JOIN users u ON u.id = o.user_id
       WHERE o.vendor_id = ? ORDER BY o.created_at DESC
-    `).all(vendor.id));
+    `).all(vendor.id);
+    const withHistory = list.map((o) => {
+      let status_history = [];
+      try {
+        status_history = db.prepare(`
+          SELECT id, status, note, created_at
+          FROM order_status_history
+          WHERE order_id = ?
+          ORDER BY created_at DESC
+          LIMIT 5
+        `).all(o.id);
+      } catch (e) { /* ignore */ }
+      return { ...o, status_history };
+    });
+    res.json(withHistory);
   } catch (err) {
     console.error('me/orders error:', err);
     res.status(500).json({ error: 'Failed to load orders' });
@@ -360,8 +374,15 @@ router.get('/me/orders', authenticate, requireRole('vendor'), async (req, res) =
 });
 
 // PUT /api/vendors/me/orders/:orderId/status
+const VENDOR_FORWARD = { pending: 'confirmed', confirmed: 'shipped', shipped: 'delivered' };
+function vendorValidTransition(from, to) {
+  if (from === to) return false;
+  if (to === 'cancelled') return from === 'pending' || from === 'confirmed';
+  return VENDOR_FORWARD[from] === to;
+}
+
 router.put('/me/orders/:orderId/status', authenticate, requireRole('vendor'), async (req, res) => {
-  const { status } = req.body;
+  const { status, note } = req.body;
   const validStatuses = ['confirmed', 'shipped', 'delivered', 'cancelled'];
   if (!validStatuses.includes(status)) {
     return res.status(400).json({ error: 'Invalid status' });
@@ -372,14 +393,39 @@ router.put('/me/orders/:orderId/status', authenticate, requireRole('vendor'), as
     const vendor = onSupabase
       ? await vendorsRepo.getByUserId(req.user.id)
       : db.prepare('SELECT id FROM vendor_profiles WHERE user_id = ?').get(req.user.id);
+
+    let order;
     if (onSupabase) {
-      const order = await ordersRepo.getBasic(req.params.orderId);
+      order = await ordersRepo.getBasic(req.params.orderId);
       if (!order || order.vendor_id !== vendor?.id) return res.status(404).json({ error: 'Order not found' });
+    } else {
+      order = db.prepare('SELECT * FROM orders WHERE id = ? AND vendor_id = ?').get(req.params.orderId, vendor?.id);
+      if (!order) return res.status(404).json({ error: 'Order not found' });
+    }
+
+    if (!vendorValidTransition(order.status, status)) {
+      return res.status(400).json({ error: `Cannot transition from ${order.status} to ${status}` });
+    }
+
+    if (onSupabase) {
       await ordersRepo.setStatus(req.params.orderId, status);
     } else {
       db.prepare("UPDATE orders SET status = ?, updated_at = datetime('now') WHERE id = ? AND vendor_id = ?")
         .run(status, req.params.orderId, vendor?.id);
+      try {
+        db.prepare(`
+          INSERT INTO order_status_history (id, order_id, status, note, changed_by_user_id)
+          VALUES (?, ?, ?, ?, ?)
+        `).run(uuidv4(), req.params.orderId, status, note || null, req.user.id);
+      } catch (e) { /* ignore */ }
     }
+
+    const updatedAt = new Date().toISOString();
+    realtime.emit(`user:${order.user_id}`, 'order:status', {
+      order_id: req.params.orderId, status, updated_at: updatedAt, note: note || null,
+    });
+    realtime.emit(`user:${order.user_id}`, 'order:updated', { id: req.params.orderId, status });
+
     res.json({ message: 'Order status updated' });
   } catch (err) {
     console.error('me/orders status error:', err);

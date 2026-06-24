@@ -17,7 +17,8 @@ async function loadCart(userId) {
   if (useSupabase()) return parseImages(await cartRepo.listForUser(userId));
   const db = getDb();
   const items = db.prepare(`
-    SELECT c.*, p.name, p.price, p.images, p.stock_quantity, v.shop_name
+    SELECT c.*, p.name, p.price, p.images, p.stock_quantity, p.vendor_id,
+           v.shop_name, v.whatsapp_number as vendor_whatsapp
     FROM cart_items c
     JOIN products p ON c.product_id = p.id
     JOIN vendor_profiles v ON p.vendor_id = v.id

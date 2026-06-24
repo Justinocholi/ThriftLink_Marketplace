@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { orders as ordersApi } from '../../services/api';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
-import { ArrowLeft, CreditCard, Truck, ShieldCheck, Loader2 } from 'lucide-react';
+import { ArrowLeft, Truck, Loader2, MessageCircle, AlertCircle } from 'lucide-react';
+import { groupCartByVendor } from '../../utils/whatsappOrder';
 
 const Checkout = () => {
-  const { cartItems, cartTotal, clearCart } = useCart();
+  const { cartItems, cartTotal } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -16,7 +17,6 @@ const Checkout = () => {
     shippingAddress: '',
     phone: user?.phone || '',
     notes: '',
-    paymentMethod: 'bank_transfer'
   });
 
   if (cartItems.length === 0) {
@@ -24,20 +24,40 @@ const Checkout = () => {
     return null;
   }
 
+  const vendorGroups = useMemo(() => groupCartByVendor(cartItems), [cartItems]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await ordersApi.create({ cartItems, ...formData });
-      await clearCart();
-      navigate('/user/orders', { state: { message: 'Order placed successfully!' } });
+      const result = await ordersApi.create({
+        cartItems,
+        shippingAddress: formData.shippingAddress,
+        phone: formData.phone,
+        notes: formData.notes,
+        paymentMethod: 'whatsapp_direct',
+      });
+      // Cart is cleared server-side; CartContext picks it up via socket.
+      // Stash payload for the confirmation screen.
+      const payload = {
+        orderIds: result.orderIds || [],
+        groups: vendorGroups,
+        buyerName: user?.name || '',
+        deliveryAddress: formData.shippingAddress,
+        deliveryNotes: formData.notes,
+      };
+      try {
+        sessionStorage.setItem('thriftlink:lastOrder', JSON.stringify(payload));
+      } catch {}
+      const firstId = (result.orderIds && result.orderIds[0]) || 'new';
+      navigate(`/order-confirmation/${firstId}`);
     } catch (error) {
-      alert(error.message || 'Failed to place order');
+      alert(error.message || 'Failed to record order');
     } finally {
       setLoading(false);
     }
@@ -57,16 +77,6 @@ const Checkout = () => {
           .checkout-two-col { grid-template-columns: 1fr !important; }
           .checkout-wrap { padding: 5rem 1rem 7rem !important; }
           .checkout-card { padding: 1rem !important; border-radius: 12px !important; }
-          .checkout-place-order {
-            position: fixed !important;
-            left: 0 !important;
-            right: 0 !important;
-            bottom: 64px !important;
-            margin: 0 !important;
-            border-radius: 0 !important;
-            z-index: 40 !important;
-            box-shadow: 0 -2px 12px rgba(0,0,0,0.08) !important;
-          }
         }
       `}</style>
       <Navbar />
@@ -80,37 +90,44 @@ const Checkout = () => {
             <ArrowLeft size={20} />
             Back to Cart
           </button>
-          <h1 className="checkout-title" style={{ fontSize: '2rem', fontWeight: '800', color: '#1f2937' }}>Checkout</h1>
+          <h1 className="checkout-title" style={{ fontSize: '2rem', fontWeight: '800', color: '#1f2937' }}>WhatsApp Checkout</h1>
+        </div>
+
+        <div style={{ marginBottom: '1.5rem', padding: '1rem 1.25rem', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '12px', display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+          <AlertCircle size={20} color="#059669" style={{ flexShrink: 0, marginTop: 2 }} />
+          <div style={{ fontSize: '0.9rem', color: '#065f46', lineHeight: 1.5 }}>
+            ThriftLink doesn't process payments. We'll send your order to each vendor on WhatsApp — you'll arrange payment and delivery directly with them.
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="checkout-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: '2rem' }}>
           {/* Main Content */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-            
-            {/* Shipping Info */}
+
+            {/* Buyer Info */}
             <div className="checkout-card" style={{ background: 'white', borderRadius: '16px', padding: '2rem', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: '1px solid #e5e7eb' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
-                <Truck size={24} color="#3b82f6" />
-                <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#1f2937' }}>Shipping Information</h2>
+                <Truck size={24} color="#059669" />
+                <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#1f2937' }}>Your Details</h2>
               </div>
-              
+
               <div style={{ display: 'grid', gap: '1.5rem' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>Delivery Address</label>
-                  <textarea 
+                  <textarea
                     name="shippingAddress"
                     required
                     value={formData.shippingAddress}
                     onChange={handleInputChange}
-                    placeholder="Enter your full delivery address"
+                    placeholder="Where should the vendor deliver?"
                     style={{ width: '100%', padding: '0.8rem', border: '1px solid #e5e7eb', borderRadius: '8px', minHeight: '100px', resize: 'vertical' }}
                   />
                 </div>
-                
+
                 <div className="checkout-two-col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>Phone Number</label>
-                    <input 
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>Your Phone</label>
+                    <input
                       type="tel"
                       name="phone"
                       required
@@ -121,8 +138,8 @@ const Checkout = () => {
                     />
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>Email (Auto-filled)</label>
-                    <input 
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>Email</label>
+                    <input
                       type="email"
                       disabled
                       value={user?.email || ''}
@@ -132,93 +149,71 @@ const Checkout = () => {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>Order Notes (Optional)</label>
-                  <input 
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>Notes (Optional)</label>
+                  <input
                     type="text"
                     name="notes"
                     value={formData.notes}
                     onChange={handleInputChange}
-                    placeholder="Any special instructions for the vendor?"
+                    placeholder="Any instructions for the vendor?"
                     style={{ width: '100%', padding: '0.8rem', border: '1px solid #e5e7eb', borderRadius: '8px' }}
                   />
                 </div>
               </div>
             </div>
 
-            {/* Payment Method */}
+            {/* Message preview, grouped by vendor */}
             <div className="checkout-card" style={{ background: 'white', borderRadius: '16px', padding: '2rem', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: '1px solid #e5e7eb' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
-                <CreditCard size={24} color="#3b82f6" />
-                <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#1f2937' }}>Payment Method</h2>
+                <MessageCircle size={24} color="#25D366" />
+                <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#1f2937' }}>WhatsApp Preview</h2>
               </div>
+              <p style={{ fontSize: '0.9rem', color: '#6b7280', marginBottom: '1.5rem' }}>
+                {vendorGroups.length === 1
+                  ? 'This is what your vendor will receive on WhatsApp.'
+                  : `Your cart spans ${vendorGroups.length} vendors — each one will receive their own message.`}
+              </p>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <label style={{
-                  display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.25rem', border: `2px solid ${formData.paymentMethod === 'bank_transfer' ? '#3b82f6' : '#e5e7eb'}`,
-                  borderRadius: '12px', cursor: 'pointer', background: formData.paymentMethod === 'bank_transfer' ? '#eff6ff' : 'white'
-                }}>
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    value="bank_transfer"
-                    checked={formData.paymentMethod === 'bank_transfer'}
-                    onChange={handleInputChange}
-                  />
-                  <div>
-                    <div style={{ fontWeight: '700', color: '#1f2937' }}>Direct Bank Transfer / Pay on Delivery</div>
-                    <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>Coordinate payment directly with the vendor after order confirmation.</div>
+                {vendorGroups.map((g) => (
+                  <div key={g.vendor_id || g.vendor_name} style={{ border: '1px solid #e5e7eb', borderRadius: '12px', padding: '1.25rem', background: '#f9fafb' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                      <div style={{ fontWeight: 700, color: '#1f2937' }}>{g.vendor_name}</div>
+                      {!g.vendor_whatsapp && (
+                        <span style={{ fontSize: '0.75rem', color: '#b45309', background: '#fef3c7', padding: '0.15rem 0.5rem', borderRadius: 999 }}>
+                          No WhatsApp on file
+                        </span>
+                      )}
+                    </div>
+                    <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                      {g.items.map((it, i) => (
+                        <li key={it.id} style={{ fontSize: '0.9rem', color: '#374151' }}>
+                          {i + 1}. {it.name} × {it.quantity} — ₦{(Number(it.price) * it.quantity).toLocaleString()}
+                        </li>
+                      ))}
+                    </ul>
+                    <div style={{ marginTop: '0.75rem', fontWeight: 700, color: '#065f46' }}>
+                      Subtotal: ₦{g.subtotal.toLocaleString()}
+                    </div>
                   </div>
-                </label>
-
-                <label style={{
-                  display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.25rem', border: `2px solid ${formData.paymentMethod === 'online' ? '#3b82f6' : '#e5e7eb'}`,
-                  borderRadius: '12px', cursor: 'pointer', background: formData.paymentMethod === 'online' ? '#eff6ff' : 'white', opacity: 0.6
-                }}>
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    value="online"
-                    disabled
-                    checked={formData.paymentMethod === 'online'}
-                    onChange={handleInputChange}
-                  />
-                  <div>
-                    <div style={{ fontWeight: '700', color: '#1f2937' }}>Online Payment (Coming Soon)</div>
-                    <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>Pay securely with Card, Transfer, or USSD.</div>
-                  </div>
-                </label>
+                ))}
               </div>
             </div>
           </div>
 
-          {/* Sidebar - Summary */}
+          {/* Sidebar */}
           <div className="checkout-summary" style={{ position: 'sticky', top: '6rem', height: 'fit-content' }}>
             <div style={{ background: 'white', borderRadius: '16px', padding: '2rem', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', border: '1px solid #e5e7eb' }}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#1f2937', marginBottom: '1.5rem' }}>Your Items</h2>
-              
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem', maxHeight: '300px', overflowY: 'auto', paddingRight: '0.5rem' }}>
-                {cartItems.map(item => (
-                  <div key={item.id} style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                    <div style={{ width: '50px', height: '50px', borderRadius: '6px', overflow: 'hidden', background: '#f3f4f6', flexShrink: 0 }}>
-                      <img src={item.images?.[0] || 'https://via.placeholder.com/50'} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: '600', color: '#1f2937', fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</div>
-                      <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>Qty: {item.quantity} × ₦{item.price.toLocaleString()}</div>
-                    </div>
-                    <div style={{ fontWeight: '700', fontSize: '0.9rem' }}>₦{(item.price * item.quantity).toLocaleString()}</div>
-                  </div>
-                ))}
-              </div>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#1f2937', marginBottom: '1.5rem' }}>Order Summary</h2>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem', borderTop: '1px solid #e5e7eb', paddingTop: '1.5rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: '#6b7280' }}>
-                  <span>Subtotal</span>
-                  <span>₦{cartTotal.toLocaleString()}</span>
+                  <span>Items</span>
+                  <span>{cartItems.reduce((s, i) => s + i.quantity, 0)}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: '#6b7280' }}>
-                  <span>Shipping Fee</span>
-                  <span style={{ fontSize: '0.85rem' }}>To be agreed with vendor</span>
+                  <span>Vendors</span>
+                  <span>{vendorGroups.length}</span>
                 </div>
                 <div style={{ height: '1px', background: '#e5e7eb', margin: '0.5rem 0' }}></div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.25rem', fontWeight: '800', color: '#1f2937' }}>
@@ -230,28 +225,28 @@ const Checkout = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="checkout-place-order"
                 style={{
-                  width: '100%', padding: '1rem', background: '#3b82f6', color: 'white', 
-                  borderRadius: '8px', fontWeight: '700', fontSize: '1rem', border: 'none', 
+                  width: '100%', padding: '1rem', background: '#25D366', color: 'white',
+                  borderRadius: '999px', fontWeight: '700', fontSize: '1rem', border: 'none',
                   cursor: loading ? 'not-allowed' : 'pointer', transition: 'background 0.3s',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem'
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem',
+                  boxShadow: '0 4px 12px rgba(37, 211, 102, 0.35)',
                 }}
               >
-                {loading ? <Loader2 className="animate-spin" size={20} /> : <ShieldCheck size={20} />}
-                Place Order
+                {loading ? <Loader2 className="animate-spin" size={20} /> : <MessageCircle size={20} />}
+                Send order to vendors via WhatsApp
               </button>
-              
-              <div style={{ marginTop: '1.5rem', padding: '1rem', background: '#fef3c7', borderRadius: '8px', border: '1px solid #fde68a' }}>
-                <div style={{ fontSize: '0.8rem', color: '#92400e', lineHeight: '1.5' }}>
-                  <strong>Note:</strong> You will coordinate payment and delivery directly with the vendor via WhatsApp/Phone after placing this order.
+
+              <div style={{ marginTop: '1.25rem', padding: '0.85rem', background: '#f0fdf4', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
+                <div style={{ fontSize: '0.8rem', color: '#065f46', lineHeight: 1.5 }}>
+                  After you click send, we'll record your order intent and take you to a confirmation page with a WhatsApp link for each vendor.
                 </div>
               </div>
             </div>
           </div>
         </form>
       </div>
-      
+
       <Footer />
     </div>
   );

@@ -23,6 +23,7 @@ const VendorPublicProfile = lazy(() => import('./pages/public/VendorPublicProfil
 const CategoryDetails = lazy(() => import('./pages/public/CategoryDetails'));
 const Cart = lazy(() => import('./pages/public/Cart'));
 const Checkout = lazy(() => import('./pages/public/Checkout'));
+const OrderConfirmation = lazy(() => import('./pages/public/OrderConfirmation'));
 
 // Lazy: static public pages
 const PrivacyPolicy = lazy(() => import('./pages/public/PrivacyPolicy'));
@@ -113,6 +114,11 @@ function App() {
                 <Route path="/checkout" element={
                   <ProtectedRoute allowedRoles={['user']}>
                     <Checkout />
+                  </ProtectedRoute>
+                } />
+                <Route path="/order-confirmation/:orderId" element={
+                  <ProtectedRoute allowedRoles={['user']}>
+                    <OrderConfirmation />
                   </ProtectedRoute>
                 } />
 

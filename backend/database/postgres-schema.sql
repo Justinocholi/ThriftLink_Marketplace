@@ -118,6 +118,16 @@ create table if not exists orders (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists order_status_history (
+  id text primary key,
+  order_id text not null references orders(id) on delete cascade,
+  status text not null check (status in ('pending','confirmed','shipped','delivered','cancelled')),
+  note text,
+  changed_by_user_id text references users(id),
+  created_at timestamptz not null default now()
+);
+create index if not exists idx_order_status_history_order on order_status_history(order_id, created_at);
+
 create table if not exists order_items (
   id text primary key,
   order_id text not null references orders(id) on delete cascade,
