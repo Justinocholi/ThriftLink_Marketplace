@@ -106,6 +106,7 @@ router.get('/:id', async (req, res) => {
     const db = getDb();
     const product = db.prepare(`
       SELECT p.*, vp.shop_name as vendor_name, vp.id as vendor_profile_id,
+             vp.user_id as vendor_user_id,
              vp.whatsapp_number, vp.rating as vendor_rating, vp.description as vendor_description,
              vp.is_verified, vp.state as vendor_state, vp.city as vendor_city, vp.logo as vendor_logo
       FROM products p
