@@ -77,14 +77,14 @@ const PricingPlans = () => {
         />
         <PricingCard 
           title="Pro Vendor" 
-          price="₦2,000" 
+          price="₦1,500"
           features={["50 Product Listings", "Verified Badge", "Priority Support", "Advanced Analytics", "Featured Listings"]} 
           recommended={true}
           onSubscribe={handleSubscribe}
         />
         <PricingCard 
           title="Enterprise" 
-          price="₦5,000" 
+          price="₦3,000"
           features={["Unlimited Listings", "Verified Badge", "Dedicated Support", "Custom Analytics", "Homepage Feature", "Multiple Locations"]} 
           onSubscribe={handleSubscribe}
         />
