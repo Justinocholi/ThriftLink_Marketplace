@@ -52,13 +52,15 @@ const UserProfile = () => {
     e.preventDefault();
     setSaving(true); setMessage(''); setError('');
     try {
+      let newAvatarUrl = null;
       if (avatarFile) {
         const result = await userMe.uploadAvatar(avatarFile);
         setAvatarPreview(result.url);
         setAvatarFile(null);
+        newAvatarUrl = result.url;
       }
       const updated = await userMe.updateProfile(form);
-      updateUser({ name: updated.name });
+      updateUser({ name: updated.name, ...(newAvatarUrl ? { avatar: newAvatarUrl } : {}) });
       setMessage('Profile updated successfully!');
     } catch (err) {
       setError(err.message);

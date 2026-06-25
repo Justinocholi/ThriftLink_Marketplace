@@ -68,7 +68,7 @@ src/                             React (Vite)
 |---|---|
 | Auth | Supabase Auth + local mirror in `users` table linked by `supabase_user_id`. |
 | Image storage | Cloudinary only. Local `/uploads` is a dev fallback. |
-| Subscription pricing | `backend/config/subscriptionPlans.js` is the only source — Free / Basic ₦2,000 (30d) / Pro ₦5,000 (30d). |
+| Subscription pricing | `backend/config/subscriptionPlans.js` is the only source — Free / Basic ₦1,500 (30d) / Pro ₦3,000 (30d). |
 | Subscription payment | Manual bank transfer (Moniepoint, env-configured). Admin confirms via `PUT /api/subscriptions/admin/payments/:id/review`. |
 | Order payment | Out of scope today. `payment_method` is recorded but no charge happens. |
 | Realtime | Socket.IO via `realtime.emit(room, event, payload)`. Rooms: `user:<id>`, `role:admin`. |

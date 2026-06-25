@@ -36,7 +36,7 @@ const ProfileDropdown = ({ role = 'user', accent = '#3b82f6' }) => {
   const name = user?.name || (role === 'admin' ? 'Admin' : role === 'vendor' ? 'Vendor' : 'Buyer');
   const email = user?.email || '';
   const seed = encodeURIComponent(name || role);
-  const avatarUrl = user?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
+  const avatarUrl = user?.avatar || user?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
 
   const RoleIcon = role === 'vendor' ? Store : role === 'admin' ? ShieldCheck : User;
 

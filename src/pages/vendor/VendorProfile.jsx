@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { vendorMe } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import VendorKycSection from './VendorKycSection';
 import { Store, MapPin, Camera, Loader2, Save, Instagram, MessageSquare, Info, ShieldCheck, FileText, Upload, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
 
@@ -17,6 +18,7 @@ const CATEGORIES = [
 ];
 
 const VendorProfile = () => {
+  const { updateUser } = useAuth();
   const [formData, setFormData] = useState({
     shop_name: '', description: '', whatsapp_number: '',
     instagram_handle: '', category: '', state: '', city: '',
@@ -60,7 +62,15 @@ const VendorProfile = () => {
     e.preventDefault();
     setSaving(true); setMessage(''); setError('');
     try {
-      if (logoFile) await vendorMe.uploadLogo(logoFile);
+      if (logoFile) {
+        const result = await vendorMe.uploadLogo(logoFile);
+        if (result?.url) {
+          setLogoPreview(result.url);
+          // Mirror the shop logo into the auth user's avatar so it shows in
+          // the navbar / profile dropdown / vendor header without a reload.
+          updateUser({ avatar: result.url });
+        }
+      }
       await vendorMe.updateProfile(formData);
       setMessage('Vendor profile updated successfully!');
       setLogoFile(null);
