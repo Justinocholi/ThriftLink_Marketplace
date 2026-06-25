@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ChevronDown, User, Settings, LogOut, Store, ShoppingBag, ShieldCheck, Home } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import LetterAvatar from './LetterAvatar';
 
 /**
  * Avatar + caret button that opens a dropdown with profile menu items.
@@ -35,8 +36,7 @@ const ProfileDropdown = ({ role = 'user', accent = '#3b82f6' }) => {
 
   const name = user?.name || (role === 'admin' ? 'Admin' : role === 'vendor' ? 'Vendor' : 'Buyer');
   const email = user?.email || '';
-  const seed = encodeURIComponent(name || role);
-  const avatarUrl = user?.avatar || user?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
+  const avatarUrl = user?.avatar || user?.avatar_url || null;
 
   const RoleIcon = role === 'vendor' ? Store : role === 'admin' ? ShieldCheck : User;
 
@@ -69,10 +69,11 @@ const ProfileDropdown = ({ role = 'user', accent = '#3b82f6' }) => {
           cursor: 'pointer', boxShadow: '0 1px 2px rgba(15,23,42,0.04)'
         }}
       >
-        <img
+        <LetterAvatar
+          name={name}
           src={avatarUrl}
+          size={32}
           alt={name}
-          style={{ width: 32, height: 32, borderRadius: '50%', background: '#f1f5f9', objectFit: 'cover' }}
         />
         <RoleIcon size={14} color={accent} />
         <ChevronDown size={16} color="#64748b" style={{ transition: 'transform 0.15s', transform: open ? 'rotate(180deg)' : 'none' }} />

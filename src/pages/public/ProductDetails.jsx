@@ -33,6 +33,7 @@ import ProgressiveImage from '../../components/ui/ProgressiveImage';
 import { cldUrl } from '../../utils/cloudinary';
 import { Skeleton, SkeletonCircle } from '../../components/ui/Skeleton';
 import ProductCard from '../../components/ProductCard';
+import LetterAvatar from '../../components/LetterAvatar';
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -480,10 +481,11 @@ const ProductDetails = () => {
                     background: '#e2e8f0',
                   }}
                 >
-                  <img
-                    src={product.vendor_logo || 'https://api.dicebear.com/7.x/initials/svg?seed=' + product.vendor_name}
+                  <LetterAvatar
+                    name={product.vendor_name}
+                    src={product.vendor_logo}
+                    size={50}
                     alt={product.vendor_name}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
                   <span
                     className="tl-online-dot"

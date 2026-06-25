@@ -9,6 +9,7 @@ import { cldUrl } from '../../utils/cloudinary';
 import { useFetch } from '../../hooks/useFetch';
 import ErrorState from '../../components/ErrorState';
 import { ROUTES } from '../../routes';
+import LetterAvatar from '../../components/LetterAvatar';
 
 // Import Assets
 import checklistIcon from '../../assets/checklist.png';
@@ -737,7 +738,7 @@ const Home = () => {
           </div>
           <p style={{ color: '#334155', lineHeight: 1.6, fontSize: '0.95rem', marginBottom: '1.25rem' }}>"{t.quote}"</p>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(t.seed)}`} alt={t.name} style={{ width: 44, height: 44, borderRadius: '50%', background: '#f1f5f9' }} />
+            <LetterAvatar name={t.name} size={44} alt={t.name} />
             <div>
               <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.95rem' }}>{t.name}</div>
               <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{t.meta}</div>
