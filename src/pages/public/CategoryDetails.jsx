@@ -162,11 +162,10 @@ const CategoryDetails = () => {
   );
 
   return (
-    <div style={{ fontFamily: "'Inter', sans-serif", background: '#f9fafb', minHeight: '100vh' }}>
+    <div style={{ fontFamily: "'Inter', sans-serif", background: 'var(--tl-bg)', minHeight: '100vh' }}>
       <Navbar />
 
       <style>{`
-        @keyframes tl-shimmer { 0%{background-position: 200% 0;} 100%{background-position: -200% 0;} }
         @keyframes tl-sheet-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
         @keyframes tl-fade-in { from { opacity: 0; } to { opacity: 1; } }
         .tl-mobile-filter-btn { display: none; }
@@ -179,7 +178,7 @@ const CategoryDetails = () => {
       `}</style>
 
       <div style={{ background: '#1f2937', color: 'white', padding: '6rem 2rem 3rem', textAlign: 'center' }}>
-        <h1 style={{ fontSize: '2.5rem', fontWeight: '800', textTransform: 'capitalize' }}>{categoryName}</h1>
+        <h1 style={{ fontSize: 'var(--tl-text-h1)', fontWeight: 800, textTransform: 'capitalize' }}>{categoryName}</h1>
         <p style={{ opacity: 0.8, fontSize: '1.1rem' }}>Browse {total} items in {categoryName}</p>
       </div>
 
@@ -197,7 +196,7 @@ const CategoryDetails = () => {
                 style={{ width: '100%', padding: '0.8rem 1rem 0.8rem 3rem', borderRadius: '8px', border: '1px solid #e5e7eb', outline: 'none' }}
               />
             </div>
-            <button type="submit" style={{ padding: '0 2rem', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer' }}>
+            <button type="submit" className="tl-btn-press" style={{ padding: '0 2rem', background: 'var(--tl-blue)', color: 'white', border: 'none', borderRadius: 'var(--tl-radius-pill)', fontWeight: '600', cursor: 'pointer', boxShadow: 'var(--tl-shadow-1)', transition: 'transform var(--tl-fast) var(--tl-ease)' }}>
                 Search
             </button>
           </form>
@@ -206,7 +205,7 @@ const CategoryDetails = () => {
             <button
               className="tl-desktop-filter-toggle"
               onClick={() => setShowFilters(!showFilters)}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.8rem 1.5rem', background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', fontWeight: '600', cursor: 'pointer' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.8rem 1.5rem', background: 'var(--tl-surface)', border: 'none', boxShadow: 'var(--tl-shadow-1)', borderRadius: 'var(--tl-radius-pill)', fontWeight: '600', cursor: 'pointer' }}
             >
               <SlidersHorizontal size={18} />
               Filters
@@ -252,7 +251,7 @@ const CategoryDetails = () => {
 
         {/* Desktop Advanced Filters Drawer */}
         {showFilters && (
-          <div className="tl-desktop-filter-drawer" style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e5e7eb', marginBottom: '2rem' }}>
+          <div className="tl-desktop-filter-drawer tl-card" style={{ padding: '1.5rem', marginBottom: '2rem' }}>
             <FilterInputs layout="grid" />
           </div>
         )}
@@ -262,13 +261,11 @@ const CategoryDetails = () => {
         ) : loading ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '1.25rem' }}>
             {[0,1,2,3,4,5,6,7].map(i => (
-              <div key={i} style={{ borderRadius: 20, overflow: 'hidden', background: '#f1f5f9', aspectRatio: '3 / 4', position: 'relative' }}>
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%)', backgroundSize: '200% 100%', animation: 'tl-shimmer 1.4s linear infinite' }} />
-              </div>
+              <div key={i} className="tl-skeleton" style={{ borderRadius: 'var(--tl-radius-md)', aspectRatio: '3 / 4' }} />
             ))}
           </div>
         ) : products.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '4rem 1.5rem', background: 'white', borderRadius: '20px', border: '1px solid #e5e7eb' }}>
+          <div className="tl-card" style={{ textAlign: 'center', padding: '4rem 1.5rem' }}>
             <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.5rem' }}>No products found.</h3>
             <p style={{ color: '#64748b' }}>Try adjusting your filters.</p>
           </div>

@@ -30,13 +30,13 @@ const OrderConfirmation = () => {
   const { groups = [], buyerName, deliveryAddress, deliveryNotes } = payload;
 
   return (
-    <div style={{ background: '#f9fafb', minHeight: '100vh', fontFamily: "'Inter', sans-serif" }}>
+    <div style={{ background: 'var(--tl-bg)', minHeight: '100vh', fontFamily: "'Inter', sans-serif" }}>
       <Navbar />
       <div style={{ maxWidth: 800, margin: '0 auto', padding: '6rem 1.5rem 4rem' }}>
-        <div style={{ background: 'white', borderRadius: 16, padding: '2rem', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: '1px solid #e5e7eb', marginBottom: '1.5rem' }}>
+        <div className="tl-card" style={{ padding: '2rem', marginBottom: '1.5rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
             <CheckCircle2 size={28} color="#059669" />
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1f2937' }}>Order recorded</h1>
+            <h1 style={{ fontSize: 'var(--tl-text-h2)', fontWeight: 800, color: 'var(--tl-ink)' }}>Order recorded</h1>
           </div>
           <p style={{ color: '#6b7280', lineHeight: 1.6 }}>
             Your order intent (#{String(orderId).slice(0, 8)}) is saved. Now message each vendor on WhatsApp to confirm payment and delivery.
@@ -55,7 +55,7 @@ const OrderConfirmation = () => {
               deliveryNotes,
             });
             return (
-              <div key={g.vendor_id || g.vendor_name} style={{ background: 'white', borderRadius: 16, padding: '1.5rem', border: '1px solid #e5e7eb' }}>
+              <div key={g.vendor_id || g.vendor_name} className="tl-card" style={{ padding: '1.5rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                   <div style={{ fontWeight: 700, color: '#1f2937', fontSize: '1.1rem' }}>{g.vendor_name}</div>
                   <div style={{ fontWeight: 700, color: '#065f46' }}>₦{g.subtotal.toLocaleString()}</div>
@@ -70,14 +70,16 @@ const OrderConfirmation = () => {
 
                 {url ? (
                   <a
+                    className="tl-btn-press"
                     href={url}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
                       display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
-                      background: '#25D366', color: 'white', padding: '0.75rem 1.25rem',
-                      borderRadius: 999, fontWeight: 700, textDecoration: 'none',
-                      boxShadow: '0 4px 12px rgba(37, 211, 102, 0.3)',
+                      background: 'var(--tl-green)', color: 'white', padding: '0.75rem 1.25rem',
+                      borderRadius: 'var(--tl-radius-pill)', fontWeight: 700, textDecoration: 'none',
+                      boxShadow: '0 4px 14px rgba(37, 211, 102, 0.35)',
+                      transition: 'transform var(--tl-fast) var(--tl-ease)',
                     }}
                   >
                     <MessageCircle size={18} />
@@ -102,10 +104,10 @@ const OrderConfirmation = () => {
         </div>
 
         <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-          <Link to="/user/orders" style={{ padding: '0.75rem 1.25rem', background: '#1f2937', color: 'white', borderRadius: 8, textDecoration: 'none', fontWeight: 600 }}>
+          <Link to="/user/orders" className="tl-btn-press" style={{ padding: '0.75rem 1.25rem', background: 'var(--tl-ink)', color: 'white', borderRadius: 'var(--tl-radius-pill)', textDecoration: 'none', fontWeight: 600, transition: 'transform var(--tl-fast) var(--tl-ease)' }}>
             View my orders
           </Link>
-          <Link to="/verified-vendors" style={{ padding: '0.75rem 1.25rem', background: 'white', color: '#1f2937', border: '1px solid #e5e7eb', borderRadius: 8, textDecoration: 'none', fontWeight: 600 }}>
+          <Link to="/verified-vendors" className="tl-btn-press" style={{ padding: '0.75rem 1.25rem', background: 'var(--tl-surface)', color: 'var(--tl-ink)', border: 'none', boxShadow: 'var(--tl-shadow-1)', borderRadius: 'var(--tl-radius-pill)', textDecoration: 'none', fontWeight: 600, transition: 'transform var(--tl-fast) var(--tl-ease)' }}>
             Keep shopping
           </Link>
         </div>

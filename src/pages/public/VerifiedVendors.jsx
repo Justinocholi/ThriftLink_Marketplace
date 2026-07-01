@@ -51,11 +51,11 @@ const VerifiedVendors = () => {
   const handleFilterChange = e => setFilters(prev => ({ ...prev, [e.target.name]: e.target.value }));
 
   return (
-    <div style={{ fontFamily: "'Inter', sans-serif", background: '#f9fafb', color: '#333', minHeight: '100vh' }}>
+    <div style={{ fontFamily: "'Inter', sans-serif", background: 'var(--tl-bg)', color: 'var(--tl-ink)', minHeight: '100vh' }}>
       <Navbar />
 
       <header style={{ background: 'linear-gradient(135deg, #25D366, #128C7E)', color: 'white', padding: '8rem 2rem 3rem', textAlign: 'center' }}>
-        <h1 style={{ fontSize: '2.5rem', fontWeight: '800', marginBottom: '1rem' }}>Verified Vendors</h1>
+        <h1 style={{ fontSize: 'var(--tl-text-h1)', fontWeight: 800, marginBottom: '1rem' }}>Verified Vendors</h1>
         <p style={{ fontSize: '1.1rem', opacity: 0.9, maxWidth: '600px', margin: '0 auto 2rem' }}>
           Connect with trusted and verified sellers across Nigeria.
         </p>
@@ -77,7 +77,7 @@ const VerifiedVendors = () => {
 
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem' }}>
         {/* Filters */}
-        <div style={{ background: 'white', padding: '2rem', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', margin: '-4rem 0 2rem', border: '1px solid #e5e7eb', position: 'relative', zIndex: 10 }}>
+        <div className="tl-card" style={{ padding: '2rem', margin: '-4rem 0 2rem', position: 'relative', zIndex: 10 }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
             <input
               name="search"
@@ -100,22 +100,19 @@ const VerifiedVendors = () => {
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-          <h2 style={{ fontSize: '1.8rem', fontWeight: '700', color: '#1f2937' }}>
-            {loading ? 'Loading...' : `${total} Verified Vendor${total !== 1 ? 's' : ''}`}
+          <h2 style={{ fontSize: 'var(--tl-text-h2)', fontWeight: 700, color: 'var(--tl-ink)' }}>
+            {loading ? <span className="tl-skeleton" style={{ display: 'inline-block', width: 220, height: '1.4em', verticalAlign: 'middle' }} /> : `${total} Verified Vendor${total !== 1 ? 's' : ''}`}
           </h2>
         </div>
 
         {loading ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
             {[0,1,2,3,4,5].map(i => (
-              <div key={i} style={{ borderRadius: 20, height: 240, background: '#f1f5f9', position: 'relative', overflow: 'hidden' }}>
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%)', backgroundSize: '200% 100%', animation: 'tl-shimmer 1.4s linear infinite' }} />
-              </div>
+              <div key={i} className="tl-skeleton" style={{ borderRadius: 'var(--tl-radius-md)', height: 240 }} />
             ))}
-            <style>{`@keyframes tl-shimmer { 0%{background-position: 200% 0;} 100%{background-position: -200% 0;} }`}</style>
           </div>
         ) : vendorList.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '4rem 1.5rem', background: 'white', borderRadius: 20, border: '1px solid #e5e7eb' }}>
+          <div className="tl-card" style={{ textAlign: 'center', padding: '4rem 1.5rem' }}>
             <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.5rem' }}>No vendors found.</h3>
             <p style={{ color: '#64748b' }}>Try adjusting your filters.</p>
           </div>
@@ -126,9 +123,8 @@ const VerifiedVendors = () => {
               return (
                 <div key={vendor.id}
                   onClick={() => navigate(`/vendor/${vendor.id}`)}
-                  style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '1.5rem', cursor: 'pointer', transition: 'box-shadow 0.2s' }}
-                  onMouseOver={e => e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)'}
-                  onMouseOut={e => e.currentTarget.style.boxShadow = 'none'}
+                  className="tl-card tl-card-hover"
+                  style={{ padding: '1.5rem', cursor: 'pointer' }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
                     <div style={{ width: '54px', height: '54px', borderRadius: '50%', flexShrink: 0, overflow: 'hidden', background: 'linear-gradient(135deg, #25D366, #128C7E)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', fontSize: '1.2rem' }}>
@@ -147,7 +143,7 @@ const VerifiedVendors = () => {
                   </div>
 
                   {vendor.is_verified === 1 && (
-                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: '#dcfce7', color: '#166534', padding: '0.25rem 0.75rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '600', marginBottom: '0.75rem' }}>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: '#dcfce7', color: '#166534', padding: '0.25rem 0.75rem', borderRadius: 'var(--tl-radius-pill)', fontSize: '0.75rem', fontWeight: '600', marginBottom: '0.75rem' }}>
                       <img src={checklistIcon} alt="Verified" style={{ width: '12px', height: '12px' }} />
                       Verified Vendor
                     </div>
@@ -169,7 +165,7 @@ const VerifiedVendors = () => {
                     {vendor.state && <span>📍 {vendor.state}{vendor.city ? `, ${vendor.city}` : ''}</span>}
                   </div>
 
-                  <button style={{ width: '100%', padding: '0.75rem', background: 'white', border: '1px solid #25D366', color: '#25D366', borderRadius: '8px', fontWeight: '600', cursor: 'pointer' }}
+                  <button className="tl-btn-press" style={{ width: '100%', padding: '0.75rem', background: 'white', border: '1px solid #25D366', color: '#25D366', borderRadius: 'var(--tl-radius-pill)', fontWeight: '600', cursor: 'pointer', boxShadow: 'var(--tl-shadow-1)', transition: 'transform var(--tl-fast) var(--tl-ease)' }}
                     onMouseOver={e => { e.currentTarget.style.background = '#25D366'; e.currentTarget.style.color = 'white'; }}
                     onMouseOut={e => { e.currentTarget.style.background = 'white'; e.currentTarget.style.color = '#25D366'; }}>
                     Visit Shop

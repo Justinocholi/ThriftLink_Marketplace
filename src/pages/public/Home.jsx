@@ -98,7 +98,7 @@ const Home = () => {
   ];
 
   return (
-    <div style={{ fontFamily: "'Inter', sans-serif", background: '#f9fafb', color: '#333', overflowX: 'hidden' }}>
+    <div style={{ fontFamily: "'Inter', sans-serif", background: 'var(--tl-bg)', color: 'var(--tl-ink)', overflowX: 'hidden' }}>
       <style>
         {`
           @media (max-width: 768px) {
@@ -154,6 +154,12 @@ const Home = () => {
             to { opacity: 1; transform: translateY(0); }
           }
           .animate-on-scroll { animation: fadeInUp 0.6s ease forwards; }
+          @media (max-width: 768px) {
+            .why-tl, .protects, .testimonials, .vendor-band, .search-section, .categories,
+            .featured-vendors, .top-vendors-month, .how-it-works, .stats-section, .cta-section {
+              padding-top: var(--tl-space-4) !important; padding-bottom: var(--tl-space-4) !important;
+            }
+          }
         `}
       </style>
       
@@ -207,10 +213,10 @@ const Home = () => {
       </section>
 
       {/* Why ThriftLink */}
-      <section className="why-tl" style={{ padding: '4.5rem 2rem', background: 'white' }}>
+      <section className="why-tl" style={{ padding: 'var(--tl-space-5) 2rem', background: 'var(--tl-surface)' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-            <h2 className="section-title" style={{ fontSize: '2rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.6rem' }}>Why ThriftLink?</h2>
+            <h2 className="section-title" style={{ fontSize: 'var(--tl-text-h2)', fontWeight: 700, color: 'var(--tl-ink)', marginBottom: '0.6rem' }}>Why ThriftLink?</h2>
             <p style={{ color: '#64748b', maxWidth: 600, margin: '0 auto' }}>Built around verification, direct chat, and an active safety net.</p>
           </div>
           <div className="why-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.25rem' }}>
@@ -220,7 +226,7 @@ const Home = () => {
               { Icon: Flag, color: '#FF6B6B', bg: 'rgba(255,107,107,0.12)', title: 'Safer Shopping', body: 'Built-in reporting tools and a watchful admin team keep bad actors out.' },
               { Icon: Users, color: '#A78BFA', bg: 'rgba(167,139,250,0.14)', title: 'Community Driven', body: "Built for Nigeria's thrift community — by people who actually thrift." },
             ].map(({ Icon, color, bg, title, body }) => (
-              <div key={title} className="why-card" style={{ background: 'white', borderRadius: 20, padding: '1.5rem 1.25rem', border: '1px solid rgba(15,23,42,0.06)', transition: 'transform .2s, border-color .2s, box-shadow .2s' }}>
+              <div key={title} className="why-card tl-card tl-card-hover" style={{ padding: '1.5rem 1.25rem' }}>
                 <div style={{ width: 52, height: 52, borderRadius: '50%', background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}>
                   <Icon size={24} color={color} />
                 </div>
@@ -233,10 +239,10 @@ const Home = () => {
       </section>
 
       {/* How ThriftLink Protects You */}
-      <section className="protects" style={{ padding: '4.5rem 2rem', background: 'linear-gradient(135deg, rgba(22,184,101,0.08), rgba(167,139,250,0.06))' }}>
+      <section className="protects" style={{ padding: 'var(--tl-space-5) 2rem', background: 'linear-gradient(135deg, rgba(22,184,101,0.08), rgba(167,139,250,0.06))' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-            <h2 className="section-title" style={{ fontSize: '2rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.6rem' }}>How ThriftLink Protects You</h2>
+            <h2 className="section-title" style={{ fontSize: 'var(--tl-text-h2)', fontWeight: 700, color: 'var(--tl-ink)', marginBottom: '0.6rem' }}>How ThriftLink Protects You</h2>
             <p style={{ color: '#475569', maxWidth: 620, margin: '0 auto' }}>Trust isn't a slogan. It's a process — here's ours.</p>
           </div>
           <div className="timeline-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem', position: 'relative' }}>
@@ -246,7 +252,7 @@ const Home = () => {
               { n: '03', title: 'Users report suspicious behavior', body: 'One tap to flag a vendor, listing, or message.' },
               { n: '04', title: 'ThriftLink reviews and removes', body: 'Admins act on every report and remove bad actors quickly.' },
             ].map((s) => (
-              <div key={s.n} className="timeline-step" style={{ background: 'white', borderRadius: 20, padding: '1.5rem 1.25rem', border: '1px solid rgba(15,23,42,0.06)', position: 'relative' }}>
+              <div key={s.n} className="timeline-step tl-card" style={{ padding: '1.5rem 1.25rem', position: 'relative' }}>
                 <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#16b865', marginBottom: '0.5rem', letterSpacing: '-0.02em', fontFamily: "'Space Grotesk', sans-serif" }}>{s.n}</div>
                 <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.4rem' }}>{s.title}</h3>
                 <p style={{ fontSize: '0.9rem', color: '#64748b', lineHeight: 1.55 }}>{s.body}</p>
@@ -273,9 +279,9 @@ const Home = () => {
       )}
 
       {/* Search Section */}
-      <section className="search-section" style={{ background: 'linear-gradient(135deg, rgba(37,211,102,0.05), rgba(59,130,246,0.05))', padding: '3rem 2rem', borderBottom: '1px solid #e5e7eb' }}>
+      <section className="search-section" style={{ background: 'linear-gradient(135deg, rgba(37,211,102,0.05), rgba(59,130,246,0.05))', padding: 'var(--tl-space-5) 2rem' }}>
         <div className="search-container" style={{ maxWidth: '1000px', margin: '0 auto' }}>
-          <h2 className="search-title" style={{ textAlign: 'center', fontSize: '1.5rem', fontWeight: '700', color: '#1f2937', marginBottom: '2rem' }}>
+          <h2 className="search-title" style={{ textAlign: 'center', fontSize: 'var(--tl-text-h2)', fontWeight: 700, color: 'var(--tl-ink)', marginBottom: '2rem' }}>
             Find Trusted WhatsApp Vendors Near You
           </h2>
 
@@ -390,9 +396,9 @@ const Home = () => {
       </section>
 
       {/* Categories Section */}
-      <section className="categories" style={{ padding: '4rem 2rem', background: '#f9fafb' }}>
+      <section className="categories" style={{ padding: 'var(--tl-space-5) 2rem', background: 'var(--tl-bg)' }}>
         <div className="section-container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <h2 className="section-title" style={{ textAlign: 'center', fontSize: '2rem', fontWeight: '700', marginBottom: '2rem', color: '#1f2937' }}>
+          <h2 className="section-title" style={{ textAlign: 'center', fontSize: 'var(--tl-text-h2)', fontWeight: 700, marginBottom: '2rem', color: 'var(--tl-ink)' }}>
             Browse Categories
           </h2>
           
@@ -404,14 +410,10 @@ const Home = () => {
             margin: '0 auto'
           }}>
             {categories.map((cat, index) => (
-              <Link to={cat.link} key={index} className="category-card" style={{
-                background: 'white',
-                borderRadius: '12px',
+              <Link to={cat.link} key={index} className="category-card tl-card tl-card-hover" style={{
                 padding: '2rem 1rem',
                 textAlign: 'center',
                 cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                border: '1px solid #e5e7eb',
                 textDecoration: 'none',
                 color: 'inherit',
                 display: 'block'
@@ -441,9 +443,9 @@ const Home = () => {
       </section>
 
 {/* Featured Vendors */}
-      <section className="featured-vendors" style={{ padding: '4rem 2rem', background: 'white' }}>
+      <section className="featured-vendors" style={{ padding: 'var(--tl-space-5) 2rem', background: 'var(--tl-surface)' }}>
         <div className="section-container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <h2 className="section-title" style={{ textAlign: 'center', fontSize: '2rem', fontWeight: '700', marginBottom: '2rem', color: '#1f2937' }}>
+          <h2 className="section-title" style={{ textAlign: 'center', fontSize: 'var(--tl-text-h2)', fontWeight: 700, marginBottom: '2rem', color: 'var(--tl-ink)' }}>
             Top Rated Vendors
           </h2>
           
@@ -452,11 +454,8 @@ const Home = () => {
           ) : vendorsLoading ? (
             <div className="vendors-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1.25rem' }}>
               {[0,1,2,3].map(i => (
-                <div key={i} style={{ borderRadius: 16, overflow: 'hidden', background: '#f1f5f9', aspectRatio: '1 / 1', position: 'relative' }}>
-                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%)', backgroundSize: '200% 100%', animation: 'tl-shimmer 1.4s linear infinite' }} />
-                </div>
+                <div key={i} className="tl-skeleton" style={{ borderRadius: 'var(--tl-radius-md)', aspectRatio: '1 / 1' }} />
               ))}
-              <style>{`@keyframes tl-shimmer { 0%{background-position: 200% 0;} 100%{background-position: -200% 0;} }`}</style>
             </div>
           ) : featuredVendors.length === 0 ? (
             <div style={{ textAlign: 'center', color: '#6b7280', padding: '2rem', maxWidth: '500px', margin: '0 auto' }}>
@@ -481,13 +480,12 @@ const Home = () => {
                   onClick={() => navigate(`/vendor/${vendor.id}`)}
                   style={{
                     position: 'relative',
-                    borderRadius: 16,
+                    borderRadius: 'var(--tl-radius-md)',
                     overflow: 'hidden',
                     cursor: 'pointer',
                     background: cover ? `#0f172a url(${cldUrl(cover, 400)}) center/cover` : gradientFor(vendor.id),
                     aspectRatio: '1 / 1',
-                    boxShadow: '0 8px 24px -12px rgba(15,23,42,0.18)',
-                    border: '1px solid #f1f5f9',
+                    boxShadow: 'var(--tl-shadow-1)',
                   }}
                 >
                   {!cover && (
@@ -532,7 +530,7 @@ const Home = () => {
 
       {/* Top Vendors of the Month Section */}
       {monthlyVendors.length > 0 && (
-      <section className="top-vendors-month" style={{ padding: '4rem 2rem', background: '#f0fdf4' }}>
+      <section className="top-vendors-month" style={{ padding: 'var(--tl-space-5) 2rem', background: 'var(--tl-green-tint)' }}>
         <div className="section-container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
             <span style={{ 
@@ -547,7 +545,7 @@ const Home = () => {
             }}>
               ✨ Monthly Highlights
             </span>
-            <h2 className="section-title" style={{ fontSize: '2rem', fontWeight: '700', color: '#1f2937', marginBottom: '1rem' }}>
+            <h2 className="section-title" style={{ fontSize: 'var(--tl-text-h2)', fontWeight: 700, color: 'var(--tl-ink)', marginBottom: '1rem' }}>
               Top Vendors of the Month
             </h2>
             <p style={{ color: '#6b7280', maxWidth: '600px', margin: '0 auto' }}>
@@ -563,15 +561,11 @@ const Home = () => {
             {monthlyVendors.map((vendor, index) => {
               const color = MONTHLY_COLORS[index % MONTHLY_COLORS.length];
               return (
-              <div key={vendor.id} className="monthly-card" style={{
-                background: 'white',
-                borderRadius: '16px',
+              <div key={vendor.id} className="monthly-card tl-card tl-card-hover" style={{
                 padding: '2rem',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '1.5rem',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                border: `1px solid ${color}20`,
                 position: 'relative',
                 overflow: 'hidden'
               }}>
@@ -641,7 +635,7 @@ const Home = () => {
       )}
 
       {/* Stats Section */}
-      <section className="stats-section" style={{ background: '#25D366', color: 'white', padding: '3rem 2rem', textAlign: 'center' }}>
+      <section className="stats-section" style={{ background: 'var(--tl-green)', color: 'white', padding: 'var(--tl-space-5) 2rem', textAlign: 'center' }}>
         <div className="stats-grid" style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
@@ -665,9 +659,9 @@ const Home = () => {
       </section>
 
       {/* How It Works */}
-      <section className="how-it-works" style={{ padding: '4rem 2rem', background: '#f9fafb' }}>
+      <section className="how-it-works" style={{ padding: 'var(--tl-space-5) 2rem', background: 'var(--tl-bg)' }}>
         <div className="section-container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <h2 className="section-title" style={{ textAlign: 'center', fontSize: '2rem', fontWeight: '700', marginBottom: '2rem', color: '#1f2937' }}>
+          <h2 className="section-title" style={{ textAlign: 'center', fontSize: 'var(--tl-text-h2)', fontWeight: 700, marginBottom: '2rem', color: 'var(--tl-ink)' }}>
             How It Works
           </h2>
           
@@ -683,14 +677,10 @@ const Home = () => {
               { title: 'Chat', desc: 'Connect directly with verified vendors on WhatsApp. No middlemen.', icon: messageIcon, step: 2 },
               { title: 'Deal', desc: 'Agree on price and delivery terms safely and conveniently.', icon: packageIcon, step: 3 }
             ].map((step) => (
-              <div key={step.step} className="step-card" style={{
-                background: 'white',
-                borderRadius: '12px',
+              <div key={step.step} className="step-card tl-card" style={{
                 padding: '2rem 1.5rem',
                 textAlign: 'center',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
-                position: 'relative',
-                border: '1px solid #e5e7eb'
+                position: 'relative'
               }}>
                 <div className="step-number" style={{
                   position: 'absolute',
@@ -720,10 +710,10 @@ const Home = () => {
       </section>
 
 {/* Testimonials */}
-<section className="testimonials" style={{ padding: '4.5rem 2rem', background: 'white' }}>
+<section className="testimonials" style={{ padding: 'var(--tl-space-5) 2rem', background: 'var(--tl-surface)' }}>
   <div style={{ maxWidth: 1200, margin: '0 auto' }}>
     <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-      <h2 className="section-title" style={{ fontSize: '2rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.6rem' }}>What our community says</h2>
+      <h2 className="section-title" style={{ fontSize: 'var(--tl-text-h2)', fontWeight: 700, color: 'var(--tl-ink)', marginBottom: '0.6rem' }}>What our community says</h2>
       <p style={{ color: '#64748b', maxWidth: 600, margin: '0 auto' }}>Real buyers, real vendors, real stories.</p>
     </div>
     <div className="testi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem' }}>
@@ -732,7 +722,7 @@ const Home = () => {
         { name: 'Tunde A.', meta: 'Vendor · Abuja', seed: 'Tunde', quote: 'Selling on ThriftLink doubled my reach. Buyers trust the verified badge and reach out directly — no haggling with bots.' },
         { name: 'Chiamaka E.', meta: 'Buyer · Port Harcourt', seed: 'Chiamaka', quote: 'The reporting tool saved me from a fake account. Admin removed them within a day.' },
       ].map(t => (
-        <div key={t.name} className="testi-card" style={{ background: 'white', borderRadius: 20, padding: '1.75rem 1.5rem', border: '1px solid rgba(15,23,42,0.06)', boxShadow: '0 4px 16px -8px rgba(15,23,42,0.08)' }}>
+        <div key={t.name} className="testi-card tl-card" style={{ padding: '1.75rem 1.5rem' }}>
           <div style={{ display: 'flex', gap: 2, marginBottom: '0.85rem' }}>
             {[0,1,2,3,4].map(i => <Star key={i} size={16} color="#facc15" fill="#facc15" />)}
           </div>
@@ -751,7 +741,7 @@ const Home = () => {
 </section>
 
 {/* Become a Vendor CTA band */}
-<section className="vendor-band" style={{ padding: '4rem 2rem', background: 'linear-gradient(135deg, #0e9a52 0%, #16b865 50%, #1ed373 100%)', color: 'white', position: 'relative', overflow: 'hidden' }}>
+<section className="vendor-band" style={{ padding: 'var(--tl-space-5) 2rem', background: 'linear-gradient(135deg, #0e9a52 0%, #16b865 50%, #1ed373 100%)', color: 'white', position: 'relative', overflow: 'hidden' }}>
   <div aria-hidden style={{ position: 'absolute', top: -120, right: -80, width: 320, height: 320, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.18) 0%, transparent 70%)' }} />
   <div className="vendor-band-grid" style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '2.5rem', alignItems: 'center', position: 'relative' }}>
     <div>
@@ -781,11 +771,11 @@ const Home = () => {
 <section className="cta-section" style={{
   background: 'linear-gradient(135deg, #1f2937 0%, #374151 100%)',
   color: 'white',
-  padding: '4rem 2rem',
+  padding: 'var(--tl-space-5) 2rem',
   textAlign: 'center'
 }}>
   <div className="cta-content" style={{ maxWidth: '600px', margin: '0 auto' }}>
-    <h2 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '1rem', lineHeight: '1.3' }}>
+    <h2 style={{ fontSize: 'var(--tl-text-h2)', fontWeight: 700, marginBottom: '1rem', lineHeight: '1.3' }}>
       Ready to grow your business?
     </h2>
     <p style={{ fontSize: '1.1rem', marginBottom: '2rem', opacity: 0.9 }}>

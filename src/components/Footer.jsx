@@ -6,7 +6,7 @@ import logo from '../assets/thriftlink-logo-.png';
 const COL_TITLE = {
   fontSize: '0.85rem',
   fontWeight: 800,
-  color: '#0f172a',
+  color: 'var(--tl-ink)',
   textTransform: 'uppercase',
   letterSpacing: '0.08em',
   marginBottom: '0.85rem'
@@ -23,9 +23,9 @@ const LINK_STYLE = {
 
 const Footer = () => {
   return (
-    <footer style={{ background: '#f8fafc', borderTop: '1px solid #e2e8f0', color: '#475569', fontFamily: "'Inter', sans-serif" }}>
+    <footer style={{ background: '#f8fafc', borderTop: '1px solid #e2e8f0', color: 'var(--tl-muted)', fontFamily: "'Inter', sans-serif" }}>
       <style>{`
-        .tl-footer-grid { display: grid; grid-template-columns: 1.5fr repeat(4, 1fr); gap: 2.5rem; padding: 3rem 1.5rem 2rem; max-width: 1280px; margin: 0 auto; }
+        .tl-footer-grid { display: grid; grid-template-columns: 1.5fr repeat(4, 1fr); gap: var(--tl-space-4); padding: var(--tl-space-4) var(--tl-space-3) var(--tl-space-3); max-width: 1280px; margin: 0 auto; }
         .tl-footer-link:hover { color: #25D366 !important; }
         .tl-footer-social { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 999px; background: white; border: 1px solid #e2e8f0; color: #475569; transition: all 0.15s; }
         .tl-footer-social:hover { color: #25D366; border-color: #25D366; transform: translateY(-1px); }

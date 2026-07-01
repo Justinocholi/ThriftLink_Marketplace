@@ -288,9 +288,10 @@ const ProductDetails = () => {
                   position: 'relative',
                   width: '100%',
                   aspectRatio: '1 / 1',
-                  borderRadius: 16,
+                  borderRadius: 'var(--tl-radius-md)',
                   overflow: 'hidden',
                   background: '#f1f5f9',
+                  boxShadow: 'var(--tl-shadow-1)',
                 }}
               >
                 <div
@@ -374,7 +375,7 @@ const ProductDetails = () => {
                       style={{
                         aspectRatio: '1',
                         background: '#f1f5f9',
-                        borderRadius: 10,
+                        borderRadius: 'var(--tl-radius-sm)',
                         overflow: 'hidden',
                         border: i === activeImg ? '2px solid #25D366' : '2px solid transparent',
                         cursor: 'pointer',
@@ -634,9 +635,9 @@ const ProductDetails = () => {
       </div>
 
       {recentItems.length > 0 && (
-        <section style={{ padding: '2rem 1.25rem 3rem', background: '#f9fafb' }}>
+        <section style={{ padding: '2rem 1.25rem 3rem', background: 'var(--tl-bg)' }}>
           <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-            <h2 style={{ fontSize: '1.3rem', fontWeight: 700, color: '#0f172a', marginBottom: '1rem' }}>Recently viewed</h2>
+            <h2 style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--tl-ink)', marginBottom: '1rem' }}>Recently viewed</h2>
             <div style={{ display: 'flex', gap: '1rem', overflowX: 'auto', paddingBottom: '0.75rem', scrollSnapType: 'x mandatory' }}>
               {recentItems.map(p => (
                 <div key={p.id} style={{ minWidth: 220, maxWidth: 220, scrollSnapAlign: 'start' }}>
@@ -682,8 +683,9 @@ const IconBtn = ({ children, onClick, label }) => (
       width: 38,
       height: 38,
       borderRadius: '50%',
-      border: '1px solid #e2e8f0',
-      background: 'white',
+      border: 'none',
+      boxShadow: 'var(--tl-shadow-1)',
+      background: 'var(--tl-surface)',
       cursor: 'pointer',
       display: 'flex',
       alignItems: 'center',

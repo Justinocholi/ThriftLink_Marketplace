@@ -64,7 +64,7 @@ const Checkout = () => {
   };
 
   return (
-    <div style={{ background: '#f9fafb', minHeight: '100vh', fontFamily: "'Inter', sans-serif" }}>
+    <div style={{ background: 'var(--tl-bg)', minHeight: '100vh', fontFamily: "'Inter', sans-serif" }}>
       <style>{`
         @media (max-width: 860px) {
           .checkout-wrap { padding: 5.5rem 1.25rem 7rem !important; }
@@ -90,7 +90,7 @@ const Checkout = () => {
             <ArrowLeft size={20} />
             Back to Cart
           </button>
-          <h1 className="checkout-title" style={{ fontSize: '2rem', fontWeight: '800', color: '#1f2937' }}>WhatsApp Checkout</h1>
+          <h1 className="checkout-title" style={{ fontSize: 'var(--tl-text-h1)', fontWeight: 800, color: 'var(--tl-ink)' }}>WhatsApp Checkout</h1>
         </div>
 
         <div style={{ marginBottom: '1.5rem', padding: '1rem 1.25rem', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '12px', display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
@@ -105,7 +105,7 @@ const Checkout = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
 
             {/* Buyer Info */}
-            <div className="checkout-card" style={{ background: 'white', borderRadius: '16px', padding: '2rem', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: '1px solid #e5e7eb' }}>
+            <div className="checkout-card tl-card" style={{ padding: '2rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
                 <Truck size={24} color="#059669" />
                 <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#1f2937' }}>Your Details</h2>
@@ -163,7 +163,7 @@ const Checkout = () => {
             </div>
 
             {/* Message preview, grouped by vendor */}
-            <div className="checkout-card" style={{ background: 'white', borderRadius: '16px', padding: '2rem', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: '1px solid #e5e7eb' }}>
+            <div className="checkout-card tl-card" style={{ padding: '2rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
                 <MessageCircle size={24} color="#25D366" />
                 <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#1f2937' }}>WhatsApp Preview</h2>
@@ -203,7 +203,7 @@ const Checkout = () => {
 
           {/* Sidebar */}
           <div className="checkout-summary" style={{ position: 'sticky', top: '6rem', height: 'fit-content' }}>
-            <div style={{ background: 'white', borderRadius: '16px', padding: '2rem', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', border: '1px solid #e5e7eb' }}>
+            <div className="tl-card" style={{ padding: '2rem' }}>
               <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#1f2937', marginBottom: '1.5rem' }}>Order Summary</h2>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
@@ -225,6 +225,7 @@ const Checkout = () => {
               <button
                 type="submit"
                 disabled={loading}
+                className="tl-btn-press"
                 style={{
                   width: '100%', padding: '1rem', background: '#25D366', color: 'white',
                   borderRadius: '999px', fontWeight: '700', fontSize: '1rem', border: 'none',

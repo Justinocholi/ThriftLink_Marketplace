@@ -26,7 +26,7 @@ const Categories = () => {
   ];
 
   return (
-    <div style={{ fontFamily: "'Inter', sans-serif", background: '#f9fafb', color: '#333', minHeight: '100vh' }}>
+    <div style={{ fontFamily: "'Inter', sans-serif", background: 'var(--tl-bg)', color: 'var(--tl-ink)', minHeight: '100vh' }}>
       <style>
         {`
           @media (max-width: 768px) {
@@ -46,9 +46,9 @@ const Categories = () => {
       }}>
         <h2 className="section-title" style={{
           textAlign: 'center',
-          fontSize: '2.2rem',
-          fontWeight: '700',
-          color: '#1f2937',
+          fontSize: 'var(--tl-text-h1)',
+          fontWeight: 700,
+          color: 'var(--tl-ink)',
           marginBottom: '2.5rem'
         }}>Browse by Category</h2>
         
@@ -58,16 +58,12 @@ const Categories = () => {
           gap: '2rem'
         }}>
           {categories.map((cat, index) => (
-            <Link to={cat.link} key={index} className="category-card" style={{
-              background: 'white',
-              borderRadius: '12px',
+            <Link to={cat.link} key={index} className="category-card tl-card tl-card-hover" style={{
               padding: '2rem 1rem',
               textAlign: 'center',
-              border: '1px solid #e5e7eb',
               cursor: 'pointer',
               textDecoration: 'none',
               color: 'inherit',
-              transition: 'all 0.3s ease',
               display: 'block'
             }}>
               <div className="category-icon" style={{
@@ -90,13 +86,13 @@ const Categories = () => {
               <div className="category-name" style={{
                 fontSize: '1rem',
                 fontWeight: '600',
-                color: '#1f2937',
+                color: 'var(--tl-ink)',
                 marginBottom: '0.3rem'
               }}>{cat.name}</div>
               
               <div className="category-count" style={{
                 fontSize: '0.85rem',
-                color: '#6b7280'
+                color: 'var(--tl-muted)'
               }}>{cat.count}</div>
             </Link>
           ))}
