@@ -12,7 +12,7 @@ export const ROUTES = {
   wishlist: '/wishlist',
   messages: '/messages',
   orderConfirmation: (id) => `/order-confirmation/${id}`,
-  user: { dashboard: '/user', orders: '/user/orders', profile: '/user/profile', saved: '/user/saved', messages: '/user/messages' },
+  user: { dashboard: '/user', orders: '/user/orders', profile: '/user/profile', saved: '/user/saved', messages: '/user/messages', support: '/user/support' },
   vendor: { dashboard: '/vendor', profile: '/vendor/profile', products: '/vendor/products', orders: '/vendor/orders', messages: '/vendor/messages', subscription: '/vendor/subscription', settings: '/vendor/settings' },
   admin: { dashboard: '/admin', vendors: '/admin/vendors', users: '/admin/users', reports: '/admin/reports', reviews: '/admin/reviews' },
   legal: { terms: '/legal/terms', privacy: '/legal/privacy', vendorPolicy: '/legal/vendor-policy', cookies: '/legal/cookies' },

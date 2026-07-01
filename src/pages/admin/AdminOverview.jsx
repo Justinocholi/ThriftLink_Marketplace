@@ -1,19 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { admin } from '../../services/api';
 import { Users, Store, Package, MessageSquare, ShoppingBag, ShieldCheck, ArrowUpRight, TrendingUp, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useFetch } from '../../hooks/useFetch';
+import ErrorState from '../../components/ErrorState';
+import { ROUTES } from '../../routes';
 
 const AdminOverview = () => {
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    admin.stats()
-      .then(setStats)
-      .catch(e => setError(e.message))
-      .finally(() => setLoading(false));
-  }, []);
+  const { data: stats, loading, error, retry } = useFetch(() => admin.stats(), []);
 
   const s = stats || { totalVendors: 0, pendingVerifications: 0, totalUsers: 0, totalProducts: 0, totalReviews: 0, totalOrders: 0 };
 
@@ -31,6 +25,8 @@ const AdminOverview = () => {
       <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
     </div>
   );
+
+  if (error) return <ErrorState error={error} onRetry={retry} />;
 
   return (
     <div style={{ fontFamily: "'Inter', sans-serif" }}>
@@ -51,8 +47,6 @@ const AdminOverview = () => {
         <h2 className="ao-title" style={{ fontSize: '1.75rem', fontWeight: '800', color: '#1e293b', marginBottom: '0.5rem' }}>Platform Overview</h2>
         <p style={{ color: '#64748b' }}>High-level performance metrics and system-wide statistics.</p>
       </div>
-
-      {error && <div style={{ background: '#fee2e2', color: '#dc2626', padding: '1rem', borderRadius: '12px', marginBottom: '1.5rem', border: '1px solid #fecaca' }}>{error}</div>}
 
       {/* Stats Grid */}
       <div className="ao-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
@@ -80,14 +74,14 @@ const AdminOverview = () => {
                 <div style={{ fontWeight: '700', color: '#92400e', fontSize: '0.95rem' }}>{s.pendingVerifications} Pending Verifications</div>
                 <div style={{ fontSize: '0.8rem', color: '#b45309' }}>New vendors waiting for approval.</div>
               </div>
-              <Link to="/admin/vendors" style={{ background: '#f59e0b', color: 'white', padding: '0.5rem 1rem', borderRadius: '8px', fontSize: '0.8rem', fontWeight: '700', textDecoration: 'none' }}>Review Now</Link>
+              <Link to={ROUTES.admin.vendors} style={{ background: '#f59e0b', color: 'white', padding: '0.5rem 1rem', borderRadius: '8px', fontSize: '0.8rem', fontWeight: '700', textDecoration: 'none' }}>Review Now</Link>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', background: '#f0fdf4', borderRadius: '16px', border: '1px solid #dcfce7' }}>
               <div>
                 <div style={{ fontWeight: '700', color: '#166534', fontSize: '0.95rem' }}>System Health: Optimal</div>
                 <div style={{ fontSize: '0.8rem', color: '#15803d' }}>All background jobs running smoothly.</div>
               </div>
-              <Link to="/admin" style={{ color: '#166534', fontSize: '0.8rem', fontWeight: '700' }}><ArrowUpRight size={18} /></Link>
+              <Link to={ROUTES.admin.dashboard} style={{ color: '#166534', fontSize: '0.8rem', fontWeight: '700' }}><ArrowUpRight size={18} /></Link>
             </div>
           </div>
         </div>
@@ -96,8 +90,8 @@ const AdminOverview = () => {
           <h4 style={{ fontWeight: '800', fontSize: '1.25rem', marginBottom: '1rem' }}>Admin Control Center</h4>
           <p style={{ opacity: 0.8, fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '1.5rem' }}>Use the sidebar or profile menu to navigate between platform management, user moderation, and system settings.</p>
           <div style={{ display: 'flex', gap: '1rem' }}>
-            <Link to="/admin/users" style={{ flex: 1, padding: '0.8rem', background: 'white', color: '#0f172a', borderRadius: '12px', textAlign: 'center', fontWeight: '700', textDecoration: 'none', fontSize: '0.9rem' }}>User Mgmt</Link>
-            <Link to="/admin/vendors" style={{ flex: 1, padding: '0.8rem', background: 'rgba(255,255,255,0.1)', color: 'white', borderRadius: '12px', textAlign: 'center', fontWeight: '700', textDecoration: 'none', fontSize: '0.9rem', border: '1px solid rgba(255,255,255,0.2)' }}>Vendor Mgmt</Link>
+            <Link to={ROUTES.admin.users} style={{ flex: 1, padding: '0.8rem', background: 'white', color: '#0f172a', borderRadius: '12px', textAlign: 'center', fontWeight: '700', textDecoration: 'none', fontSize: '0.9rem' }}>User Mgmt</Link>
+            <Link to={ROUTES.admin.vendors} style={{ flex: 1, padding: '0.8rem', background: 'rgba(255,255,255,0.1)', color: 'white', borderRadius: '12px', textAlign: 'center', fontWeight: '700', textDecoration: 'none', fontSize: '0.9rem', border: '1px solid rgba(255,255,255,0.2)' }}>Vendor Mgmt</Link>
           </div>
         </div>
       </div>

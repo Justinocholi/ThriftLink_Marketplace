@@ -1,26 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { admin } from '../../services/api';
 import { Search, Filter, Shield, MoreVertical, Loader2, UserCheck, UserX, Mail, MapPin } from 'lucide-react';
+import { useFetch } from '../../hooks/useFetch';
+import ErrorState from '../../components/ErrorState';
 
 const AdminUsers = () => {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data, loading, error: fetchError, retry, setData } = useFetch(
+    () => admin.users().then(d => d.users || d),
+    []
+  );
+  const users = data || [];
   const [error, setError] = useState('');
   const [acting, setActing] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-
-  useEffect(() => {
-    admin.users()
-      .then(data => setUsers(data.users || data))
-      .catch(e => setError(e.message))
-      .finally(() => setLoading(false));
-  }, []);
 
   const handleToggleStatus = async (id, is_active) => {
     setActing(id);
     try {
       await admin.setUserStatus(id, is_active ? 0 : 1);
-      setUsers(prev => prev.map(u => u.id === id ? { ...u, is_active: is_active ? 0 : 1 } : u));
+      setData(prev => (prev || []).map(u => u.id === id ? { ...u, is_active: is_active ? 0 : 1 } : u));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -38,6 +36,8 @@ const AdminUsers = () => {
       <Loader2 className="animate-spin" size={32} color="#3b82f6" />
     </div>
   );
+
+  if (fetchError) return <ErrorState error={fetchError} onRetry={retry} />;
 
   return (
     <div style={{ fontFamily: "'Inter', sans-serif" }}>

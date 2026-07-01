@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { admin } from '../../services/api';
+import { useFetch } from '../../hooks/useFetch';
+import ErrorState from '../../components/ErrorState';
 
 const STATUS_STYLE = {
   approved:  { background: '#dcfce7', color: '#15803d' },
@@ -9,8 +11,12 @@ const STATUS_STYLE = {
 };
 
 const AdminVendors = () => {
-  const [vendors, setVendors] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data, loading, error: fetchError, retry, setData } = useFetch(
+    () => admin.vendors().then(d => d.vendors || d),
+    []
+  );
+  const vendors = data || [];
+  const setVendors = (updater) => setData(prev => updater(prev || []));
   const [error, setError] = useState('');
   const [filter, setFilter] = useState('pending');
   const [acting, setActing] = useState(null);
@@ -22,16 +28,6 @@ const AdminVendors = () => {
     setToast(msg);
     setTimeout(() => setToast(''), 2200);
   };
-
-  const load = () => {
-    setLoading(true);
-    admin.vendors()
-      .then(data => setVendors(data.vendors || data))
-      .catch(e => setError(e.message))
-      .finally(() => setLoading(false));
-  };
-
-  useEffect(() => { load(); }, []);
 
   const handleVerify = async (id, status) => {
     setActing(id);
@@ -136,6 +132,8 @@ const AdminVendors = () => {
 
         {loading ? (
           <div style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>Loading vendors...</div>
+        ) : fetchError ? (
+          <ErrorState error={fetchError} onRetry={retry} />
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>

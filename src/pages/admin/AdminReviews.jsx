@@ -1,18 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { admin } from '../../services/api';
+import { useFetch } from '../../hooks/useFetch';
+import ErrorState from '../../components/ErrorState';
 
 const AdminReviews = () => {
-  const [reviews, setReviews] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data, loading, error: fetchError, retry, setData } = useFetch(
+    () => admin.reviews().then(d => d.reviews || d),
+    []
+  );
+  const reviews = data || [];
+  const setReviews = (updater) => setData(prev => updater(prev || []));
   const [error, setError] = useState('');
   const [acting, setActing] = useState(null);
-
-  useEffect(() => {
-    admin.reviews()
-      .then(data => setReviews(data.reviews || data))
-      .catch(e => setError(e.message))
-      .finally(() => setLoading(false));
-  }, []);
 
   const handleApprove = async (id, is_approved) => {
     setActing(id);
@@ -55,6 +54,8 @@ const AdminReviews = () => {
 
         {loading ? (
           <div style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>Loading reviews...</div>
+        ) : fetchError ? (
+          <ErrorState error={fetchError} onRetry={retry} />
         ) : reviews.length === 0 ? (
           <div style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>
             <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⭐</div>

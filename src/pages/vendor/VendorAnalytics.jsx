@@ -1,19 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { vendorMe } from '../../services/api';
+import { useFetch } from '../../hooks/useFetch';
+import ErrorState from '../../components/ErrorState';
 
 const VendorAnalytics = () => {
-  const [analytics, setAnalytics] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    vendorMe.getAnalytics()
-      .then(setAnalytics)
-      .catch(e => setError(e.message))
-      .finally(() => setLoading(false));
-  }, []);
+  const { data: analytics, loading, error, retry } = useFetch(() => vendorMe.getAnalytics(), []);
 
   if (loading) return <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>Loading analytics...</div>;
+  if (error) return <ErrorState error={error} onRetry={retry} />;
 
   const totals = analytics?.totals || { profile_views: 0, whatsapp_clicks: 0, rating: 0, total_reviews: 0 };
 
@@ -22,8 +16,6 @@ const VendorAnalytics = () => {
       <h4 style={{ fontSize: '1.25rem', color: '#0f172a', fontWeight: '700', marginBottom: '1.5rem', paddingBottom: '1rem', borderBottom: '1px solid #f1f5f9' }}>
         Detailed Analytics
       </h4>
-
-      {error && <div style={{ background: '#fee2e2', color: '#dc2626', padding: '0.75rem 1rem', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.875rem' }}>{error}</div>}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
         <div style={{ background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)', borderRadius: '16px', padding: '2rem', border: '1px solid #93c5fd' }}>
