@@ -112,7 +112,7 @@ const VendorDashboard = () => {
           boxShadow: '0 8px 24px -12px rgba(37,211,102,0.25)'
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.5rem' }}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a' }}>Get your shop ready 🚀</h3>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a' }}>Get your shop ready</h3>
             <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#25D366' }}>
               {requiredDoneCount} of {requiredSteps.length} steps complete
             </span>
@@ -177,7 +177,7 @@ const VendorDashboard = () => {
       {/* Page Header — gradient brand banner with CTA */}
       <div className="tl-dash-hero" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <h2>Store Overview 🏪</h2>
+          <h2>Store Overview</h2>
           <p>Manage your thrift business and track your performance.</p>
         </div>
         <Link to="/vendor/products" style={{ background: 'rgba(255,255,255,0.95)', color: '#0e9a52', padding: '0.85rem 1.5rem', borderRadius: '999px', fontWeight: '700', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem', boxShadow: '0 8px 24px -8px rgba(15,23,42,0.2)', position: 'relative', zIndex: 1 }}>
@@ -253,7 +253,7 @@ const VendorDashboard = () => {
           </div>
 
           <div style={{ background: 'linear-gradient(135deg, #25D366, #128C7E)', borderRadius: '24px', padding: '2rem', color: 'white' }}>
-            <h4 style={{ fontWeight: '800', marginBottom: '0.75rem' }}>Pro Tip! 💡</h4>
+            <h4 style={{ fontWeight: '800', marginBottom: '0.75rem' }}>Pro Tip!</h4>
             <p style={{ fontSize: '0.9rem', opacity: 0.9, lineHeight: '1.5' }}>Verified vendors receive 3x more clicks than unverified ones. Submit your ID for verification today.</p>
             <button style={{ marginTop: '1.25rem', width: '100%', padding: '0.8rem', background: 'white', border: 'none', borderRadius: '10px', color: '#128C7E', fontWeight: '700', cursor: 'pointer' }}>Verify Now</button>
           </div>

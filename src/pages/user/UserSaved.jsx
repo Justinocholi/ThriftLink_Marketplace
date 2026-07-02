@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Heart } from 'lucide-react';
+import { Heart, Package } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { userMe } from '../../services/api';
 import { useFetch } from '../../hooks/useFetch';
@@ -34,7 +34,7 @@ const UserSaved = () => {
 
       {saved.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>❤️</div>
+          <div style={{ marginBottom: '1rem' }}><Heart size={48} strokeWidth={1.5} /></div>
           <p>No saved items yet. Browse vendors to save items you like!</p>
         </div>
       ) : (
@@ -48,7 +48,7 @@ const UserSaved = () => {
                   onClick={() => item.product_id && navigate(ROUTES.product(item.product_id))}>
                   {img
                     ? <img src={img} alt={item.product_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    : <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem' }}>📦</div>}
+                    : <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}><Package size={32} strokeWidth={1.5} /></div>}
                   <button
                     onClick={(e) => { e.stopPropagation(); handleUnsave(item.id); }}
                     style={{ position: 'absolute', top: '10px', right: '10px', background: 'white', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { MapPin, Package } from 'lucide-react';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import ReviewSection from '../../components/ReviewSection';
@@ -123,7 +124,7 @@ const VendorPublicProfile = () => {
                 <span style={{ fontWeight: '600', color: '#1f2937' }}>{vendor.rating > 0 ? vendor.rating.toFixed(1) : 'New'}</span>
                 <span>({vendor.total_reviews} review{vendor.total_reviews !== 1 ? 's' : ''})</span>
               </div>
-              {vendor.state && <><span>•</span><span>📍 {vendor.state}{vendor.city ? `, ${vendor.city}` : ''}</span></>}
+              {vendor.state && <><span>•</span><span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}><MapPin size={14} /> {vendor.state}{vendor.city ? `, ${vendor.city}` : ''}</span></>}
               {vendor.category && <><span>•</span><span>{vendor.category}</span></>}
             </div>
 
@@ -177,7 +178,7 @@ const VendorPublicProfile = () => {
                   <div className="vpp-img" style={{ height: '200px', background: '#f3f4f6', overflow: 'hidden' }}>
                     {images[0]
                       ? <img src={images[0]} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      : <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem' }}>📦</div>}
+                      : <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}><Package size={40} strokeWidth={1.5} /></div>}
                   </div>
                   <div style={{ padding: '1rem' }}>
                     <h3 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1f2937' }}>{product.name}</h3>

@@ -60,10 +60,10 @@ const AdminVendors = () => {
   const kycSummary = (v) => {
     const hasNin = Boolean(v.nin);
     const hasDoc = Boolean(v.id_document_url);
-    if (!hasNin && !hasDoc) return { key: 'not_started', label: 'Not started', icon: '🚫', bg: '#f1f5f9', fg: '#64748b' };
-    if (v.verification_status === 'approved') return { key: 'approved', label: 'Approved', icon: '✅', bg: '#dcfce7', fg: '#15803d' };
-    if (v.verification_status === 'rejected') return { key: 'rejected', label: 'Rejected', icon: '❌', bg: '#fee2e2', fg: '#dc2626' };
-    return { key: 'pending', label: 'Pending review', icon: '⏳', bg: '#fef3c7', fg: '#b45309' };
+    if (!hasNin && !hasDoc) return { key: 'not_started', label: 'Not started', bg: '#f1f5f9', fg: '#64748b' };
+    if (v.verification_status === 'approved') return { key: 'approved', label: 'Approved', bg: '#dcfce7', fg: '#15803d' };
+    if (v.verification_status === 'rejected') return { key: 'rejected', label: 'Rejected', bg: '#fee2e2', fg: '#dc2626' };
+    return { key: 'pending', label: 'Pending review', bg: '#fef3c7', fg: '#b45309' };
   };
   const maskNin = (n) => (n ? `${'*'.repeat(Math.max(0, n.length - 4))}${n.slice(-4)}` : '—');
 
@@ -107,10 +107,10 @@ const AdminVendors = () => {
               <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginRight: 4 }}>KYC:</span>
               {[
                 { v: 'all', label: 'All' },
-                { v: 'pending', label: '⏳ Pending review' },
-                { v: 'approved', label: '✅ Approved' },
-                { v: 'rejected', label: '❌ Rejected' },
-                { v: 'not_started', label: '🚫 Not started' },
+                { v: 'pending', label: 'Pending review' },
+                { v: 'approved', label: 'Approved' },
+                { v: 'rejected', label: 'Rejected' },
+                { v: 'not_started', label: 'Not started' },
               ].map((opt) => (
                 <button
                   key={opt.v}
@@ -155,7 +155,7 @@ const AdminVendors = () => {
                       <td style={{ padding: '1rem', color: '#475569' }}>{vendor.state || '—'}</td>
                       <td style={{ padding: '1rem' }}>
                         <span style={{ background: ks.bg, color: ks.fg, padding: '0.3rem 0.65rem', borderRadius: '999px', fontSize: '0.78rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.3rem', whiteSpace: 'nowrap' }}>
-                          <span>{ks.icon}</span> {ks.label}
+                          {ks.label}
                         </span>
                       </td>
                       <td style={{ padding: '1rem', color: '#475569', fontFamily: 'monospace', fontSize: '0.85rem' }}>{maskNin(vendor.nin)}</td>

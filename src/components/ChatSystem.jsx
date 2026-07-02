@@ -532,7 +532,7 @@ const ChatSystem = () => {
                           fontWeight: chat.unread_count > 0 ? 700 : 400,
                         }}
                       >
-                        {chat.last_image ? '📷 Photo' : chat.last_message || 'No messages yet'}
+                        {chat.last_image ? 'Photo' : chat.last_message || 'No messages yet'}
                       </p>
                     )}
                     {chat.unread_count > 0 && (
@@ -695,7 +695,7 @@ const ChatSystem = () => {
                     padding: '2rem',
                   }}
                 >
-                  Say hello 👋 — start the conversation.
+                  Say hello and start the conversation.
                 </div>
               ) : (
                 messages.map((m) => (

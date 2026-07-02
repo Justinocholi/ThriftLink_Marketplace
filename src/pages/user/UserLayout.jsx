@@ -206,7 +206,7 @@ const UserLayout = () => {
             </button>
             <div className="user-welcome-block">
               <h1 className="user-welcome-title" style={{ fontSize: '1.75rem', color: '#0f172a', fontWeight: '700', marginBottom: '0.25rem' }}>
-                Welcome back! 👋
+                Welcome back!
               </h1>
               <p className="user-welcome-sub" style={{ color: '#64748b' }}>Here's what's happening with your account.</p>
             </div>

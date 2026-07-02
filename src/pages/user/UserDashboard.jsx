@@ -42,7 +42,7 @@ const UserDashboard = () => {
       `}</style>
       {/* Hero Welcome — gradient brand banner */}
       <div className="tl-dash-hero">
-        <h2>Welcome back! 👋</h2>
+        <h2>Welcome back!</h2>
         <p>Here's what's happening with your account today.</p>
       </div>
 

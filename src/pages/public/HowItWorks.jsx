@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Lock, CreditCard, MapPin, FileText } from 'lucide-react';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 
@@ -343,10 +344,10 @@ const HowItWorks = () => {
             marginBottom: '2rem'
           }}>
             {[
-              { icon: '🔒', title: 'Verify Before You Buy', text: 'Only deal with verified vendors. Check their badges, ratings, and reviews before making any purchase.' },
-              { icon: '💳', title: 'Use Secure Payments', text: 'Prefer bank transfers or cash on delivery. Avoid unusual payment methods or upfront payments to strangers.' },
-              { icon: '📍', title: 'Meet in Safe Places', text: 'For pickups, choose public, well-lit locations. For deliveries, verify the vendor\'s identity first.' },
-              { icon: '📝', title: 'Keep Records', text: 'Save all chat conversations, receipts, and transaction details. This helps resolve any disputes.' }
+              { icon: <Lock size={18} />, title: 'Verify Before You Buy', text: 'Only deal with verified vendors. Check their badges, ratings, and reviews before making any purchase.' },
+              { icon: <CreditCard size={18} />, title: 'Use Secure Payments', text: 'Prefer bank transfers or cash on delivery. Avoid unusual payment methods or upfront payments to strangers.' },
+              { icon: <MapPin size={18} />, title: 'Meet in Safe Places', text: 'For pickups, choose public, well-lit locations. For deliveries, verify the vendor\'s identity first.' },
+              { icon: <FileText size={18} />, title: 'Keep Records', text: 'Save all chat conversations, receipts, and transaction details. This helps resolve any disputes.' }
             ].map((tip, idx) => (
               <div key={idx} className="safety-tip" style={{
                 background: 'rgba(255, 255, 255, 0.1)',

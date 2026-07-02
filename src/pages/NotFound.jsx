@@ -42,7 +42,7 @@ const NotFound = () => {
           404
         </div>
         <h1 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.75rem' }}>
-          This page took the wrong WhatsApp link 🤷
+          We couldn't find that page
         </h1>
         <p style={{ fontSize: '1.05rem', color: '#475569', lineHeight: 1.6, marginBottom: '2rem' }}>
           The page you're looking for doesn't exist or has been moved. Let's get you back to finding great deals.

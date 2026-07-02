@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Star } from 'lucide-react';
 import { admin } from '../../services/api';
 import { useFetch } from '../../hooks/useFetch';
 import ErrorState from '../../components/ErrorState';
@@ -58,7 +59,7 @@ const AdminReviews = () => {
           <ErrorState error={fetchError} onRetry={retry} />
         ) : reviews.length === 0 ? (
           <div style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⭐</div>
+            <div style={{ marginBottom: '1rem' }}><Star size={48} strokeWidth={1.5} /></div>
             <p>No reviews to moderate</p>
           </div>
         ) : (
@@ -66,7 +67,7 @@ const AdminReviews = () => {
             <div key={r.id} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '1.25rem', marginBottom: '1rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                 <div>
-                  <div style={{ color: '#fbbf24', fontSize: '1rem', marginBottom: '0.25rem' }}>{'⭐'.repeat(r.rating)}</div>
+                  <div style={{ color: '#fbbf24', fontSize: '1rem', marginBottom: '0.25rem' }}>{'★'.repeat(r.rating)}</div>
                   <div style={{ fontSize: '0.875rem', color: '#64748b' }}>by {r.user_name || 'User'} • {new Date(r.created_at).toLocaleDateString()}</div>
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>

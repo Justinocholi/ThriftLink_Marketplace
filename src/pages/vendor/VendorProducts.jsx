@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Upload } from 'lucide-react';
+import { Upload, Package } from 'lucide-react';
 import { vendorMe } from '../../services/api';
 import { useFetch } from '../../hooks/useFetch';
 import ErrorState from '../../components/ErrorState';
@@ -188,7 +188,7 @@ const VendorProducts = () => {
         <ErrorState error={fetchError} onRetry={retryProducts} />
       ) : products.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '3rem 1rem', color: '#94a3b8' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📦</div>
+          <div style={{ marginBottom: '1rem' }}><Package size={48} strokeWidth={1.5} /></div>
           <p>No products yet. Add your first product above!</p>
         </div>
       ) : (
@@ -201,7 +201,7 @@ const VendorProducts = () => {
                 <div style={{ height: '140px', background: '#f1f5f9', position: 'relative' }}>
                   {firstImg
                     ? <img src={firstImg} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    : <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem' }}>📦</div>}
+                    : <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}><Package size={32} strokeWidth={1.5} /></div>}
                   {!item.is_available && (
                     <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <span style={{ background: 'white', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: '600', color: '#64748b' }}>Hidden</span>

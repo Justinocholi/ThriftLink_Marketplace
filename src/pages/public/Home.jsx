@@ -543,7 +543,7 @@ const Home = () => {
               display: 'inline-block',
               marginBottom: '1rem'
             }}>
-              ✨ Monthly Highlights
+              Monthly Highlights
             </span>
             <h2 className="section-title" style={{ fontSize: 'var(--tl-text-h2)', fontWeight: 700, color: 'var(--tl-ink)', marginBottom: '1rem' }}>
               Top Vendors of the Month

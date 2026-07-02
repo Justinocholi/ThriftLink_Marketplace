@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { passwordReset } from '../../services/api';
 import PasswordField from '../../components/PasswordField';
+import { CheckCircle } from 'lucide-react';
 
 const wrap = { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem', background: '#f9fafb', fontFamily: "'Inter', sans-serif" };
 const card = { background: 'white', borderRadius: 16, padding: '2.5rem', maxWidth: 460, width: '100%', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' };
@@ -52,7 +53,7 @@ const ResetPassword = () => {
     return (
       <div style={wrap}>
         <div style={{ ...card, textAlign: 'center' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>✅</div>
+          <div style={{ marginBottom: '0.5rem', color: '#16a34a' }}><CheckCircle size={48} strokeWidth={1.5} /></div>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.5rem' }}>
             Password updated
           </h1>

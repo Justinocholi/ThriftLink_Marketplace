@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { MapPin } from 'lucide-react';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import { vendors as vendorsApi } from '../../services/api';
@@ -162,7 +163,7 @@ const VerifiedVendors = () => {
                   )}
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#9ca3af', marginBottom: '1rem' }}>
-                    {vendor.state && <span>📍 {vendor.state}{vendor.city ? `, ${vendor.city}` : ''}</span>}
+                    {vendor.state && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}><MapPin size={14} /> {vendor.state}{vendor.city ? `, ${vendor.city}` : ''}</span>}
                   </div>
 
                   <button className="tl-btn-press" style={{ width: '100%', padding: '0.75rem', background: 'white', border: '1px solid #25D366', color: '#25D366', borderRadius: 'var(--tl-radius-pill)', fontWeight: '600', cursor: 'pointer', boxShadow: 'var(--tl-shadow-1)', transition: 'transform var(--tl-fast) var(--tl-ease)' }}
