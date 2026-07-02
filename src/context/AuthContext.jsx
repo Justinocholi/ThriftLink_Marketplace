@@ -59,6 +59,16 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Used by the OAuth callback: the backend already exchanged the Supabase
+  // access token for our JWT + user, so we just persist it like login does.
+  const loginWithToken = (token, user) => {
+    localStorage.setItem('token', token);
+    setUser(user);
+    identifyUser(user);
+    trackEvent('user_logged_in', { role: user.role, method: 'oauth' });
+    return { success: true, type: user.role };
+  };
+
   const logout = () => {
     trackEvent('user_logged_out');
     resetUser();
@@ -71,7 +81,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, updateUser, loading }}>
+    <AuthContext.Provider value={{ user, login, loginWithToken, register, logout, updateUser, loading }}>
       {!loading && children}
     </AuthContext.Provider>
   );

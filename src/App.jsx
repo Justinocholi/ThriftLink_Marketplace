@@ -11,6 +11,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 // Eager: landing surfaces
 import Login from './pages/Login';
+import AuthCallback from './pages/AuthCallback';
 import Home from './pages/public/Home';
 import Categories from './pages/public/Categories';
 import VerifiedVendors from './pages/public/VerifiedVendors';
@@ -100,6 +101,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />
+                <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/categories" element={<Categories />} />

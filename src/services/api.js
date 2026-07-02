@@ -62,6 +62,7 @@ export const auth = {
   login: (email, password) => request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
   register: (payload) => request('/auth/register', { method: 'POST', body: JSON.stringify(payload) }),
   me: () => request('/auth/me'),
+  oauthExchange: (accessToken) => request('/auth/oauth', { method: 'POST', body: JSON.stringify({ access_token: accessToken }) }),
   changePassword: (payload) => request('/auth/change-password', { method: 'PUT', body: JSON.stringify(payload) }),
 };
 

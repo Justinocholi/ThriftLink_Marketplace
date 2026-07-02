@@ -96,6 +96,18 @@ async function signInSupabaseUser(email, password) {
   return data;
 }
 
+// Verify a Supabase access token (e.g. from an OAuth redirect flow) and
+// return the Supabase user it belongs to. Returns null if Supabase isn't
+// configured or the token is invalid/expired.
+async function getUserFromToken(accessToken) {
+  const client = getSupabaseAdminClient() || getSupabaseClient();
+  if (!client || !accessToken) return null;
+
+  const { data, error } = await client.auth.getUser(accessToken);
+  if (error) return null;
+  return data?.user || null;
+}
+
 async function updateSupabaseUserPassword(userId, password) {
   const adminClient = getSupabaseAdminClient();
   if (!adminClient || !userId) {
@@ -118,5 +130,6 @@ module.exports = {
   isSupabaseEnabled,
   registerSupabaseUser,
   signInSupabaseUser,
+  getUserFromToken,
   updateSupabaseUserPassword,
 };

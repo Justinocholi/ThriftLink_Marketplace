@@ -13,6 +13,7 @@ const {
   signInSupabaseUser,
   updateSupabaseUserPassword,
   getSupabaseClient,
+  getUserFromToken,
 } = require('../services/supabaseService');
 const { sendWelcomeSms } = require('../services/termiiService');
 const { verifyEmailDeliverability } = require('../services/mailboxlayerService');
@@ -357,6 +358,78 @@ router.post('/login', async (req, res) => {
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ error: 'Failed to sign in' });
+  }
+});
+
+// POST /api/auth/oauth — exchange a Supabase OAuth access token for our JWT.
+// The frontend completes the Google/Facebook redirect flow with supabase-js,
+// then posts the Supabase access token here. We verify it with Supabase,
+// sync/create the local users row, and return { token, user } exactly like
+// /login does. No password is involved — OAuth users keep a random hash.
+router.post('/oauth', async (req, res) => {
+  try {
+    const { access_token } = req.body || {};
+    if (!access_token) {
+      return res.status(400).json({ error: 'access_token is required' });
+    }
+
+    const supabaseUser = await getUserFromToken(access_token);
+    if (!supabaseUser || !supabaseUser.email) {
+      return res.status(401).json({ error: 'Invalid or expired sign-in session' });
+    }
+
+    const metadata = supabaseUser.user_metadata || {};
+    const email = normalizeEmail(supabaseUser.email);
+    const name = metadata.full_name || metadata.name || email.split('@')[0];
+    const avatar = metadata.avatar_url || metadata.picture || null;
+
+    const onSupabase = useSupabase();
+    const db = onSupabase ? null : getDb();
+
+    let user;
+    if (onSupabase) {
+      user = await usersRepo.getBySupabaseUserId(supabaseUser.id);
+      if (!user) user = await usersRepo.getByEmail(email);
+      if (user) {
+        user = await usersRepo.update(user.id, {
+          supabase_user_id: user.supabase_user_id || supabaseUser.id,
+          name: user.name || name,
+        });
+      } else {
+        user = await createUserAsync({
+          email, name, role: 'user', supabaseUserId: supabaseUser.id,
+        });
+      }
+    } else {
+      user = db.prepare('SELECT * FROM users WHERE supabase_user_id = ? OR email = ?')
+        .get(supabaseUser.id, email);
+      if (user) {
+        db.prepare(`
+          UPDATE users SET
+            supabase_user_id = COALESCE(supabase_user_id, ?),
+            name = COALESCE(name, ?),
+            updated_at = datetime('now')
+          WHERE id = ?
+        `).run(supabaseUser.id, name, user.id);
+        user = db.prepare('SELECT * FROM users WHERE id = ?').get(user.id);
+      } else {
+        // createLocalUser hashes a random UUID when no password is given, so
+        // password login stays impossible until the user sets one.
+        user = createLocalUser(db, {
+          email, name, role: 'user', supabaseUserId: supabaseUser.id,
+        });
+      }
+    }
+
+    if (!user.is_active) {
+      return res.status(403).json({ error: 'Account suspended. Contact support.' });
+    }
+
+    const token = signToken(user);
+    res.json({ token, user: { ...safeUser(user), avatar: user.avatar || avatar } });
+  } catch (error) {
+    console.error('OAuth exchange error:', error);
+    res.status(500).json({ error: 'Failed to sign in with social account' });
   }
 });
 
