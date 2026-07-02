@@ -23,8 +23,13 @@ const Cart = () => {
     return (
       <div className="min-h-screen bg-gray-50">
         <Navbar />
-        <div className="flex justify-center items-center h-[60vh]">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="cart-wrap" style={{ maxWidth: '1000px', margin: '0 auto', padding: '6rem 2rem 4rem' }}>
+          <div className="tl-skeleton" style={{ height: 40, width: 280, marginBottom: '2rem' }} />
+          <div style={{ display: 'grid', gap: '1rem' }}>
+            {[0, 1, 2].map(i => (
+              <div key={i} className="tl-skeleton" style={{ height: 130 }} />
+            ))}
+          </div>
         </div>
         <Footer />
       </div>
@@ -32,7 +37,7 @@ const Cart = () => {
   }
 
   return (
-    <div style={{ background: '#f9fafb', minHeight: '100vh', fontFamily: "'Inter', sans-serif" }}>
+    <div style={{ background: 'var(--tl-bg)', minHeight: '100vh', fontFamily: "'Inter', sans-serif" }}>
       <style>{`
         @media (max-width: 860px) {
           .cart-wrap { padding: 5.5rem 1.25rem 3rem !important; }
@@ -60,11 +65,11 @@ const Cart = () => {
             <ArrowLeft size={20} />
             Back
           </button>
-          <h1 className="cart-title" style={{ fontSize: '2rem', fontWeight: '800', color: '#1f2937' }}>Your Shopping Cart</h1>
+          <h1 className="cart-title" style={{ fontSize: 'var(--tl-text-h1)', fontWeight: 800, color: 'var(--tl-ink)' }}>Your Shopping Cart</h1>
         </div>
 
         {cartItems.length === 0 ? (
-          <div style={{ background: 'white', borderRadius: '16px', padding: '4rem 2rem', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+          <div className="tl-card" style={{ padding: '4rem 2rem', textAlign: 'center' }}>
             <div style={{ width: '80px', height: '80px', background: '#eff6ff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
               <ShoppingBag size={40} color="#3b82f6" />
             </div>
@@ -73,10 +78,12 @@ const Cart = () => {
               Looks like you haven't added anything to your cart yet. Browse our verified vendors to find great deals!
             </p>
             <Link 
-              to="/verified-vendors" 
+              to="/verified-vendors"
+              className="tl-btn-press"
               style={{ 
-                display: 'inline-block', padding: '1rem 2.5rem', background: '#3b82f6', color: 'white', 
-                borderRadius: '8px', fontWeight: '600', textDecoration: 'none', transition: 'background 0.3s' 
+                display: 'inline-block', padding: '1rem 2.5rem', background: 'var(--tl-green)', color: 'white',
+                borderRadius: 'var(--tl-radius-pill)', fontWeight: '600', textDecoration: 'none',
+                boxShadow: '0 4px 14px rgba(37, 211, 102, 0.35)', transition: 'transform var(--tl-fast) var(--tl-ease)' 
               }}
             >
               Start Shopping
@@ -87,8 +94,8 @@ const Cart = () => {
             {/* Cart Items List */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {cartItems.map((item) => (
-                <div key={item.id} className="cart-item" style={{ background: 'white', borderRadius: '12px', padding: '1.5rem', display: 'flex', gap: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: '1px solid #e5e7eb' }}>
-                  <div className="cart-item-img" style={{ width: '100px', height: '100px', borderRadius: '8px', overflow: 'hidden', background: '#f3f4f6', flexShrink: 0 }}>
+                <div key={item.id} className="cart-item tl-card" style={{ padding: '1.5rem', display: 'flex', gap: '1.5rem' }}>
+                  <div className="cart-item-img" style={{ width: '100px', height: '100px', borderRadius: 'var(--tl-radius-sm)', overflow: 'hidden', background: '#f3f4f6', flexShrink: 0 }}>
                     <img 
                       src={item.images?.[0] || 'https://via.placeholder.com/100'} 
                       alt={item.name} 
@@ -133,7 +140,7 @@ const Cart = () => {
 
             {/* Order Summary */}
             <div className="cart-summary" style={{ position: 'sticky', top: '6rem', height: 'fit-content' }}>
-              <div className="cart-summary-card" style={{ background: 'white', borderRadius: '16px', padding: '2rem', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', border: '1px solid #e5e7eb' }}>
+              <div className="cart-summary-card tl-card" style={{ padding: '2rem' }}>
                 <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#1f2937', marginBottom: '1.5rem' }}>Order Summary</h2>
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
@@ -154,6 +161,7 @@ const Cart = () => {
 
                 <button
                   onClick={handleCheckout}
+                  className="tl-btn-press"
                   style={{
                     width: '100%', padding: '1rem', background: '#25D366', color: 'white',
                     borderRadius: '999px', fontWeight: '700', fontSize: '1rem', border: 'none',

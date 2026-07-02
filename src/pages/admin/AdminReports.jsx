@@ -1,5 +1,7 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { admin as adminApi } from '../../services/api';
+import { useFetch } from '../../hooks/useFetch';
+import ErrorState from '../../components/ErrorState';
 import { useToast } from '../../components/ui/Toast';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { Flag, Trash2, AlertOctagon, CheckCircle2, XCircle, Search, Radio } from 'lucide-react';
@@ -15,27 +17,15 @@ const STATUS_BADGE = {
 const AdminReports = () => {
   const toast = useToast();
   const { connected } = useRealtime();
-  const [reports, setReports] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('pending');
   const [query, setQuery] = useState('');
 
-  const load = async () => {
-    setLoading(true);
-    try {
-      const params = filter === 'all' ? {} : { status: filter };
-      const res = await adminApi.reports(params);
-      setReports(res.reports || []);
-    } catch (err) {
-      toast.error(err.message || 'Failed to load reports');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    load();
-  }, [filter]);
+  const { data, loading, error, retry: load, setData } = useFetch(
+    () => adminApi.reports(filter === 'all' ? {} : { status: filter }).then(res => res.reports || []),
+    [filter]
+  );
+  const reports = data || [];
+  const setReports = (updater) => setData(prev => updater(prev || []));
 
   // Realtime: new report arrives — prepend if it matches the current filter.
   useRealtimeEvent('report:new', useCallback((report) => {
@@ -142,7 +132,9 @@ const AdminReports = () => {
         ))}
       </div>
 
-      {loading ? (
+      {error ? (
+        <ErrorState error={error} onRetry={load} />
+      ) : loading ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {[0, 1, 2, 3].map((i) => (
             <div key={i} style={{ background: 'white', borderRadius: 12, padding: '1rem', border: '1px solid #e2e8f0' }}>

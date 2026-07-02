@@ -1,7 +1,10 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { Check, Copy, X, AlertTriangle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { subscriptions as subsApi, vendorMe } from '../../services/api';
+import { useFetch } from '../../hooks/useFetch';
+import ErrorState from '../../components/ErrorState';
+import { ROUTES } from '../../routes';
 
 const card = {
   background: 'white',
@@ -180,31 +183,24 @@ const UpgradeModal = ({ plan, narration, paymentAccount, onClose, onSubmitted })
 };
 
 const VendorSubscription = () => {
-  const [plans, setPlans] = useState([]);
-  const [paymentAccount, setPaymentAccount] = useState(null);
-  const [me, setMe] = useState(null);
   const [openPlan, setOpenPlan] = useState(null);
   const [banner, setBanner] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState(null);
 
-  const refresh = async () => {
-    try {
+  const { data, loading, error, retry: refresh } = useFetch(
+    async () => {
       const [plansRes, meRes, profileRes] = await Promise.all([
         subsApi.getPlans(),
         subsApi.getMine(),
         vendorMe.getProfile().catch(() => null),
       ]);
-      setPlans(plansRes.plans);
-      setPaymentAccount(plansRes.paymentAccount);
-      setMe(meRes);
-      setProfile(profileRes);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+      return { plans: plansRes.plans, paymentAccount: plansRes.paymentAccount, me: meRes, profile: profileRes };
+    },
+    []
+  );
+  const plans = data?.plans || [];
+  const paymentAccount = data?.paymentAccount || null;
+  const me = data?.me || null;
+  const profile = data?.profile || null;
 
   const missingProfile = profile ? (
     [
@@ -215,8 +211,6 @@ const VendorSubscription = () => {
   ) : [];
   const kycApproved = profile?.verification_status === 'approved';
   const eligible = profile && missingProfile.length === 0 && kycApproved;
-
-  useEffect(() => { refresh(); }, []);
 
   const onSubmitted = () => {
     setOpenPlan(null);
@@ -230,6 +224,7 @@ const VendorSubscription = () => {
   if (loading) {
     return <div style={card}>Loading subscription…</div>;
   }
+  if (error) return <ErrorState error={error} onRetry={refresh} />;
 
   return (
     <>
@@ -255,7 +250,7 @@ const VendorSubscription = () => {
                   </div>
                 )}
               </div>
-              <Link to="/vendor/profile" style={{ display: 'inline-block', marginTop: '0.75rem', padding: '0.55rem 1rem', background: '#b45309', color: 'white', borderRadius: 8, textDecoration: 'none', fontWeight: 700, fontSize: '0.85rem' }}>
+              <Link to={ROUTES.vendor.profile} style={{ display: 'inline-block', marginTop: '0.75rem', padding: '0.55rem 1rem', background: '#b45309', color: 'white', borderRadius: 8, textDecoration: 'none', fontWeight: 700, fontSize: '0.85rem' }}>
                 Go to profile →
               </Link>
             </div>

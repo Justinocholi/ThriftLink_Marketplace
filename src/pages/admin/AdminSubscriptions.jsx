@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { subscriptions as subsApi } from '../../services/api';
+import { useFetch } from '../../hooks/useFetch';
+import ErrorState from '../../components/ErrorState';
 
 const STATUSES = ['pending', 'approved', 'rejected'];
 
@@ -20,25 +22,15 @@ const StatusPill = ({ status }) => {
 
 const AdminSubscriptions = () => {
   const [status, setStatus] = useState('pending');
-  const [rows, setRows] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [reviewing, setReviewing] = useState(null); // { id, decision }
   const [notes, setNotes] = useState('');
   const [busy, setBusy] = useState(false);
 
-  const load = async (s = status) => {
-    setLoading(true);
-    try {
-      const res = await subsApi.adminList(s);
-      setRows(res.payments || []);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { load(status); }, [status]);
+  const { data, loading, error, retry: load } = useFetch(
+    () => subsApi.adminList(status).then(res => res.payments || []),
+    [status]
+  );
+  const rows = data || [];
 
   const submitReview = async () => {
     if (!reviewing) return;
@@ -47,7 +39,7 @@ const AdminSubscriptions = () => {
       await subsApi.adminReview(reviewing.id, reviewing.decision, notes);
       setReviewing(null);
       setNotes('');
-      load(status);
+      load();
     } catch (err) {
       alert(err.message || 'Failed to submit decision');
     } finally {
@@ -84,6 +76,8 @@ const AdminSubscriptions = () => {
       <div style={{ background: 'white', borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
         {loading ? (
           <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>Loading…</div>
+        ) : error ? (
+          <ErrorState error={error} onRetry={load} />
         ) : rows.length === 0 ? (
           <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>No {status} submissions.</div>
         ) : (

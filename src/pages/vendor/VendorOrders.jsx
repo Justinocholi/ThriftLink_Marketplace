@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { vendorMe } from '../../services/api';
 import { useToast } from '../../components/ui/Toast';
+import { useFetch } from '../../hooks/useFetch';
+import ErrorState from '../../components/ErrorState';
 
 const STATUS_STYLES = {
   pending:   { background: '#e5e7eb', color: '#374151' },
@@ -47,20 +49,14 @@ const StepIndicator = ({ status }) => {
 };
 
 const VendorOrders = () => {
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data, loading, error: fetchError, retry, setData } = useFetch(() => vendorMe.getOrders(), []);
+  const orders = data || [];
+  const setOrders = setData;
   const [error, setError] = useState('');
   const [updating, setUpdating] = useState(null);
   const [noteByOrder, setNoteByOrder] = useState({});
   const [selectedNext, setSelectedNext] = useState({});
   const toast = useToast();
-
-  useEffect(() => {
-    vendorMe.getOrders()
-      .then(setOrders)
-      .catch(e => setError(e.message))
-      .finally(() => setLoading(false));
-  }, []);
 
   const handleUpdateStatus = async (orderId) => {
     const status = selectedNext[orderId];
@@ -69,7 +65,7 @@ const VendorOrders = () => {
 
     const prev = orders;
     // Optimistic update
-    setOrders((curr) => curr.map(o => o.id === orderId ? { ...o, status } : o));
+    setOrders((curr) => (curr || []).map(o => o.id === orderId ? { ...o, status } : o));
     setUpdating(orderId);
     try {
       await vendorMe.updateOrderStatus(orderId, status, note);
@@ -86,6 +82,7 @@ const VendorOrders = () => {
   };
 
   if (loading) return <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>Loading orders...</div>;
+  if (fetchError) return <ErrorState error={fetchError} onRetry={retry} />;
 
   return (
     <div style={{ background: 'white', borderRadius: '16px', padding: '2rem', marginBottom: '2rem', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>

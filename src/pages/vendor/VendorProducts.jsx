@@ -1,6 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Upload } from 'lucide-react';
 import { vendorMe } from '../../services/api';
+import { useFetch } from '../../hooks/useFetch';
+import ErrorState from '../../components/ErrorState';
+import { ROUTES } from '../../routes';
 
 const CATEGORIES = [
   'Fashion & Clothing','Electronics','Shoes & Footwear','Bags & Accessories',
@@ -13,9 +16,16 @@ const CONDITIONS = ['new', 'like_new', 'good', 'fair'];
 const UNVERIFIED_LIMIT = 3;
 
 const VendorProducts = () => {
-  const [products, setProducts] = useState([]);
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const {
+    data: productsData,
+    loading,
+    error: fetchError,
+    retry: retryProducts,
+    setData: setProductsData,
+  } = useFetch(() => vendorMe.getProducts(), []);
+  const { data: profile } = useFetch(() => vendorMe.getProfile().catch(() => null), []);
+  const products = productsData || [];
+  const setProducts = (updater) => setProductsData(prev => updater(prev || []));
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [capError, setCapError] = useState(false);
@@ -26,18 +36,7 @@ const VendorProducts = () => {
     name: '', price: '', original_price: '', category: '', condition: 'good', description: '', stock_quantity: 1
   });
 
-  const loadProducts = () => {
-    setLoading(true);
-    vendorMe.getProducts()
-      .then(setProducts)
-      .catch(e => setError(e.message))
-      .finally(() => setLoading(false));
-  };
-
-  useEffect(() => {
-    loadProducts();
-    vendorMe.getProfile().then(setProfile).catch(() => {});
-  }, []);
+  const loadProducts = retryProducts;
 
   const isApproved = profile?.verification_status === 'approved';
   const showCapChip = !!profile && !isApproved;
@@ -130,7 +129,7 @@ const VendorProducts = () => {
           <div style={{ marginBottom: '0.5rem' }}>
             Complete KYC verification to list unlimited products and earn the verified badge.
           </div>
-          <a href="/vendor/profile" style={{ color: '#c2410c', fontWeight: 600, textDecoration: 'underline' }}>
+          <a href={ROUTES.vendor.profile} style={{ color: '#c2410c', fontWeight: 600, textDecoration: 'underline' }}>
             Complete KYC verification →
           </a>
         </div>
@@ -185,6 +184,8 @@ const VendorProducts = () => {
 
       {loading ? (
         <div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>Loading products...</div>
+      ) : fetchError ? (
+        <ErrorState error={fetchError} onRetry={retryProducts} />
       ) : products.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '3rem 1rem', color: '#94a3b8' }}>
           <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📦</div>

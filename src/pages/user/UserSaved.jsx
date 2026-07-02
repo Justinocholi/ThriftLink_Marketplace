@@ -1,31 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Heart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { userMe } from '../../services/api';
+import { useFetch } from '../../hooks/useFetch';
+import ErrorState from '../../components/ErrorState';
+import { ROUTES } from '../../routes';
 
 const UserSaved = () => {
-  const [saved, setSaved] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { data, loading, error, retry, setData } = useFetch(() => userMe.getSaved(), []);
+  const [actionError, setActionError] = useState('');
   const navigate = useNavigate();
-
-  useEffect(() => {
-    userMe.getSaved()
-      .then(setSaved)
-      .catch(e => setError(e.message))
-      .finally(() => setLoading(false));
-  }, []);
+  const saved = data || [];
 
   const handleUnsave = async (id) => {
     try {
       await userMe.unsaveItem(id);
-      setSaved(prev => prev.filter(item => item.id !== id));
+      setData(prev => (prev || []).filter(item => item.id !== id));
     } catch (err) {
-      setError(err.message);
+      setActionError(err.message);
     }
   };
 
   if (loading) return <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>Loading saved items...</div>;
+  if (error) return <ErrorState error={error} onRetry={retry} />;
 
   return (
     <div style={{ background: 'white', borderRadius: '16px', padding: '2rem', marginBottom: '2rem', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
@@ -33,7 +30,7 @@ const UserSaved = () => {
         Saved Items ({saved.length})
       </h4>
 
-      {error && <div style={{ background: '#fee2e2', color: '#dc2626', padding: '0.75rem 1rem', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.875rem' }}>{error}</div>}
+      {actionError && <div style={{ background: '#fee2e2', color: '#dc2626', padding: '0.75rem 1rem', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.875rem' }}>{actionError}</div>}
 
       {saved.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>
@@ -48,7 +45,7 @@ const UserSaved = () => {
             return (
               <div key={item.id} style={{ border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden' }}>
                 <div style={{ position: 'relative', height: '200px', background: '#f1f5f9', cursor: 'pointer' }}
-                  onClick={() => item.product_id && navigate(`/product/${item.product_id}`)}>
+                  onClick={() => item.product_id && navigate(ROUTES.product(item.product_id))}>
                   {img
                     ? <img src={img} alt={item.product_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     : <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem' }}>📦</div>}

@@ -6,6 +6,7 @@ import { useRealtime } from '../context/RealtimeContext';
 import { ShoppingCart, User, LogOut, Settings, LayoutDashboard, MessageSquare, Users, ShieldCheck, Wifi, WifiOff } from 'lucide-react';
 import logo from '../assets/thriftlink-logo-.png';
 import gpsIcon from '../assets/gps.png';
+import LetterAvatar from './LetterAvatar';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -216,16 +217,11 @@ const Navbar = () => {
 
           {!user ? (
             <Link to="/login" style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              background: '#f3f4f6',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              border: '1px solid #e5e7eb'
             }}>
-              <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Guest" alt="Guest" style={{ width: '100%', height: '100%', borderRadius: '50%' }} />
+              <LetterAvatar name="Guest" size={40} alt="Guest" />
             </Link>
           ) : (
             <div style={{ position: 'relative' }}>

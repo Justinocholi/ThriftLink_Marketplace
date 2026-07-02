@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { vendorMe } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import VendorKycSection from './VendorKycSection';
+import { useFetch } from '../../hooks/useFetch';
+import ErrorState from '../../components/ErrorState';
 import { Store, MapPin, Camera, Loader2, Save, Instagram, MessageSquare, Info, ShieldCheck, FileText, Upload, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
 
 const NIGERIA_STATES = [
@@ -25,28 +27,26 @@ const VendorProfile = () => {
   });
   const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
+  const { data: profileData, loading, error: fetchError, retry } = useFetch(() => vendorMe.getProfile(), []);
+
   useEffect(() => {
-    vendorMe.getProfile()
-      .then(p => {
-        setFormData({
-          shop_name: p.shop_name || '',
-          description: p.description || '',
-          whatsapp_number: p.whatsapp_number || '',
-          instagram_handle: p.instagram_handle || '',
-          category: p.category || '',
-          state: p.state || '',
-          city: p.city || '',
-        });
-        if (p.logo) setLogoPreview(p.logo);
-      })
-      .catch(e => setError(e.message))
-      .finally(() => setLoading(false));
-  }, []);
+    const p = profileData;
+    if (!p) return;
+    setFormData({
+      shop_name: p.shop_name || '',
+      description: p.description || '',
+      whatsapp_number: p.whatsapp_number || '',
+      instagram_handle: p.instagram_handle || '',
+      category: p.category || '',
+      state: p.state || '',
+      city: p.city || '',
+    });
+    if (p.logo) setLogoPreview(p.logo);
+  }, [profileData]);
 
   const handleChange = e => setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
 
@@ -89,6 +89,8 @@ const VendorProfile = () => {
       <Loader2 className="animate-spin" size={32} color="#25D366" />
     </div>
   );
+
+  if (fetchError) return <ErrorState error={fetchError} onRetry={retry} />;
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', fontFamily: "'Inter', sans-serif" }}>

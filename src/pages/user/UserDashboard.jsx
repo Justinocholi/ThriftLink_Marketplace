@@ -1,7 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { ShoppingBag, Heart, Truck, Package, MessageCircle, ChevronRight, Clock } from 'lucide-react';
 import { userMe } from '../../services/api';
 import { Link } from 'react-router-dom';
+import { useFetch } from '../../hooks/useFetch';
+import ErrorState from '../../components/ErrorState';
+import { ROUTES } from '../../routes';
 
 const STATUS_STYLE = {
   pending:   { background: '#fef3c7', color: '#b45309', label: 'Pending' },
@@ -12,28 +15,20 @@ const STATUS_STYLE = {
 };
 
 const UserDashboard = () => {
-  const [orders, setOrders] = useState([]);
-  const [saved, setSaved] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { data, loading, error, retry } = useFetch(
+    async () => {
+      const [orders, saved] = await Promise.all([userMe.getOrders(), userMe.getSaved()]);
+      return { orders, saved };
+    },
+    []
+  );
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [o, s] = await Promise.all([userMe.getOrders(), userMe.getSaved()]);
-        setOrders(o);
-        setSaved(s);
-      } catch (e) {
-        setError(e.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
-
+  const orders = data?.orders || [];
+  const saved = data?.saved || [];
   const pendingCount = orders.filter(o => ['pending', 'confirmed', 'shipped'].includes(o.status)).length;
   const recent = orders.slice(0, 5);
+
+  if (error) return <ErrorState error={error} onRetry={retry} />;
 
   return (
     <div style={{ padding: '1rem', fontFamily: "'Inter', sans-serif" }}>
@@ -45,12 +40,6 @@ const UserDashboard = () => {
           .ud-stat-value { font-size: 1.5rem !important; }
         }
       `}</style>
-      {error && (
-        <div style={{ background: '#fee2e2', color: '#dc2626', padding: '1rem', borderRadius: '12px', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', border: '1px solid #fecaca' }}>
-          <span style={{ fontWeight: '600' }}>Error:</span> {error}
-        </div>
-      )}
-
       {/* Hero Welcome — gradient brand banner */}
       <div className="tl-dash-hero">
         <h2>Welcome back! 👋</h2>
@@ -60,9 +49,9 @@ const UserDashboard = () => {
       {/* Stats Grid — branded color tiles */}
       <div className="ud-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
         {[
-          { to: '/user/orders', label: 'Total Orders',     value: loading ? '—' : orders.length,  icon: <Package size={26} />, tone: 'sky' },
-          { to: '/user/saved',  label: 'Saved Items',      value: loading ? '—' : saved.length,   icon: <Heart size={26} />,   tone: 'coral' },
-          { to: '/user/orders', label: 'Active Deliveries', value: loading ? '—' : pendingCount,   icon: <Truck size={26} />,   tone: 'green' },
+          { to: ROUTES.user.orders, label: 'Total Orders',     value: loading ? '—' : orders.length,  icon: <Package size={26} />, tone: 'sky' },
+          { to: ROUTES.user.saved,  label: 'Saved Items',      value: loading ? '—' : saved.length,   icon: <Heart size={26} />,   tone: 'coral' },
+          { to: ROUTES.user.orders, label: 'Active Deliveries', value: loading ? '—' : pendingCount,   icon: <Truck size={26} />,   tone: 'green' },
         ].map((s, i) => (
           <Link key={i} to={s.to} style={{ textDecoration: 'none' }}>
             <div className={`tl-stat-tile brand-${s.tone}`} style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
@@ -85,7 +74,7 @@ const UserDashboard = () => {
             <h4 style={{ fontSize: '1.25rem', color: '#0f172a', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Clock size={20} color="#64748b" /> Recent Purchases
             </h4>
-            <Link to="/user/orders" style={{ fontSize: '0.875rem', color: '#3b82f6', fontWeight: '700', textDecoration: 'none' }}>View All</Link>
+            <Link to={ROUTES.user.orders} style={{ fontSize: '0.875rem', color: '#3b82f6', fontWeight: '700', textDecoration: 'none' }}>View All</Link>
           </div>
 
           {loading ? (
@@ -96,7 +85,7 @@ const UserDashboard = () => {
             <div style={{ textAlign: 'center', padding: '4rem 2rem', background: '#f8fafc', borderRadius: '16px' }}>
               <ShoppingBag size={48} color="#cbd5e1" style={{ marginBottom: '1rem' }} />
               <p style={{ color: '#64748b', fontWeight: '500' }}>No orders yet. Start shopping!</p>
-              <Link to="/categories" style={{ display: 'inline-block', marginTop: '1rem', color: '#3b82f6', fontWeight: '700', textDecoration: 'none' }}>Browse Marketplace →</Link>
+              <Link to={ROUTES.categories} style={{ display: 'inline-block', marginTop: '1rem', color: '#3b82f6', fontWeight: '700', textDecoration: 'none' }}>Browse Marketplace →</Link>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -127,13 +116,13 @@ const UserDashboard = () => {
           <div className="ud-card" style={{ background: 'white', borderRadius: '24px', padding: '2rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #f1f5f9' }}>
             <h4 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#1e293b', marginBottom: '1.25rem' }}>Quick Actions</h4>
             <div style={{ display: 'grid', gap: '0.75rem' }}>
-              <Link to="/user/profile" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', background: '#f8fafc', borderRadius: '12px', textDecoration: 'none', color: '#334155', fontWeight: '600' }}>
+              <Link to={ROUTES.user.profile} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', background: '#f8fafc', borderRadius: '12px', textDecoration: 'none', color: '#334155', fontWeight: '600' }}>
                 Manage Profile <ChevronRight size={18} />
               </Link>
-              <Link to="/user/messages" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', background: '#f8fafc', borderRadius: '12px', textDecoration: 'none', color: '#334155', fontWeight: '600' }}>
+              <Link to={ROUTES.user.messages} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', background: '#f8fafc', borderRadius: '12px', textDecoration: 'none', color: '#334155', fontWeight: '600' }}>
                 Your Messages <ChevronRight size={18} />
               </Link>
-              <Link to="/user/support" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', background: '#f8fafc', borderRadius: '12px', textDecoration: 'none', color: '#334155', fontWeight: '600' }}>
+              <Link to={ROUTES.user.support} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', background: '#f8fafc', borderRadius: '12px', textDecoration: 'none', color: '#334155', fontWeight: '600' }}>
                 Help & Support <ChevronRight size={18} />
               </Link>
             </div>
