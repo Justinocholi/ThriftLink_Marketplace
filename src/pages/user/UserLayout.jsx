@@ -57,7 +57,7 @@ const UserLayout = () => {
             }
             .main-content {
               margin-left: 0 !important;
-              padding: 1.25rem !important;
+              padding: 1rem 0.85rem !important;
               padding-bottom: 96px !important;
               overflow-x: hidden !important;
               max-width: 100% !important;

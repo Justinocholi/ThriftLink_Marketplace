@@ -1858,5 +1858,24 @@ h1, h2, h3, .section-title, .hero h1 {
     pointer-events: none;
 }
 
+@media (max-width: 640px) {
+    .tl-glossy-hero {
+        padding: 1.5rem 1.25rem !important;
+        border-radius: 18px !important;
+    }
+    .tl-glass-card {
+        padding: 1.25rem 1rem !important;
+        border-radius: 16px !important;
+    }
+    .tl-glass-stat {
+        padding: 1.15rem 1rem !important;
+        border-radius: 16px !important;
+    }
+    .tl-glass-pill {
+        padding: 0.28rem 0.65rem !important;
+        font-size: 0.75rem !important;
+    }
+}
+
 
 

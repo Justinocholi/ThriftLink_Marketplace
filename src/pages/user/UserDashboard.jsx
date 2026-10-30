@@ -45,7 +45,17 @@ const SUGGESTED_QUICK_TAGS = [
 
 const UserDashboard = () => {
   const [interestModalOpen, setInterestModalOpen] = useState(false);
-  const [userInterests, setUserInterests] = useState([]);
+  
+  // Initialize from client-side persistent storage so preferences never vanish
+  const [userInterests, setUserInterests] = useState(() => {
+    try {
+      const cached = JSON.parse(localStorage.getItem('tl_buyer_interests') || '[]');
+      return Array.isArray(cached) ? cached : [];
+    } catch (_) {
+      return [];
+    }
+  });
+
   const [recommendations, setRecommendations] = useState([]);
   const [recLoading, setRecLoading] = useState(true);
   const [saveToast, setSaveToast] = useState('');
@@ -69,8 +79,20 @@ const UserDashboard = () => {
   );
 
   useEffect(() => {
-    if (data?.interests) {
+    if (Array.isArray(data?.interests) && data.interests.length > 0) {
       setUserInterests(data.interests);
+      try {
+        localStorage.setItem('tl_buyer_interests', JSON.stringify(data.interests));
+      } catch (_) {}
+    } else {
+      // If backend returned empty, check if we have cached local preferences to sync up
+      try {
+        const cached = JSON.parse(localStorage.getItem('tl_buyer_interests') || '[]');
+        if (Array.isArray(cached) && cached.length > 0) {
+          setUserInterests(cached);
+          recApi.setUserInterests(cached).catch(() => {});
+        }
+      } catch (_) {}
     }
   }, [data?.interests]);
 
@@ -99,12 +121,14 @@ const UserDashboard = () => {
       : [...userInterests, tag];
 
     setUserInterests(updated);
+    try {
+      localStorage.setItem('tl_buyer_interests', JSON.stringify(updated));
+    } catch (_) {}
     setSaveToast(isPresent ? `Removed ${tag}` : `Saved ${tag}`);
     setTimeout(() => setSaveToast(''), 2200);
 
     try {
       await recApi.setUserInterests(updated);
-      // Reload recommendations with newly saved preferences
       loadRecommendations();
     } catch (err) {
       console.error('Failed to save preference:', err);
@@ -112,7 +136,11 @@ const UserDashboard = () => {
   };
 
   const handlePreferencesSaved = (updatedInterests) => {
-    setUserInterests(updatedInterests);
+    const list = Array.isArray(updatedInterests) ? updatedInterests : [];
+    setUserInterests(list);
+    try {
+      localStorage.setItem('tl_buyer_interests', JSON.stringify(list));
+    } catch (_) {}
     setSaveToast('Preferences updated & saved');
     setTimeout(() => setSaveToast(''), 2200);
     loadRecommendations();
@@ -126,25 +154,76 @@ const UserDashboard = () => {
   if (error) return <ErrorState error={error} onRetry={retry} />;
 
   return (
-    <div style={{ padding: '1rem', fontFamily: "'Inter', sans-serif" }}>
+    <div style={{ padding: '0 0 2rem', fontFamily: "'Inter', sans-serif" }}>
       <style>{`
-        @media (max-width: 640px) {
-          .ud-main-grid { grid-template-columns: 1fr !important; gap: 1rem !important; }
-          .ud-stats-grid { grid-template-columns: 1fr !important; gap: 0.75rem !important; margin-bottom: 1.25rem !important; }
-          .ud-card { padding: 1.25rem !important; border-radius: 16px !important; }
-          .ud-stat-value { font-size: 1.5rem !important; }
+        @media (max-width: 768px) {
+          .ud-hero-banner {
+            padding: 1.5rem !important;
+            border-radius: 18px !important;
+            margin-bottom: 1.5rem !important;
+          }
+          .ud-hero-title {
+            font-size: 1.45rem !important;
+          }
+          .ud-hero-btn {
+            width: 100% !important;
+            justify-content: center !important;
+            text-align: center !important;
+          }
+          .ud-stats-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 0.75rem !important;
+            margin-bottom: 1.5rem !important;
+          }
+          .ud-main-grid {
+            grid-template-columns: 1fr !important;
+            gap: 1.25rem !important;
+          }
+          .ud-card {
+            padding: 1.25rem 1rem !important;
+            border-radius: 16px !important;
+          }
+          .ud-stat-value {
+            font-size: 1.4rem !important;
+          }
+          .ud-recent-order-item {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 0.6rem !important;
+          }
+          .ud-order-price-col {
+            text-align: left !important;
+            width: 100% !important;
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+          }
+        }
+        @media (max-width: 480px) {
+          .ud-stats-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .ud-pref-header {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 0.75rem !important;
+          }
+          .ud-pref-edit-btn {
+            width: 100% !important;
+            justify-content: center !important;
+          }
         }
       `}</style>
 
       {/* Hero Welcome — glossy brand banner */}
-      <div className="tl-glossy-hero" style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+      <div className="tl-glossy-hero ud-hero-banner" style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: '0.4rem' }}>
             <span className="tl-glass-pill" style={{ color: 'white', background: 'rgba(255,255,255,0.2)', borderColor: 'rgba(255,255,255,0.3)', padding: '0.2rem 0.65rem' }}>
               <Sparkles size={13} /> Algorithmic Matching Active
             </span>
           </div>
-          <h2 style={{ fontSize: '2rem', fontWeight: 800, color: 'white', marginBottom: '0.4rem' }}>
+          <h2 className="ud-hero-title" style={{ fontSize: '2rem', fontWeight: 800, color: 'white', marginBottom: '0.4rem' }}>
             Welcome back{data?.profile?.name ? `, ${data.profile.name.split(' ')[0]}` : ''}
           </h2>
           <p style={{ color: 'rgba(255,255,255,0.92)', fontSize: '0.95rem', margin: 0 }}>
@@ -155,7 +234,7 @@ const UserDashboard = () => {
         <button
           type="button"
           onClick={() => setInterestModalOpen(true)}
-          className="tl-glass-pill"
+          className="tl-glass-pill ud-hero-btn"
           style={{
             background: 'white',
             color: '#0f172a',
@@ -199,8 +278,8 @@ const UserDashboard = () => {
       )}
 
       {/* Personalized Preferences Card (Saved directly on Dashboard) */}
-      <div className="tl-glass-card" style={{ padding: '1.75rem 2rem', marginBottom: '2rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.25rem' }}>
+      <div className="tl-glass-card ud-card" style={{ padding: '1.75rem 2rem', marginBottom: '2rem' }}>
+        <div className="ud-pref-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.25rem' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
               <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#059669', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
@@ -219,6 +298,7 @@ const UserDashboard = () => {
           <button
             type="button"
             onClick={() => setInterestModalOpen(true)}
+            className="ud-pref-edit-btn"
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -365,7 +445,7 @@ const UserDashboard = () => {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 260px), 1fr))',
               gap: '1.25rem',
             }}
           >
@@ -454,15 +534,15 @@ const UserDashboard = () => {
               {recent.map(order => {
                 const st = STATUS_STYLE[order.status] || STATUS_STYLE.pending;
                 return (
-                  <div key={order.id} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', borderRadius: '16px', border: '1px solid #f1f5f9', background: 'rgba(255, 255, 255, 0.6)' }}>
+                  <div key={order.id} className="ud-recent-order-item" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', borderRadius: '16px', border: '1px solid #f1f5f9', background: 'rgba(255, 255, 255, 0.6)' }}>
                     <div style={{ width: '48px', height: '48px', background: '#f1f5f9', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <Package size={24} color="#64748b" />
                     </div>
-                    <div style={{ flex: 1 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontWeight: '700', color: '#1e293b', fontSize: '0.95rem' }}>Order #{order.id.slice(0, 8)}</div>
                       <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{new Date(order.created_at).toLocaleDateString()}</div>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
+                    <div className="ud-order-price-col" style={{ textAlign: 'right' }}>
                       <div style={{ fontWeight: '800', color: '#0f172a', marginBottom: '0.25rem' }}>₦{Number(order.total_amount || 0).toLocaleString()}</div>
                       <span style={{ ...st, padding: '0.2rem 0.6rem', borderRadius: '6px', fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase' }}>{st.label}</span>
                     </div>
@@ -519,6 +599,7 @@ const UserDashboard = () => {
         isOpen={interestModalOpen}
         onClose={() => setInterestModalOpen(false)}
         onSaved={handlePreferencesSaved}
+        initialInterests={userInterests}
       />
     </div>
   );

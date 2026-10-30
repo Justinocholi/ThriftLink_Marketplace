@@ -99,8 +99,27 @@ const VendorAnalytics = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+      <style>{`
+        @media (max-width: 900px) {
+          .va-main-grid { grid-template-columns: 1fr !important; gap: 1.25rem !important; }
+          .va-bottom-grid { grid-template-columns: 1fr !important; gap: 1.25rem !important; }
+        }
+        @media (max-width: 680px) {
+          .va-header-card { padding: 1.25rem 1rem !important; flex-direction: column !important; align-items: stretch !important; gap: 1rem !important; }
+          .va-kpi-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 0.75rem !important; }
+          .va-kpi-card { padding: 1.25rem 1rem !important; border-radius: 16px !important; }
+          .va-kpi-value { font-size: 1.6rem !important; }
+          .va-funnel-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 0.75rem !important; }
+          .va-chart-container { overflow-x: auto !important; padding-bottom: 0.5rem !important; }
+          .va-chart-inner { min-width: 380px !important; }
+        }
+        @media (max-width: 440px) {
+          .va-kpi-grid { grid-template-columns: 1fr !important; }
+          .va-funnel-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
       {/* Header with Range Controls */}
-      <div className="tl-glass-card" style={{ padding: '1.75rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.25rem' }}>
+      <div className="tl-glass-card va-header-card" style={{ padding: '1.75rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.25rem' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
             <span className="tl-glass-pill" style={{ color: '#059669', borderColor: 'rgba(16, 185, 129, 0.3)', padding: '0.2rem 0.65rem' }}>
@@ -144,9 +163,9 @@ const VendorAnalytics = () => {
       </div>
 
       {/* Top 4 KPI Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
+      <div className="va-kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
         {/* Total Views */}
-        <div className="tl-glass-card" style={{ padding: '1.75rem', position: 'relative' }}>
+        <div className="tl-glass-card va-kpi-card" style={{ padding: '1.75rem', position: 'relative' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
             <div style={{ width: 44, height: 44, borderRadius: 14, background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', boxShadow: '0 8px 16px -4px rgba(59, 130, 246, 0.4)' }}>
               <Eye size={22} />
@@ -156,7 +175,7 @@ const VendorAnalytics = () => {
             </span>
           </div>
           <p style={{ color: '#64748b', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.35rem' }}>Store Profile Views</p>
-          <h3 style={{ fontSize: '2.2rem', fontWeight: 800, color: '#0f172a', margin: 0, fontFamily: "'Space Grotesk', sans-serif" }}>
+          <h3 className="va-kpi-value" style={{ fontSize: '2.2rem', fontWeight: 800, color: '#0f172a', margin: 0, fontFamily: "'Space Grotesk', sans-serif" }}>
             {totals.profile_views.toLocaleString()}
           </h3>
           <p style={{ fontSize: '0.78rem', color: '#94a3b8', marginTop: '0.5rem', marginBottom: 0 }}>
@@ -165,7 +184,7 @@ const VendorAnalytics = () => {
         </div>
 
         {/* WhatsApp Inquiries */}
-        <div className="tl-glass-card" style={{ padding: '1.75rem', position: 'relative' }}>
+        <div className="tl-glass-card va-kpi-card" style={{ padding: '1.75rem', position: 'relative' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
             <div style={{ width: 44, height: 44, borderRadius: 14, background: 'linear-gradient(135deg, #10b981, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', boxShadow: '0 8px 16px -4px rgba(16, 185, 129, 0.4)' }}>
               <MessageSquare size={22} />
@@ -175,7 +194,7 @@ const VendorAnalytics = () => {
             </span>
           </div>
           <p style={{ color: '#64748b', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.35rem' }}>WhatsApp Lead Clicks</p>
-          <h3 style={{ fontSize: '2.2rem', fontWeight: 800, color: '#0f172a', margin: 0, fontFamily: "'Space Grotesk', sans-serif" }}>
+          <h3 className="va-kpi-value" style={{ fontSize: '2.2rem', fontWeight: 800, color: '#0f172a', margin: 0, fontFamily: "'Space Grotesk', sans-serif" }}>
             {totals.whatsapp_clicks.toLocaleString()}
           </h3>
           <p style={{ fontSize: '0.78rem', color: '#94a3b8', marginTop: '0.5rem', marginBottom: 0 }}>
@@ -184,7 +203,7 @@ const VendorAnalytics = () => {
         </div>
 
         {/* Algorithm Impressions */}
-        <div className="tl-glass-card" style={{ padding: '1.75rem', position: 'relative' }}>
+        <div className="tl-glass-card va-kpi-card" style={{ padding: '1.75rem', position: 'relative' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
             <div style={{ width: 44, height: 44, borderRadius: 14, background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', boxShadow: '0 8px 16px -4px rgba(139, 92, 246, 0.4)' }}>
               <Sparkles size={22} />
@@ -194,7 +213,7 @@ const VendorAnalytics = () => {
             </span>
           </div>
           <p style={{ color: '#64748b', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.35rem' }}>Recommendation Impressions</p>
-          <h3 style={{ fontSize: '2.2rem', fontWeight: 800, color: '#0f172a', margin: 0, fontFamily: "'Space Grotesk', sans-serif" }}>
+          <h3 className="va-kpi-value" style={{ fontSize: '2.2rem', fontWeight: 800, color: '#0f172a', margin: 0, fontFamily: "'Space Grotesk', sans-serif" }}>
             {funnel.impressions.toLocaleString()}
           </h3>
           <p style={{ fontSize: '0.78rem', color: '#94a3b8', marginTop: '0.5rem', marginBottom: 0 }}>
@@ -203,7 +222,7 @@ const VendorAnalytics = () => {
         </div>
 
         {/* Trust & Community */}
-        <div className="tl-glass-card" style={{ padding: '1.75rem', position: 'relative' }}>
+        <div className="tl-glass-card va-kpi-card" style={{ padding: '1.75rem', position: 'relative' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
             <div style={{ width: 44, height: 44, borderRadius: 14, background: 'linear-gradient(135deg, #f59e0b, #d97706)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', boxShadow: '0 8px 16px -4px rgba(245, 158, 11, 0.4)' }}>
               <Star size={22} />
@@ -213,7 +232,7 @@ const VendorAnalytics = () => {
             </span>
           </div>
           <p style={{ color: '#64748b', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.35rem' }}>Store Trust Rating</p>
-          <h3 style={{ fontSize: '2.2rem', fontWeight: 800, color: '#0f172a', margin: 0, fontFamily: "'Space Grotesk', sans-serif" }}>
+          <h3 className="va-kpi-value" style={{ fontSize: '2.2rem', fontWeight: 800, color: '#0f172a', margin: 0, fontFamily: "'Space Grotesk', sans-serif" }}>
             {totals.rating > 0 ? totals.rating.toFixed(1) : '5.0'}
             <span style={{ fontSize: '1rem', color: '#94a3b8', fontWeight: 500 }}> / 5</span>
           </h3>
@@ -242,7 +261,7 @@ const VendorAnalytics = () => {
         </div>
 
         {/* Funnel Pipeline Steps */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', position: 'relative' }}>
+        <div className="va-funnel-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', position: 'relative' }}>
           {[
             {
               stage: '1. Impressions',
@@ -300,7 +319,7 @@ const VendorAnalytics = () => {
       </div>
 
       {/* Main Grid: Daily Activity Trend & Traffic Attribution */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.8fr 1.2fr', gap: '2rem' }}>
+      <div className="va-main-grid" style={{ display: 'grid', gridTemplateColumns: '1.8fr 1.2fr', gap: '2rem' }}>
         {/* Daily Views Bar Chart */}
         <div className="tl-glass-card" style={{ padding: '2rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
@@ -320,8 +339,8 @@ const VendorAnalytics = () => {
           </div>
 
           {dailyViews.length > 0 ? (
-            <div>
-              <div style={{ height: '160px', display: 'flex', alignItems: 'flex-end', gap: dailyViews.length > 30 ? '3px' : '8px', paddingBottom: '0.5rem', borderBottom: '1px solid #f1f5f9' }}>
+            <div className="va-chart-container">
+              <div className="va-chart-inner" style={{ height: '160px', display: 'flex', alignItems: 'flex-end', gap: dailyViews.length > 30 ? '3px' : '8px', paddingBottom: '0.5rem', borderBottom: '1px solid #f1f5f9' }}>
                 {dailyViews.map((d, i) => {
                   const views = d.views || 0;
                   const heightPercent = Math.max((views / maxDailyViews) * 100, 6);
@@ -425,7 +444,7 @@ const VendorAnalytics = () => {
       </div>
 
       {/* Bottom Grid: Top Products & Growth Recommendations */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '2rem' }}>
+      <div className="va-bottom-grid" style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '2rem' }}>
         {/* Top Performing Catalog Items */}
         <div className="tl-glass-card" style={{ padding: '2rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>

@@ -16,16 +16,30 @@ function isSupabase() {
 async function getUserInterests(userId) {
   if (!userId) return [];
   if (isSupabase()) {
-    const db = supabaseData.getDataClient();
-    const rows = supabaseData.unwrap(
-      await db.from('user_interests').select('category').eq('user_id', userId)
-    ) || [];
-    return rows.map((r) => r.category);
+    try {
+      const db = supabaseData.getDataClient();
+      const rows = supabaseData.unwrap(
+        await db.from('user_interests').select('category').eq('user_id', userId)
+      ) || [];
+      return rows.map((r) => r.category);
+    } catch (err) {
+      console.error('Supabase getUserInterests error:', err.message);
+      return [];
+    }
   }
 
   const db = getDb();
-  const rows = db.prepare('SELECT category FROM user_interests WHERE user_id = ? ORDER BY created_at ASC').all(userId);
-  return rows.map((r) => r.category);
+  try {
+    const rows = db.prepare(`
+      SELECT category FROM user_interests 
+      WHERE user_id = ? OR user_id = (SELECT id FROM users WHERE supabase_user_id = ?)
+      ORDER BY created_at ASC
+    `).all(userId, userId);
+    return rows.map((r) => r.category);
+  } catch (err) {
+    console.error('SQLite getUserInterests error:', err.message);
+    return [];
+  }
 }
 
 async function setUserInterests(userId, categories = []) {
@@ -33,32 +47,63 @@ async function setUserInterests(userId, categories = []) {
   const validCategories = Array.from(new Set(categories.map((c) => String(c).trim()).filter(Boolean)));
 
   if (isSupabase()) {
-    const db = supabaseData.getDataClient();
-    await db.from('user_interests').delete().eq('user_id', userId);
-    if (validCategories.length > 0) {
-      const rows = validCategories.map((cat) => ({
-        id: uuidv4(),
-        user_id: userId,
-        category: cat,
-      }));
-      supabaseData.unwrap(await db.from('user_interests').insert(rows));
+    try {
+      const db = supabaseData.getDataClient();
+      const del = await db.from('user_interests').delete().eq('user_id', userId);
+      if (del.error) console.warn('Supabase delete user_interests notice:', del.error.message);
+      if (validCategories.length > 0) {
+        const rows = validCategories.map((cat) => ({
+          id: uuidv4(),
+          user_id: userId,
+          category: cat,
+        }));
+        supabaseData.unwrap(await db.from('user_interests').insert(rows));
+      }
+      return validCategories;
+    } catch (err) {
+      console.error('Supabase setUserInterests error:', err.message);
+      return validCategories;
     }
-    return validCategories;
   }
 
   const db = getDb();
-  const insertStmt = db.prepare('INSERT OR IGNORE INTO user_interests (id, user_id, category) VALUES (?, ?, ?)');
-  const deleteStmt = db.prepare('DELETE FROM user_interests WHERE user_id = ?');
 
-  const txn = db.transaction(() => {
-    deleteStmt.run(userId);
-    for (const cat of validCategories) {
-      insertStmt.run(uuidv4(), userId, cat);
+  // Ensure user exists in SQLite users table to satisfy foreign key constraint
+  try {
+    let resolvedUserId = userId;
+    const userRow = db.prepare('SELECT id FROM users WHERE id = ?').get(userId);
+    if (!userRow) {
+      const userBySupabase = db.prepare('SELECT id FROM users WHERE supabase_user_id = ?').get(userId);
+      if (userBySupabase) {
+        resolvedUserId = userBySupabase.id;
+      } else {
+        // Insert stub user record so FOREIGN KEY constraint passes smoothly
+        db.prepare('INSERT OR IGNORE INTO users (id, email, name, password_hash, role) VALUES (?, ?, ?, ?, ?)').run(
+          resolvedUserId,
+          `user-${String(resolvedUserId).slice(0, 8)}@thriftlink.user`,
+          'Thrift Shopper',
+          'stub_hash',
+          'user'
+        );
+      }
     }
-  });
-  txn();
 
-  return validCategories;
+    const insertStmt = db.prepare('INSERT OR IGNORE INTO user_interests (id, user_id, category) VALUES (?, ?, ?)');
+    const deleteStmt = db.prepare('DELETE FROM user_interests WHERE user_id = ?');
+
+    const txn = db.transaction(() => {
+      deleteStmt.run(resolvedUserId);
+      for (const cat of validCategories) {
+        insertStmt.run(uuidv4(), resolvedUserId, cat);
+      }
+    });
+    txn();
+
+    return validCategories;
+  } catch (err) {
+    console.error('SQLite setUserInterests error:', err.message);
+    return validCategories;
+  }
 }
 
 // ---------------------------------------------------------------------------

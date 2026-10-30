@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, Check, X, MapPin, Tag, Palette, CheckCircle2, Loader2 } from 'lucide-react';
+import { Sparkles, Check, X, MapPin, Tag, Palette, CheckCircle2, Loader2, Save } from 'lucide-react';
 import { recommendations as recApi, userMe } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -34,74 +34,90 @@ export const LOCATIONS_LIST = [
   'Nationwide',
 ];
 
-const InterestSelectorModal = ({ isOpen, onClose, onSaved }) => {
+const InterestSelectorModal = ({ isOpen, onClose, onSaved, initialInterests = [] }) => {
   const { user } = useAuth();
   const [selected, setSelected] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [saveStatus, setSaveStatus] = useState('idle'); // 'idle' | 'saving' | 'saved'
+  const [saving, setSaving] = useState(false);
 
+  // Initialize selections from initialInterests or localStorage
   useEffect(() => {
     if (isOpen) {
-      if (user) {
-        setLoading(true);
-        recApi.getUserInterests()
-          .then((res) => {
-            setSelected(Array.isArray(res.interests) ? res.interests : []);
-          })
-          .catch(() => {})
-          .finally(() => setLoading(false));
-      } else {
+      let base = Array.isArray(initialInterests) && initialInterests.length > 0 ? [...initialInterests] : [];
+      if (base.length === 0) {
         try {
-          const cached = JSON.parse(localStorage.getItem('tl_guest_interests') || '[]');
-          setSelected(cached);
+          const cached = JSON.parse(localStorage.getItem('tl_buyer_interests') || '[]');
+          if (Array.isArray(cached) && cached.length > 0) base = cached;
         } catch (_) {}
       }
+      setSelected(base);
+
+      // Also refresh from API in background if user is authenticated
+      setLoading(true);
+      recApi.getUserInterests()
+        .then((res) => {
+          if (Array.isArray(res?.interests) && res.interests.length > 0) {
+            setSelected(res.interests);
+            try {
+              localStorage.setItem('tl_buyer_interests', JSON.stringify(res.interests));
+            } catch (_) {}
+          }
+        })
+        .catch(() => {})
+        .finally(() => setLoading(false));
     }
-  }, [isOpen, user]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
-  // Immediate save on every change
-  const persistChanges = async (newSelected, stateToUpdate = null) => {
-    setSaveStatus('saving');
-    try {
-      if (user) {
-        await recApi.setUserInterests(newSelected);
-        if (stateToUpdate && stateToUpdate !== 'Nationwide') {
-          userMe.updateProfile({ state: stateToUpdate }).catch(() => {});
-        }
+  const toggleItem = (item, isLocation = false) => {
+    if (isLocation) {
+      const withoutLocations = selected.filter((i) => !LOCATIONS_LIST.includes(i));
+      if (selected.includes(item)) {
+        setSelected(withoutLocations);
       } else {
-        localStorage.setItem('tl_guest_interests', JSON.stringify(newSelected));
+        setSelected([...withoutLocations, item]);
       }
-      setSaveStatus('saved');
-      if (onSaved) onSaved(newSelected);
-      setTimeout(() => {
-        setSaveStatus((prev) => (prev === 'saved' ? 'idle' : prev));
-      }, 1800);
-    } catch (err) {
-      console.error('Failed to auto-save interests:', err);
-      setSaveStatus('idle');
+    } else {
+      setSelected(prev => prev.includes(item) ? prev.filter(i => i !== item) : [...prev, item]);
     }
   };
 
-  const toggleItem = (item, isLocation = false) => {
-    setSelected((prev) => {
-      let updated;
-      if (isLocation) {
-        // Only allow one primary location selected at a time
-        const withoutLocations = prev.filter((i) => !LOCATIONS_LIST.includes(i));
-        if (prev.includes(item)) {
-          updated = withoutLocations;
-        } else {
-          updated = [...withoutLocations, item];
-        }
-        persistChanges(updated, prev.includes(item) ? null : item.replace(' (FCT)', '').replace(' (Port Harcourt)', '').replace(' (Ibadan)', '').replace(' (Benin)', ''));
-      } else {
-        updated = prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item];
-        persistChanges(updated);
+  const handleSave = async () => {
+    setSaving(true);
+    const updated = [...selected];
+
+    // Always mirror to localStorage immediately so data never disappears
+    try {
+      localStorage.setItem('tl_buyer_interests', JSON.stringify(updated));
+    } catch (_) {}
+
+    try {
+      // 1. Save to recommendations backend
+      await recApi.setUserInterests(updated);
+
+      // 2. If a state location was picked, sync user profile state
+      const selectedLocation = updated.find(i => LOCATIONS_LIST.includes(i));
+      if (selectedLocation && selectedLocation !== 'Nationwide') {
+        const cleanState = selectedLocation
+          .replace(' (FCT)', '')
+          .replace(' (Port Harcourt)', '')
+          .replace(' (Ibadan)', '')
+          .replace(' (Benin)', '');
+        userMe.updateProfile({ state: cleanState }).catch(() => {});
       }
-      return updated;
-    });
+
+      // 3. Notify parent components
+      if (onSaved) onSaved(updated);
+      onClose();
+    } catch (err) {
+      console.error('Failed to save interests:', err);
+      // Even if network fails, parent state & localStorage retain selections
+      if (onSaved) onSaved(updated);
+      onClose();
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -116,11 +132,36 @@ const InterestSelectorModal = ({ isOpen, onClose, onSaved }) => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '1rem',
+        padding: '0.75rem',
       }}
       onClick={onClose}
     >
+      <style>{`
+        @media (max-width: 640px) {
+          .tl-interest-modal {
+            max-height: 94vh !important;
+            border-radius: 18px !important;
+          }
+          .tl-interest-header {
+            padding: 1.25rem 1.25rem 0.85rem !important;
+          }
+          .tl-interest-body {
+            padding: 1.15rem 1.25rem !important;
+            gap: 1.25rem !important;
+          }
+          .tl-interest-footer {
+            padding: 0.85rem 1.25rem 1rem !important;
+            flex-direction: column-reverse !important;
+            gap: 0.75rem !important;
+          }
+          .tl-interest-footer button {
+            width: 100% !important;
+            justify-content: center !important;
+          }
+        }
+      `}</style>
       <div
+        className="tl-interest-modal"
         onClick={(e) => e.stopPropagation()}
         style={{
           background: 'white',
@@ -135,12 +176,12 @@ const InterestSelectorModal = ({ isOpen, onClose, onSaved }) => {
         }}
       >
         {/* Header */}
-        <div style={{ padding: '1.75rem 2rem 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #f1f5f9' }}>
+        <div className="tl-interest-header" style={{ padding: '1.75rem 2rem 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #f1f5f9' }}>
           <div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#059669', fontSize: '0.8rem', fontWeight: 700, marginBottom: 4 }}>
               <Sparkles size={15} /> Personalize Your ThriftLink Feed
             </div>
-            <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0f172a', margin: '0 0 4px', letterSpacing: '-0.01em' }}>
+            <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0f172a', margin: '0 0 4px', letterSpacing: '-0.01em' }}>
               Your Thrifting Preferences
             </h2>
             <p style={{ color: '#64748b', fontSize: '0.85rem', margin: 0, lineHeight: 1.4 }}>
@@ -169,8 +210,8 @@ const InterestSelectorModal = ({ isOpen, onClose, onSaved }) => {
         </div>
 
         {/* Scrollable Body */}
-        <div style={{ padding: '1.5rem 2rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
-          {loading ? (
+        <div className="tl-interest-body" style={{ padding: '1.5rem 2rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+          {loading && selected.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500 mx-auto mb-2" />
               Loading preferences...
@@ -297,41 +338,60 @@ const InterestSelectorModal = ({ isOpen, onClose, onSaved }) => {
           )}
         </div>
 
-        {/* Modal Footer with Instant Save Status */}
-        <div style={{ padding: '1rem 2rem 1.25rem', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fafafa' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.82rem' }}>
-            {saveStatus === 'saving' ? (
-              <span style={{ color: '#64748b', display: 'flex', alignItems: 'center', gap: 5 }}>
-                <Loader2 size={14} className="animate-spin" /> Saving changes...
-              </span>
-            ) : saveStatus === 'saved' ? (
-              <span style={{ color: '#059669', display: 'flex', alignItems: 'center', gap: 5, fontWeight: 700 }}>
-                <CheckCircle2 size={15} color="#059669" /> All changes saved
-              </span>
-            ) : (
-              <span style={{ color: '#94a3b8' }}>
-                {selected.length} preference{selected.length !== 1 ? 's' : ''} active
-              </span>
-            )}
+        {/* Modal Footer with Explicit Save Button */}
+        <div className="tl-interest-footer" style={{ padding: '1.15rem 2rem', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fafafa', gap: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', color: '#64748b' }}>
+            <span style={{ fontWeight: 600 }}>{selected.length} preference{selected.length !== 1 ? 's' : ''} chosen</span>
           </div>
 
-          <button
-            type="button"
-            onClick={onClose}
-            style={{
-              padding: '0.65rem 1.5rem',
-              borderRadius: 12,
-              border: 'none',
-              background: '#0f172a',
-              color: 'white',
-              fontWeight: 700,
-              fontSize: '0.88rem',
-              cursor: 'pointer',
-              boxShadow: '0 4px 12px rgba(15, 23, 42, 0.15)',
-            }}
-          >
-            Done
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <button
+              type="button"
+              onClick={onClose}
+              style={{
+                padding: '0.65rem 1.25rem',
+                borderRadius: 12,
+                border: '1px solid #cbd5e1',
+                background: 'white',
+                color: '#475569',
+                fontWeight: 600,
+                fontSize: '0.88rem',
+                cursor: 'pointer',
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={saving}
+              style={{
+                padding: '0.65rem 1.5rem',
+                borderRadius: 12,
+                border: 'none',
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                color: 'white',
+                fontWeight: 700,
+                fontSize: '0.88rem',
+                cursor: saving ? 'not-allowed' : 'pointer',
+                boxShadow: '0 4px 14px rgba(16, 185, 129, 0.35)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                opacity: saving ? 0.75 : 1,
+              }}
+            >
+              {saving ? (
+                <>
+                  <Loader2 size={15} className="animate-spin" /> Saving...
+                </>
+              ) : (
+                <>
+                  <Check size={16} strokeWidth={2.5} /> Save Preferences ({selected.length})
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>

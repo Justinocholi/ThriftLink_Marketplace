@@ -95,14 +95,19 @@ const VendorDashboard = () => {
   return (
     <div style={{ fontFamily: "'Inter', sans-serif" }}>
       <style>{`
-        @media (max-width: 640px) {
-          .vd-main-grid { grid-template-columns: 1fr !important; gap: 1rem !important; }
-          .vd-stats-grid { grid-template-columns: 1fr 1fr !important; gap: 0.75rem !important; margin-bottom: 1.25rem !important; }
-          .vd-card { padding: 1.25rem !important; border-radius: 16px !important; }
+        @media (max-width: 768px) {
+          .vd-hero-banner { padding: 1.5rem !important; border-radius: 18px !important; margin-bottom: 1.5rem !important; }
+          .vd-hero-title { font-size: 1.45rem !important; }
+          .vd-hero-btn { width: 100% !important; justify-content: center !important; }
+          .vd-main-grid { grid-template-columns: 1fr !important; gap: 1.25rem !important; }
+          .vd-stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 0.75rem !important; margin-bottom: 1.5rem !important; }
+          .vd-card { padding: 1.25rem 1rem !important; border-radius: 16px !important; }
           .vd-stat-value { font-size: 1.4rem !important; }
         }
-        @media (max-width: 400px) {
+        @media (max-width: 440px) {
           .vd-stats-grid { grid-template-columns: 1fr !important; }
+          .vd-share-box { flex-direction: column !important; align-items: stretch !important; gap: 0.5rem !important; }
+          .vd-share-box button { width: 100% !important; justify-content: center !important; }
         }
       `}</style>
       {/* Onboarding checklist — shown until all required steps done */}
@@ -176,12 +181,12 @@ const VendorDashboard = () => {
       )}
 
       {/* Page Header — glossy brand hero with CTA */}
-      <div className="tl-glossy-hero" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '2.5rem' }}>
+      <div className="tl-glossy-hero vd-hero-banner" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '2.5rem' }}>
         <div>
-          <h2 style={{ fontSize: '2rem', fontWeight: 800, color: 'white', marginBottom: '0.4rem' }}>Store Overview</h2>
+          <h2 className="vd-hero-title" style={{ fontSize: '2rem', fontWeight: 800, color: 'white', marginBottom: '0.4rem' }}>Store Overview</h2>
           <p style={{ color: 'rgba(255,255,255,0.92)', fontSize: '1rem', margin: 0 }}>Manage your thrift business and track your performance.</p>
         </div>
-        <Link to="/vendor/products" className="tl-glass-pill" style={{ background: 'rgba(255,255,255,0.95)', color: '#0e9a52', padding: '0.85rem 1.6rem', fontWeight: '700', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem', boxShadow: '0 8px 24px -6px rgba(0,0,0,0.15)', position: 'relative', zIndex: 1, fontSize: '0.9rem' }}>
+        <Link to="/vendor/products" className="tl-glass-pill vd-hero-btn" style={{ background: 'rgba(255,255,255,0.95)', color: '#0e9a52', padding: '0.85rem 1.6rem', fontWeight: '700', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem', boxShadow: '0 8px 24px -6px rgba(0,0,0,0.15)', position: 'relative', zIndex: 1, fontSize: '0.9rem' }}>
           <Package size={20} /> Add New Product
         </Link>
       </div>
@@ -251,7 +256,7 @@ const VendorDashboard = () => {
               </p>
 
               {/* Referral link bar */}
-              <div style={{ display: 'flex', alignItems: 'center', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '0.4rem 0.6rem', marginBottom: '1rem' }}>
+              <div className="vd-share-box" style={{ display: 'flex', alignItems: 'center', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '0.4rem 0.6rem', marginBottom: '1rem' }}>
                 <span style={{ flex: 1, fontSize: '0.78rem', color: '#334155', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'monospace' }}>
                   {typeof window !== 'undefined' ? `${window.location.origin}/vendor/${profile.id}?ref=${referral?.referralCode || profile.id}` : ''}
                 </span>
