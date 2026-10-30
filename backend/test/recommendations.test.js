@@ -265,4 +265,16 @@ describe('Recommendation API & Surfaces Integration Tests', () => {
     expect(attrRes.status).toBe(200);
     expect(attrRes.body.result.conversion_status).toBe('registered');
   });
+
+  test('Personalized feed returns posts for public and authenticated users', async () => {
+    const res = await request(app).get('/api/recommendations/feed?surface=recommended_for_you&limit=10');
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body.posts)).toBe(true);
+
+    const authRes = await request(app)
+      .get('/api/recommendations/feed?surface=new_arrivals&limit=10')
+      .set('Authorization', `Bearer ${customer.token}`);
+    expect(authRes.status).toBe(200);
+    expect(Array.isArray(authRes.body.posts)).toBe(true);
+  });
 });

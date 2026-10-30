@@ -511,18 +511,19 @@ async function getPersonalizedFeed({
       page: 1,
       excludeFollowed: false,
     }),
-    repo.getRecentFeedPosts(80),
-    userId ? repo.getUserFollowedVendorIds(userId) : Promise.resolve([]),
-    userId ? repo.getDismissedVendorIds(userId, 30) : Promise.resolve(new Set()),
+    recommendationsRepo.getRecentFeedPosts(80),
+    userId ? recommendationsRepo.getUserFollowedVendorIds(userId) : Promise.resolve([]),
+    userId ? recommendationsRepo.getDismissedVendorIds(userId, 30) : Promise.resolve([]),
   ]);
 
-  const followedSet = new Set(followedIds);
+  const followedSet = new Set(followedIds || []);
+  const dismissedSet = new Set(dismissedIds || []);
   const vendorScoreMap = new Map();
   for (const v of vendorRecs.vendors || []) {
     vendorScoreMap.set(v.id, v);
   }
 
-  let candidatePosts = (rawPosts || []).filter((p) => !dismissedIds.has(p.vendor_id));
+  let candidatePosts = (rawPosts || []).filter((p) => !dismissedSet.has(p.vendor_id));
   if (surface === 'following') {
     candidatePosts = candidatePosts.filter((p) => followedSet.has(p.vendor_id));
   }
