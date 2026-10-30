@@ -6,6 +6,7 @@ import FeedPostCard from '../../components/FeedPostCard';
 import InterestSelectorModal from '../../components/InterestSelectorModal';
 import { recommendations as recApi } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import { getSocket } from '../../services/socket';
 import { cldUrl } from '../../utils/cloudinary';
 import {
   Sparkles,
@@ -52,6 +53,23 @@ const NewsFeed = () => {
   useEffect(() => {
     loadFeed(surface);
   }, [surface, loadFeed]);
+
+  // Real-time: prepend newly posted vendor products to the feed immediately
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket) return;
+    const handleProductCreated = (newPost) => {
+      if (!newPost || !newPost.id) return;
+      setPosts((prev) => {
+        if (prev.some((p) => p.id === newPost.id)) return prev;
+        return [newPost, ...prev];
+      });
+    };
+    socket.on('product:created', handleProductCreated);
+    return () => {
+      socket.off('product:created', handleProductCreated);
+    };
+  }, []);
 
   const filteredPosts = posts.filter((p) => {
     if (verificationFilter === 'verified' && !p.is_verified) return false;

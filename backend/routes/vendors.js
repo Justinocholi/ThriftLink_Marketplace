@@ -175,7 +175,7 @@ router.post('/me/products', authenticate, requireRole('vendor'), upload.array('i
     const db = onSupabase ? null : getDb();
     const vendor = onSupabase
       ? await vendorsRepo.getByUserId(req.user.id)
-      : db.prepare('SELECT id, verification_status FROM vendor_profiles WHERE user_id = ?').get(req.user.id);
+      : db.prepare('SELECT * FROM vendor_profiles WHERE user_id = ?').get(req.user.id);
     if (!vendor) return res.status(404).json({ error: 'Vendor profile not found' });
 
     // Cap unverified vendors at 3 product listings. Editing/deleting still allowed.
@@ -216,7 +216,37 @@ router.post('/me/products', authenticate, requireRole('vendor'), upload.array('i
       db.prepare("UPDATE vendor_profiles SET catalog_updated_at = datetime('now') WHERE id = ?").run(vendor.id);
       created = db.prepare('SELECT * FROM products WHERE id = ?').get(id);
     }
-    realtime.emit('*', 'product:created', created);
+
+    // Broadcast enriched post to the News Feed in real time
+    const isVerified = Boolean(vendor.is_verified);
+    let parsedImages = [];
+    try {
+      parsedImages = typeof created.images === 'string' ? JSON.parse(created.images) : (created.images || []);
+    } catch {
+      parsedImages = [];
+    }
+
+    const feedPostPayload = {
+      ...created,
+      post_type: 'catalog_drop',
+      vendor_id: vendor.id,
+      vendor_name: vendor.shop_name,
+      vendor_logo: vendor.logo,
+      vendor_category: vendor.category || created.category,
+      vendor_state: vendor.state,
+      vendor_city: vendor.city,
+      vendor_rating: Number(vendor.rating || 0),
+      vendor_reviews: Number(vendor.total_reviews || 0),
+      whatsapp_number: isVerified ? vendor.whatsapp_number : null,
+      is_verified: isVerified,
+      is_restricted: !isVerified,
+      images: parsedImages,
+      reasons: isVerified
+        ? ['Just posted by a verified vendor']
+        : ['Unverified Vendor — Restricted Preview'],
+    };
+
+    realtime.emit('*', 'product:created', feedPostPayload);
     res.status(201).json(created);
   } catch (error) {
     console.error('Vendor product upload error:', error);

@@ -301,9 +301,10 @@ const FeedPostCard = ({ post, surface = 'recommended_for_you', onFollowChange = 
         }}
       >
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', minWidth: 0, flex: 1 }}>
-          {/* Square-ish Classic Profile Picture */}
+          {/* Square-ish Classic Profile Picture — links directly to Vendor Profile */}
           <div
             onClick={handleOpenVendor}
+            title={`View ${post.vendor_name || 'Vendor'}'s Shop Profile`}
             style={{
               width: 46,
               height: 46,
@@ -319,6 +320,7 @@ const FeedPostCard = ({ post, surface = 'recommended_for_you', onFollowChange = 
               fontSize: '0.95rem',
               flexShrink: 0,
               cursor: 'pointer',
+              transition: 'transform 0.15s ease, opacity 0.15s ease',
             }}
           >
             {post.vendor_logo ? (
@@ -336,12 +338,16 @@ const FeedPostCard = ({ post, surface = 'recommended_for_you', onFollowChange = 
             <div style={{ fontSize: '0.9rem', lineHeight: 1.35, color: '#334155' }}>
               <span
                 onClick={handleOpenVendor}
+                title={`View ${post.vendor_name || 'Vendor'}'s Shop Profile`}
                 style={{
                   fontWeight: 800,
                   color: isRestricted ? '#475569' : '#1e3a8a',
                   cursor: 'pointer',
                   marginRight: 5,
+                  textDecoration: 'none',
                 }}
+                onMouseEnter={(e) => { e.currentTarget.style.textDecoration = 'underline'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.textDecoration = 'none'; }}
               >
                 {post.vendor_name || 'Thrift Vendor'}
               </span>

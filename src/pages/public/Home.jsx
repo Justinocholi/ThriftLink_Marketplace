@@ -7,6 +7,7 @@ import InFeedSuggestedVendors from '../../components/InFeedSuggestedVendors';
 import InterestSelectorModal from '../../components/InterestSelectorModal';
 import { recommendations as recApi, vendors as vendorsApi, products as productsApi } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import { getSocket } from '../../services/socket';
 import { cldUrl } from '../../utils/cloudinary';
 import { ROUTES } from '../../routes';
 import {
@@ -138,6 +139,23 @@ const Home = () => {
     setPage(1);
     loadFeedData(surface, 1, false);
   }, [surface, loadFeedData]);
+
+  // Real-time: prepend newly posted vendor products to the feed immediately
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket) return;
+    const handleProductCreated = (newPost) => {
+      if (!newPost || !newPost.id) return;
+      setPosts((prev) => {
+        if (prev.some((p) => p.id === newPost.id)) return prev;
+        return [newPost, ...prev];
+      });
+    };
+    socket.on('product:created', handleProductCreated);
+    return () => {
+      socket.off('product:created', handleProductCreated);
+    };
+  }, []);
 
   const handleLoadMore = () => {
     const nextPage = page + 1;
