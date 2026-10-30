@@ -119,12 +119,44 @@ async function followVendor(userId, vendorId) {
       { id: uuidv4(), user_id: userId, vendor_id: vendorId },
       { onConflict: 'user_id,vendor_id' }
     );
+    // Notify vendor in-app
+    try {
+      const vp = supabaseData.unwrap(await db.from('vendor_profiles').select('user_id').eq('id', vendorId).maybeSingle());
+      if (vp?.user_id) {
+        await db.from('notifications').insert({
+          id: uuidv4(),
+          user_id: vp.user_id,
+          type: 'new_follower',
+          title: 'New Store Follower',
+          message: 'A customer started following your store profile. Keep your catalog updated!',
+          link: '/vendor/analytics',
+        });
+      }
+    } catch (_) {}
     return { following: true };
   }
 
   const db = getDb();
   db.prepare('INSERT OR IGNORE INTO vendor_follows (id, user_id, vendor_id) VALUES (?, ?, ?)')
     .run(uuidv4(), userId, vendorId);
+
+  try {
+    const vp = db.prepare('SELECT user_id FROM vendor_profiles WHERE id = ?').get(vendorId);
+    if (vp?.user_id) {
+      db.prepare(`
+        INSERT OR IGNORE INTO notifications (id, user_id, type, title, message, link)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `).run(
+        uuidv4(),
+        vp.user_id,
+        'new_follower',
+        'New Store Follower',
+        'A customer started following your store profile. Keep your catalog updated!',
+        '/vendor/analytics'
+      );
+    }
+  } catch (_) {}
+
   return { following: true };
 }
 
@@ -251,7 +283,18 @@ async function getCollaborativePeerVendorIds(userId, userInterests = []) {
 async function logInteraction({ userId = null, vendorId, eventType, metadata = {} }) {
   if (!vendorId || !eventType) throw new Error('vendorId and eventType are required');
 
-  const metaString = typeof metadata === 'string' ? metadata : JSON.stringify(metadata);
+  // Map extended event types ('share', 'post_view') to DB CHECK-compatible event types while preserving metadata
+  let dbEventType = eventType;
+  let enrichedMeta = typeof metadata === 'object' && metadata !== null ? { ...metadata } : {};
+  if (eventType === 'share') {
+    dbEventType = 'save';
+    enrichedMeta.originalEvent = 'share';
+  } else if (eventType === 'post_view') {
+    dbEventType = 'catalog_view';
+    enrichedMeta.originalEvent = 'post_view';
+  }
+
+  const metaString = JSON.stringify(enrichedMeta);
 
   if (isSupabase()) {
     const db = supabaseData.getDataClient();
@@ -263,7 +306,7 @@ async function logInteraction({ userId = null, vendorId, eventType, metadata = {
           .select('id')
           .eq('user_id', userId)
           .eq('vendor_id', vendorId)
-          .eq('event_type', eventType)
+          .eq('event_type', dbEventType)
           .gte('created_at', windowAgo)
           .maybeSingle()
       );
@@ -276,8 +319,8 @@ async function logInteraction({ userId = null, vendorId, eventType, metadata = {
       id: uuidv4(),
       user_id: userId,
       vendor_id: vendorId,
-      event_type: eventType,
-      metadata: metadata,
+      event_type: dbEventType,
+      metadata: enrichedMeta,
     });
     return { recorded: true };
   }
@@ -289,7 +332,7 @@ async function logInteraction({ userId = null, vendorId, eventType, metadata = {
       WHERE user_id = ? AND vendor_id = ? AND event_type = ?
         AND created_at >= datetime('now', '-15 minutes')
       LIMIT 1
-    `).get(userId, vendorId, eventType);
+    `).get(userId, vendorId, dbEventType);
     if (existing) {
       return { recorded: false, deduplicated: true };
     }
@@ -298,7 +341,7 @@ async function logInteraction({ userId = null, vendorId, eventType, metadata = {
   db.prepare(`
     INSERT INTO vendor_interactions (id, user_id, vendor_id, event_type, metadata)
     VALUES (?, ?, ?, ?, ?)
-  `).run(uuidv4(), userId, vendorId, eventType, metaString);
+  `).run(uuidv4(), userId, vendorId, dbEventType, metaString);
 
   return { recorded: true };
 }

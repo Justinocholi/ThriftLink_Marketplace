@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, MessageCircle, Star, Heart, X, Sparkles, MapPin, Package } from 'lucide-react';
+import { ShieldCheck, MessageCircle, Star, Heart, X, Sparkles, MapPin, Share2, Check } from 'lucide-react';
 import { recommendations as recApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { cldUrl } from '../utils/cloudinary';
@@ -35,6 +35,7 @@ const RecommendationCard = ({
   const [isFollowing, setIsFollowing] = useState(false);
   const [followingLoading, setFollowingLoading] = useState(false);
   const [dismissed, setDismissed] = useState(false);
+  const [copiedShare, setCopiedShare] = useState(false);
   const impressionRecorded = useRef(false);
 
   // Check follow status if logged in
@@ -122,6 +123,29 @@ const RecommendationCard = ({
     } else {
       navigate(`/vendor/${vendor.id}`);
     }
+  };
+
+  const handleShare = async (e) => {
+    e.stopPropagation();
+    recApi.trackEvent(vendor.id, 'share', { surface, position }).catch(() => {});
+    const shareUrl = `${window.location.origin}/vendor/${vendor.id}?ref=tl_share`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${vendor.shop_name} on ThriftLink`,
+          text: `Check out ${vendor.shop_name} (${vendor.category || 'Verified Thrift Vendor'}) on ThriftLink!`,
+          url: shareUrl,
+        });
+        return;
+      } catch {
+        // fallback to clipboard
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopiedShare(true);
+      setTimeout(() => setCopiedShare(false), 2000);
+    } catch {}
   };
 
   if (dismissed) return null;
@@ -389,6 +413,25 @@ const RecommendationCard = ({
           }}
         >
           View Store
+        </button>
+
+        <button
+          onClick={handleShare}
+          title="Share vendor profile"
+          style={{
+            padding: '0.55rem 0.65rem',
+            borderRadius: 8,
+            border: '1px solid #e2e8f0',
+            background: copiedShare ? '#dcfce7' : 'white',
+            color: copiedShare ? '#15803d' : '#475569',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease',
+          }}
+        >
+          {copiedShare ? <Check size={15} /> : <Share2 size={15} />}
         </button>
       </div>
     </div>

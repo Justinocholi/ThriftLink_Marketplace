@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import { vendors as vendorsApi, products as productsApi, recommendations as recApi } from '../../services/api';
-import { ShieldCheck, MessageCircle, Users, Flag, Star, Sparkles, Compass, Clock, SlidersHorizontal } from 'lucide-react';
+import { ShieldCheck, MessageCircle, Users, Flag, Star, Sparkles, Compass, Clock, SlidersHorizontal, Heart, Layers, ArrowRight, MapPin } from 'lucide-react';
 import ProductCard from '../../components/ProductCard';
 import RecommendationCard from '../../components/RecommendationCard';
 import InterestSelectorModal from '../../components/InterestSelectorModal';
@@ -397,24 +397,32 @@ const Home = () => {
             </button>
           </div>
 
-          <div className="quick-filters" style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-            {['Phones', 'Laptops', 'Shoes', 'Bags', 'Services'].map(filter => (
-              <Link to={`/categories?q=${filter}`} key={filter} className="filter-chip" style={{
+          <div className="quick-filters" style={{ display: 'flex', justifyContent: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
+            {[
+              { label: 'Vintage shirts', to: '/category/all?q=Vintage+shirts' },
+              { label: 'Thrift sneakers', to: '/category/all?q=Thrift+sneakers' },
+              { label: "Ladies' handbags", to: '/category/all?q=handbags' },
+              { label: "Men's thrift clothing", to: '/category/all?q=mens+clothing' },
+              { label: 'Thrift vendors in Abuja', to: '/category/all?state=FCT' },
+              { label: 'Under ₦5,000', to: '/category/all?max_price=5000' },
+            ].map(item => (
+              <Link to={item.to} key={item.label} className="filter-chip" style={{
                 padding: '0.5rem 1rem',
-                background: 'rgba(255,255,255,0.7)',
+                background: 'rgba(255,255,255,0.75)',
                 backdropFilter: 'blur(12px)',
                 WebkitBackdropFilter: 'blur(12px)',
-                border: '1px solid rgba(15,23,42,0.06)',
+                border: '1px solid rgba(15,23,42,0.08)',
                 borderRadius: '20px',
-                fontSize: '0.85rem',
+                fontSize: '0.84rem',
+                fontWeight: 600,
                 color: '#374151',
                 textDecoration: 'none',
                 transition: 'all 0.2s ease',
                 display: 'inline-block'
               }}
               onMouseOver={(e) => { e.currentTarget.style.borderColor = '#25D366'; e.currentTarget.style.color = '#0e9a52'; }}
-              onMouseOut={(e) => { e.currentTarget.style.borderColor = 'rgba(15,23,42,0.06)'; e.currentTarget.style.color = '#374151'; }}>
-                {filter}
+              onMouseOut={(e) => { e.currentTarget.style.borderColor = 'rgba(15,23,42,0.08)'; e.currentTarget.style.color = '#374151'; }}>
+                {item.label}
               </Link>
             ))}
           </div>
@@ -478,6 +486,7 @@ const Home = () => {
               </div>
               <h2 className="section-title" style={{ fontSize: 'var(--tl-text-h2)', fontWeight: 800, color: 'var(--tl-ink)', margin: 0 }}>
                 {recSurface === 'recommended_for_you' && 'Recommended For You'}
+                {recSurface === 'following' && 'Updates From Vendors You Follow'}
                 {recSurface === 'discover' && 'Discover Emerging & Verified Vendors'}
                 {recSurface === 'new_arrivals' && 'New Arrivals & Fresh Catalogs'}
               </h2>
@@ -511,6 +520,7 @@ const Home = () => {
           <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem', flexWrap: 'wrap' }}>
             {[
               { id: 'recommended_for_you', label: 'Recommended For You', Icon: Sparkles },
+              { id: 'following', label: 'Following', Icon: Heart },
               { id: 'discover', label: 'Discover Vendors', Icon: Compass },
               { id: 'new_arrivals', label: 'New Arrivals', Icon: Clock },
             ].map(({ id, label, Icon }) => {
@@ -551,10 +561,12 @@ const Home = () => {
           ) : recVendors.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '3.5rem 1rem', background: 'white', borderRadius: '16px', border: '1px dashed #cbd5e1' }}>
               <p style={{ color: '#64748b', fontSize: '1rem', margin: '0 0 1rem' }}>
-                No recommendations found for this surface right now.
+                {recSurface === 'following'
+                  ? "You aren't following any thrift vendors yet. Follow vendors in 'For You' or 'Discover' to track their latest catalog drops here."
+                  : 'No recommendations found for this surface right now.'}
               </p>
               <button
-                onClick={() => setInterestModalOpen(true)}
+                onClick={() => recSurface === 'following' ? setRecSurface('recommended_for_you') : setInterestModalOpen(true)}
                 style={{
                   padding: '0.65rem 1.25rem',
                   borderRadius: 999,
@@ -565,7 +577,7 @@ const Home = () => {
                   cursor: 'pointer',
                 }}
               >
-                Select Your Favorite Categories →
+                {recSurface === 'following' ? 'Explore Recommended Vendors →' : 'Select Your Favorite Categories →'}
               </button>
             </div>
           ) : (
@@ -581,6 +593,113 @@ const Home = () => {
               ))}
             </div>
           )}
+        </div>
+      </section>
+
+      {/* Curated Collections Section (Section 7 — Organic Growth & Discovery Collections) */}
+      <section className="curated-collections" style={{ padding: 'var(--tl-space-5) 2rem', background: 'linear-gradient(180deg, var(--tl-bg) 0%, #f0fdf4 100%)' }}>
+        <div className="section-container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
+            <div>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#059669', fontSize: '0.85rem', fontWeight: 700, marginBottom: 4 }}>
+                <Layers size={16} /> Curated Collections
+              </div>
+              <h2 className="section-title" style={{ fontSize: 'var(--tl-text-h2)', fontWeight: 800, color: 'var(--tl-ink)', margin: 0 }}>
+                Explore ThriftLink Collections
+              </h2>
+              <p style={{ color: '#64748b', margin: '0.35rem 0 0', fontSize: '0.95rem' }}>
+                Handpicked themes to help you discover verified Nigerian thrift vendors by style, budget, and city.
+              </p>
+            </div>
+            <Link to="/verified-vendors" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#16a34a', fontWeight: 700, textDecoration: 'none', fontSize: '0.9rem' }}>
+              View All Verified Vendors <ArrowRight size={16} />
+            </Link>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
+            {[
+              {
+                title: 'Best Vintage Clothing Vendors in Nigeria',
+                subtitle: 'Retro tees, 90s denim, and authentic vintage bales',
+                badge: 'Vintage & Retro',
+                gradient: 'linear-gradient(135deg, #065f46 0%, #10b981 100%)',
+                to: '/category/all?q=vintage&style=Vintage',
+              },
+              {
+                title: 'Affordable Thrift Fashion Finds',
+                subtitle: 'Quality verified thrift pieces under ₦5,000',
+                badge: 'Budget Friendly',
+                gradient: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
+                to: '/category/all?max_price=5000',
+              },
+              {
+                title: "Men's Thrift Fashion & Streetwear",
+                subtitle: 'Oversized shirts, cargo pants, jerseys & sneakers',
+                badge: "Men's Edit",
+                gradient: 'linear-gradient(135deg, #4c1d95 0%, #8b5cf6 100%)',
+                to: '/category/all?q=mens&style=Streetwear',
+              },
+              {
+                title: "Women's Thrift Collections & Bags",
+                subtitle: 'Dresses, corporate wear, heels & designer handbags',
+                badge: "Women's Edit",
+                gradient: 'linear-gradient(135deg, #831843 0%, #ec4899 100%)',
+                to: '/category/all?q=bags&style=Chic',
+              },
+              {
+                title: 'Thrift Vendors in Abuja & Lagos',
+                subtitle: 'Connect with verified vendors in your city for fast delivery',
+                badge: 'Local Discovery',
+                gradient: 'linear-gradient(135deg, #7c2d12 0%, #f97316 100%)',
+                to: '/category/all?state=FCT',
+              },
+            ].map((col) => (
+              <Link
+                key={col.title}
+                to={col.to}
+                className="tl-card tl-card-hover"
+                style={{
+                  position: 'relative',
+                  padding: '1.5rem 1.35rem',
+                  borderRadius: '18px',
+                  background: col.gradient,
+                  color: 'white',
+                  textDecoration: 'none',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  minHeight: '190px',
+                  boxShadow: '0 10px 25px -8px rgba(15, 23, 42, 0.2)',
+                  overflow: 'hidden',
+                }}
+              >
+                <div>
+                  <span style={{
+                    display: 'inline-block',
+                    padding: '0.25rem 0.65rem',
+                    borderRadius: 999,
+                    background: 'rgba(255,255,255,0.2)',
+                    backdropFilter: 'blur(6px)',
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    letterSpacing: '0.03em',
+                    marginBottom: '0.85rem',
+                  }}>
+                    {col.badge}
+                  </span>
+                  <h3 style={{ fontSize: '1.08rem', fontWeight: 800, lineHeight: 1.3, margin: '0 0 0.45rem', color: 'white' }}>
+                    {col.title}
+                  </h3>
+                  <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.88)', margin: 0, lineHeight: 1.45 }}>
+                    {col.subtitle}
+                  </p>
+                </div>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: '0.82rem', fontWeight: 700, marginTop: '1rem', color: 'white' }}>
+                  Explore Collection <ArrowRight size={14} />
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 

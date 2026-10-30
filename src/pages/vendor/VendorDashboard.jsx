@@ -7,6 +7,9 @@ import ErrorState from '../../components/ErrorState';
 
 const VendorDashboard = () => {
   const [copied, setCopied] = useState(false);
+  const [hasSharedStore, setHasSharedStore] = useState(() => {
+    try { return localStorage.getItem('tl_vendor_shared') === '1'; } catch { return false; }
+  });
   const { data, error, loading, retry } = useFetch(async () => {
     const [a, o, p, pr, r] = await Promise.all([
       vendorMe.getAnalytics(),
@@ -30,39 +33,82 @@ const VendorDashboard = () => {
   const products = data?.products || [];
   const referral = data?.referral || null;
 
-  // Onboarding checklist
+  const totals = analytics?.totals || {
+    profile_views: 0,
+    catalog_views: 0,
+    followers: 0,
+    whatsapp_clicks: 0,
+    rating: 0,
+    total_reviews: 0,
+  };
+  const catalogViewsCount = totals.catalog_views || products.reduce((sum, item) => sum + Number(item.views || 0), 0);
+
+  // 6-Step Vendor Activation Checklist (Section 3 — Vendor Success)
   const profileDone = Boolean(profile && profile.business_name && profile.business_description);
-  const kycDone = profile && (profile.kyc_status === 'pending' || profile.kyc_status === 'approved');
-  const productDone = products.length > 0;
+  const kycDone = Boolean(profile && (profile.kyc_status === 'pending' || profile.kyc_status === 'approved' || profile.is_verified));
+  const firstPostDone = products.length >= 1;
+  const fiveCatalogDone = products.length >= 5;
+  const sharedDone = Boolean(hasSharedStore || (referral?.totalVisits || 0) > 0);
+  const enquiryDone = Boolean((totals.whatsapp_clicks || 0) > 0 || recentOrders.length > 0);
   const isFreePlan = !profile?.subscription_plan || profile.subscription_plan === 'free' || profile.subscription_plan === 'Free';
 
   const requiredSteps = [
     {
       key: 'profile',
-      title: 'Complete your shop profile',
-      desc: 'Add your business name and description so buyers know who you are.',
+      title: '1. Complete your business profile',
+      desc: 'Add your shop name, bio, location, and WhatsApp contact so buyers know who you are.',
       done: profileDone,
       to: '/vendor/profile'
     },
     {
       key: 'kyc',
-      title: 'Submit KYC verification',
-      desc: 'Upload your NIN and a valid ID document to get verified.',
-      done: Boolean(kycDone),
+      title: '2. Complete verification (KYC)',
+      desc: 'Submit your NIN and ID document to earn the Verified Vendor badge and appear in main recommendations.',
+      done: kycDone,
       to: '/vendor/profile'
     },
     {
-      key: 'product',
-      title: 'Add your first product',
-      desc: 'List at least one item so buyers can start discovering you.',
-      done: productDone,
+      key: 'catalog5',
+      title: `3. Upload at least 5 catalog items (${Math.min(products.length, 5)}/5)`,
+      desc: 'Vendors with 5+ catalog items receive higher recommendation visibility and buyer engagement.',
+      done: fiveCatalogDone,
       to: '/vendor/products'
+    },
+    {
+      key: 'first_post',
+      title: '4. Publish your first catalog post',
+      desc: 'Publish at least one active thrift item with clear photos and pricing.',
+      done: firstPostDone,
+      to: '/vendor/products'
+    },
+    {
+      key: 'share',
+      title: '5. Share your ThriftLink profile',
+      desc: 'Share your personal storefront link on WhatsApp Status, Instagram, or TikTok to bring your audience.',
+      done: sharedDone,
+      actionLabel: 'Copy Link',
+      onAction: () => {
+        if (!profile?.id) return;
+        const url = `${window.location.origin}/vendor/${profile.id}?ref=${referral?.referralCode || profile.id}`;
+        navigator.clipboard.writeText(url).catch(() => {});
+        try { localStorage.setItem('tl_vendor_shared', '1'); } catch {}
+        setHasSharedStore(true);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }
+    },
+    {
+      key: 'enquiry',
+      title: '6. Respond to your first customer enquiry',
+      desc: 'Reply promptly when buyers reach out via in-app messages or WhatsApp enquiries.',
+      done: enquiryDone,
+      to: '/vendor/messages'
     }
   ];
   const optionalStep = {
     key: 'plan',
-    title: 'Upgrade your plan (optional)',
-    desc: 'Premium plans get more visibility and unlock advanced tools.',
+    title: 'Upgrade your plan (optional — Basic ₦3,000 / Pro ₦5,000)',
+    desc: 'Unlock featured placement and deeper analytics.',
     done: !isFreePlan,
     to: '/vendor/subscription',
     soft: true
@@ -72,16 +118,11 @@ const VendorDashboard = () => {
   const allRequiredDone = requiredDoneCount === requiredSteps.length;
   const checklistSteps = [...requiredSteps, optionalStep];
 
-  const totals = analytics?.totals || { profile_views: 0, whatsapp_clicks: 0, rating: 0, total_reviews: 0 };
-  const conversionRate = totals.profile_views > 0
-    ? ((totals.whatsapp_clicks / totals.profile_views) * 100).toFixed(1) + '%'
-    : '0%';
-
   const stats = [
-    { label: 'Profile Views',   value: totals.profile_views,   icon: <Eye size={24} />,           tone: 'sky',      trend: '+12%', isUp: true },
-    { label: 'WhatsApp Clicks', value: totals.whatsapp_clicks, icon: <MessageSquare size={24} />, tone: 'green',    trend: '+5%',  isUp: true },
-    { label: 'Conversion',      value: conversionRate,         icon: <TrendingUp size={24} />,    tone: 'sun',      trend: '-2%',  isUp: false },
-    { label: 'Store Rating',    value: totals.rating > 0 ? totals.rating.toFixed(1) : 'New', icon: <Star size={24} />, tone: 'lavender', trend: '0%', isUp: true },
+    { label: 'Profile Views',              sub: 'Storefront visits',           value: totals.profile_views,   icon: <Eye size={24} />,           tone: 'sky',      trend: 'Live', isUp: true },
+    { label: 'Catalog Views',              sub: 'Product & catalog opens',     value: catalogViewsCount,      icon: <Package size={24} />,       tone: 'lavender', trend: 'Live', isUp: true },
+    { label: 'Followers',                  sub: 'Customers following your shop', value: totals.followers || 0, icon: <Users size={24} />,         tone: 'sun',      trend: 'Live', isUp: true },
+    { label: 'Contact Clicks (Enquiries)', sub: 'WhatsApp & direct enquiries', value: totals.whatsapp_clicks, icon: <MessageSquare size={24} />, tone: 'green',    trend: 'Intent', isUp: true },
   ];
 
   if (error) return <ErrorState error={error} onRetry={retry} title="Couldn't load your dashboard" />;
@@ -110,15 +151,20 @@ const VendorDashboard = () => {
           .vd-share-box button { width: 100% !important; justify-content: center !important; }
         }
       `}</style>
-      {/* Onboarding checklist — shown until all required steps done */}
-      {!loading && !allRequiredDone && (
+      {/* 6-Step Vendor Activation Checklist (Section 3 — Vendor Success) */}
+      {!loading && (
         <div className="tl-glass-card" style={{
           padding: '1.5rem',
           marginBottom: '1.75rem',
           border: '1.5px solid rgba(37,211,102,0.4)',
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.5rem' }}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a' }}>Get your shop ready</h3>
+            <div>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>Vendor Activation Checklist</h3>
+              <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '0.15rem 0 0' }}>
+                Complete these 6 steps to maximize your visibility in ThriftLink recommendations.
+              </p>
+            </div>
             <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#25D366' }}>
               {requiredDoneCount} of {requiredSteps.length} steps complete
             </span>
@@ -131,13 +177,13 @@ const VendorDashboard = () => {
               transition: 'width 0.3s ease'
             }} />
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
             {checklistSteps.map(step => (
               <div key={step.key} style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.85rem',
-                padding: '0.85rem 1rem',
+                padding: '0.8rem 1rem',
                 borderRadius: '12px',
                 border: '1px solid #f1f5f9',
                 background: step.done ? '#f0fdf4' : '#fafafa'
@@ -147,7 +193,7 @@ const VendorDashboard = () => {
                   : <Circle size={22} color="#cbd5e1" style={{ flexShrink: 0 }} />
                 }
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.92rem', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                     {step.title}
                     {step.soft && (
                       <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#3b82f6', background: 'rgba(59,130,246,0.1)', padding: '0.15rem 0.5rem', borderRadius: 999, textTransform: 'uppercase' }}>
@@ -155,9 +201,31 @@ const VendorDashboard = () => {
                       </span>
                     )}
                   </div>
-                  <div style={{ fontSize: '0.82rem', color: '#64748b', marginTop: 2 }}>{step.desc}</div>
+                  <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: 2 }}>{step.desc}</div>
                 </div>
-                {!step.done && (
+                {!step.done && step.onAction && (
+                  <button
+                    type="button"
+                    onClick={step.onAction}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.3rem',
+                      background: '#25D366',
+                      color: 'white',
+                      border: 'none',
+                      padding: '0.5rem 0.9rem',
+                      borderRadius: 999,
+                      fontWeight: 700,
+                      fontSize: '0.8rem',
+                      cursor: 'pointer',
+                      flexShrink: 0
+                    }}
+                  >
+                    <Copy size={13} /> {step.actionLabel || 'Action'}
+                  </button>
+                )}
+                {!step.done && step.to && (
                   <Link to={step.to} style={{
                     display: 'inline-flex',
                     alignItems: 'center',
@@ -198,10 +266,11 @@ const VendorDashboard = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
               <div className={`tl-stat-icon ${s.tone}`}>{s.icon}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', fontWeight: '700', color: s.isUp ? '#10b981' : '#ef4444', background: s.isUp ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', padding: '0.3rem 0.6rem', borderRadius: '999px' }}>
-                {s.isUp ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />} {s.trend}
+                <ArrowUpRight size={14} /> {s.trend}
               </div>
             </div>
-            <p style={{ color: '#64748b', fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.25rem' }}>{s.label}</p>
+            <p style={{ color: '#0f172a', fontSize: '0.875rem', fontWeight: '700', marginBottom: '0.1rem' }}>{s.label}</p>
+            {s.sub && <p style={{ color: '#64748b', fontSize: '0.75rem', marginBottom: '0.35rem' }}>{s.sub}</p>}
             <h4 className="vd-stat-value" style={{ fontSize: '2rem', fontWeight: '800', color: '#0f172a', fontFamily: "'Space Grotesk', sans-serif" }}>{s.value}</h4>
           </div>
         ))}

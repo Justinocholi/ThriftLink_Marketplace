@@ -26,6 +26,36 @@ const UserProfile = () => {
   const [error, setError] = useState('');
   const [interests, setInterests] = useState([]);
   const [interestModalOpen, setInterestModalOpen] = useState(false);
+  const [notifPrefs, setNotifPrefs] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('tl_notification_prefs') || 'null');
+      return saved || {
+        followedVendorDrops: true,
+        matchingNewVendors: true,
+        savedVendorUpdates: true,
+        enquiryReplies: true,
+      };
+    } catch {
+      return {
+        followedVendorDrops: true,
+        matchingNewVendors: true,
+        savedVendorUpdates: true,
+        enquiryReplies: true,
+      };
+    }
+  });
+
+  const handleToggleNotifPref = (key) => {
+    setNotifPrefs((prev) => {
+      const next = { ...prev, [key]: !prev[key] };
+      try {
+        localStorage.setItem('tl_notification_prefs', JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+    setMessage('Notification preferences saved.');
+    setTimeout(() => setMessage(''), 2200);
+  };
 
   const loadInterests = useCallback(() => {
     recApi.getUserInterests()
@@ -153,6 +183,17 @@ const UserProfile = () => {
             <Sparkles size={18} /> Thrifting Interests ({interests.length})
           </div>
         </button>
+        <button 
+          onClick={() => setActiveTab('notifications')}
+          style={{ 
+            padding: '1rem 0.5rem', background: 'none', border: 'none', borderBottom: activeTab === 'notifications' ? '2px solid #3b82f6' : '2px solid transparent',
+            color: activeTab === 'notifications' ? '#3b82f6' : '#64748b', fontWeight: '700', fontSize: '0.95rem', cursor: 'pointer', transition: 'all 0.2s'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Bell size={18} /> Notifications
+          </div>
+        </button>
       </div>
 
       {/* Notifications */}
@@ -243,7 +284,7 @@ const UserProfile = () => {
               </button>
             </div>
           </form>
-        ) : (
+        ) : activeTab === 'interests' ? (
           <div style={{ display: 'grid', gap: '1.5rem', maxWidth: '600px' }}>
             <div>
               <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.5rem' }}>
@@ -304,6 +345,98 @@ const UserProfile = () => {
                 <SlidersHorizontal size={16} />
                 Manage Categories
               </button>
+            </div>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gap: '1.5rem', maxWidth: '640px' }}>
+            <div>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.5rem' }}>
+                Notification Controls
+              </h3>
+              <p style={{ color: '#64748b', fontSize: '0.88rem', margin: 0, lineHeight: 1.5 }}>
+                Choose which updates you want to receive so ThriftLink stays helpful and never feels noisy.
+              </p>
+            </div>
+
+            <div style={{ display: 'grid', gap: '1rem' }}>
+              {[
+                {
+                  key: 'followedVendorDrops',
+                  title: 'Followed Vendor Drops',
+                  desc: 'Get notified when a vendor you follow uploads a new catalog item or collection.',
+                },
+                {
+                  key: 'matchingNewVendors',
+                  title: 'New Matching Verified Vendors',
+                  desc: 'Receive alerts when newly verified vendors match your saved categories, style, or city.',
+                },
+                {
+                  key: 'savedVendorUpdates',
+                  title: 'Saved Item & Catalog Updates',
+                  desc: 'Get notified when items or vendors you saved update availability or pricing.',
+                },
+                {
+                  key: 'enquiryReplies',
+                  title: 'Enquiry & Message Responses',
+                  desc: 'Immediate alerts when a vendor replies to your product enquiry or message.',
+                },
+              ].map((item) => {
+                const enabled = Boolean(notifPrefs[item.key]);
+                return (
+                  <div
+                    key={item.key}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '1rem',
+                      padding: '1rem 1.25rem',
+                      borderRadius: 14,
+                      border: '1px solid #e2e8f0',
+                      background: enabled ? '#f8fafc' : 'white',
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.92rem', marginBottom: 2 }}>
+                        {item.title}
+                      </div>
+                      <div style={{ fontSize: '0.8rem', color: '#64748b', lineHeight: 1.45 }}>
+                        {item.desc}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleNotifPref(item.key)}
+                      aria-pressed={enabled}
+                      style={{
+                        width: 48,
+                        height: 26,
+                        borderRadius: 999,
+                        border: 'none',
+                        background: enabled ? '#16b865' : '#cbd5e1',
+                        position: 'relative',
+                        cursor: 'pointer',
+                        flexShrink: 0,
+                        transition: 'background 0.2s ease',
+                      }}
+                    >
+                      <span
+                        style={{
+                          position: 'absolute',
+                          top: 3,
+                          left: enabled ? 25 : 3,
+                          width: 20,
+                          height: 20,
+                          borderRadius: '50%',
+                          background: 'white',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                          transition: 'left 0.2s ease',
+                        }}
+                      />
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

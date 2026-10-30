@@ -7,7 +7,7 @@ import RecommendationCard from '../../components/RecommendationCard';
 import { vendors as vendorsApi, reviews as reviewsApi, userMe, recommendations as recApi } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useAuthGate } from '../../context/UIContext';
-import { Flag, Share2, Heart, Check, Users, MapPin, Package } from 'lucide-react';
+import { Flag, Share2, Heart, Check, Users, MapPin, Package, ShieldCheck, Clock, Info } from 'lucide-react';
 import checklistIcon from '../../assets/checklist.png';
 import starIcon from '../../assets/star.png';
 import whatsappIcon from '../../assets/whatsapp (1).png';
@@ -99,6 +99,7 @@ const VendorPublicProfile = () => {
     const vendorName = data?.vendor?.shop_name || 'Thrift Shop';
     const refCode = data?.vendor?.referral_code || id;
     const shareUrl = `${window.location.origin}/vendor/${id}?ref=${encodeURIComponent(refCode)}`;
+    recApi.trackEvent(id, 'share', { surface: 'vendor_profile' }).catch(() => {});
 
     if (navigator.share) {
       try {
@@ -193,12 +194,18 @@ const VendorPublicProfile = () => {
           </div>
 
           <div style={{ flex: 1, minWidth: '240px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
               <h1 className="vpp-name" style={{ fontSize: '2rem', fontWeight: '800', color: '#1f2937', margin: 0 }}>{vendor.shop_name}</h1>
-              {vendor.is_verified === 1 && (
-                <span style={{ background: '#dcfce7', color: '#166534', padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.85rem', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  <img src={checklistIcon} alt="Verified" style={{ width: '14px', height: '14px' }} />
+              {Boolean(vendor.is_verified) && (
+                <span style={{ background: '#dcfce7', color: '#166534', padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.82rem', fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <ShieldCheck size={15} color="#166534" />
                   Verified Vendor
+                </span>
+              )}
+              {products.length > 0 && (
+                <span style={{ background: '#eff6ff', color: '#1d4ed8', padding: '0.3rem 0.75rem', borderRadius: '20px', fontSize: '0.78rem', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <Clock size={13} color="#1d4ed8" />
+                  Active Catalog • Typically responds to enquiries
                 </span>
               )}
             </div>
@@ -214,7 +221,30 @@ const VendorPublicProfile = () => {
             </div>
 
             {vendor.description && (
-              <p style={{ maxWidth: '600px', color: '#4b5563', lineHeight: '1.6', marginBottom: '1.5rem' }}>{vendor.description}</p>
+              <p style={{ maxWidth: '600px', color: '#4b5563', lineHeight: '1.6', marginBottom: '1.25rem' }}>{vendor.description}</p>
+            )}
+
+            {/* Honest Verification Disclaimer (Section 2 — Trust & Safety) */}
+            {Boolean(vendor.is_verified) && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '0.6rem',
+                maxWidth: '640px',
+                padding: '0.75rem 1rem',
+                marginBottom: '1.25rem',
+                borderRadius: '10px',
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                fontSize: '0.78rem',
+                color: '#475569',
+                lineHeight: 1.45,
+              }}>
+                <Info size={16} color="#0284c7" style={{ flexShrink: 0, marginTop: 1 }} />
+                <span>
+                  <strong>Verification Scope:</strong> ThriftLink verification confirms vendor identity and business details; it does not guarantee product quality, delivery, or transaction outcomes. Always inspect items and chat with the vendor before paying.
+                </span>
+              </div>
             )}
 
             <div className="vpp-actions" style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
@@ -293,7 +323,10 @@ const VendorPublicProfile = () => {
               const images = (() => { try { return JSON.parse(product.images || '[]'); } catch { return []; } })();
               return (
                 <div key={product.id}
-                  onClick={() => navigate(`/product/${product.id}`)}
+                  onClick={() => {
+                    recApi.trackEvent(id, 'post_view', { productId: product.id, surface: 'vendor_catalog' }).catch(() => {});
+                    navigate(`/product/${product.id}`);
+                  }}
                   style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e5e7eb', cursor: 'pointer', transition: 'transform 0.2s' }}
                   onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'}
                   onMouseOut={e => e.currentTarget.style.transform = 'none'}

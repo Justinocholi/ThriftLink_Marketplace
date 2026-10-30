@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
-import { products as productsApi } from '../../services/api';
-import { Search, SlidersHorizontal, ShieldCheck, X } from 'lucide-react';
+import { products as productsApi, vendors as vendorsApi } from '../../services/api';
+import { Search, SlidersHorizontal, ShieldCheck, X, Store, Package, Sparkles } from 'lucide-react';
 import ProductCard from '../../components/ProductCard';
+import RecommendationCard from '../../components/RecommendationCard';
 import { useFetch } from '../../hooks/useFetch';
 import ErrorState from '../../components/ErrorState';
 
@@ -20,6 +21,7 @@ const CategoryDetails = () => {
   const minPrice = searchParams.get('min_price') || '';
   const maxPrice = searchParams.get('max_price') || '';
   const condition = searchParams.get('condition') || '';
+  const styleFilter = searchParams.get('style') || '';
   const state = searchParams.get('state') || '';
   const verifiedOnly = searchParams.get('verified') === '1';
 
@@ -28,15 +30,17 @@ const CategoryDetails = () => {
     minPrice ? 1 : 0,
     maxPrice ? 1 : 0,
     condition ? 1 : 0,
+    styleFilter ? 1 : 0,
     state ? 1 : 0,
   ].reduce((a, b) => a + b, 0);
 
   const categoryName = id === 'all' ? "All Categories" : id;
 
   const { data: fetched, error, loading, retry } = useFetch(async () => {
+    const combinedQuery = [searchTerm, styleFilter].filter(Boolean).join(' ').trim();
     const params = {
       category: id === 'all' ? '' : categoryName,
-      search: searchTerm,
+      search: combinedQuery,
       sort: sortBy,
       min_price: minPrice,
       max_price: maxPrice,
@@ -44,15 +48,42 @@ const CategoryDetails = () => {
       state: state,
       limit: 24
     };
-    const data = await productsApi.list(params);
+    const [data, vendorData] = await Promise.all([
+      productsApi.list(params).catch(() => ({ products: [], total: 0 })),
+      vendorsApi.list({
+        search: combinedQuery,
+        category: id === 'all' ? '' : categoryName,
+        state: state,
+        verified: 'true',
+        limit: 8,
+      }).catch(() => ({ vendors: [] })),
+    ]);
+
     let list = data.products || [];
     if (verifiedOnly) list = list.filter(p => p.is_verified);
     if (sortBy === 'rating') {
       list = [...list].sort((a, b) => Number(b.vendor_rating || b.rating || 0) - Number(a.vendor_rating || a.rating || 0));
     }
-    return { products: list, total: verifiedOnly ? list.length : (data.total || list.length) };
-  }, [id, searchTerm, sortBy, minPrice, maxPrice, condition, state, verifiedOnly]);
+
+    let matchedVendors = Array.isArray(vendorData?.vendors) ? vendorData.vendors : [];
+    if (combinedQuery || state || id !== 'all') {
+      const qLower = combinedQuery.toLowerCase();
+      matchedVendors = matchedVendors.filter((v) => {
+        if (state && v.state && !v.state.toLowerCase().includes(state.toLowerCase())) return false;
+        if (!qLower) return true;
+        const hay = `${v.shop_name || ''} ${v.category || ''} ${v.description || ''} ${v.state || ''}`.toLowerCase();
+        return qLower.split(/\s+/).some((tok) => hay.includes(tok));
+      });
+    }
+
+    return {
+      products: list,
+      vendors: matchedVendors.slice(0, 4),
+      total: verifiedOnly ? list.length : (data.total || list.length),
+    };
+  }, [id, searchTerm, sortBy, minPrice, maxPrice, condition, styleFilter, state, verifiedOnly]);
   const products = fetched?.products || [];
+  const matchingVendors = fetched?.vendors || [];
   const total = fetched?.total || 0;
 
   // Lock body scroll while bottom sheet is open
@@ -117,6 +148,23 @@ const CategoryDetails = () => {
       </div>
 
       <div>
+        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>Style / Vibe</label>
+        <select
+          value={styleFilter}
+          onChange={(e) => updateFilter('style', e.target.value)}
+          style={{ width: '100%', padding: '0.6rem', border: '1px solid #e5e7eb', borderRadius: '6px' }}
+        >
+          <option value="">All Styles</option>
+          <option value="Vintage">Vintage & Retro</option>
+          <option value="Streetwear">Streetwear & Casual</option>
+          <option value="Y2K">90s & Y2K</option>
+          <option value="Chic">Chic & Corporate</option>
+          <option value="Luxury">Luxury & Designer</option>
+          <option value="Everyday">Everyday Thrift</option>
+        </select>
+      </div>
+
+      <div>
         <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>Condition</label>
         <select
           value={condition}
@@ -140,8 +188,15 @@ const CategoryDetails = () => {
         >
           <option value="">All Nigeria</option>
           <option value="Lagos">Lagos</option>
-          <option value="Abuja">Abuja</option>
-          <option value="Rivers">Rivers</option>
+          <option value="FCT">Abuja (FCT)</option>
+          <option value="Rivers">Rivers (Port Harcourt)</option>
+          <option value="Oyo">Oyo (Ibadan)</option>
+          <option value="Edo">Edo (Benin)</option>
+          <option value="Enugu">Enugu</option>
+          <option value="Delta">Delta</option>
+          <option value="Kano">Kano</option>
+          <option value="Ogun">Ogun</option>
+          <option value="Kaduna">Kaduna</option>
         </select>
       </div>
 
@@ -255,6 +310,80 @@ const CategoryDetails = () => {
             <FilterInputs layout="grid" />
           </div>
         )}
+
+        {/* Quick Search Pills (Section 5 — Useful Search Queries) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '2rem' }}>
+          <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#64748b', marginRight: 4 }}>Popular Searches:</span>
+          {[
+            { label: 'Vintage shirts', q: 'Vintage shirts', style: 'Vintage', state: '' },
+            { label: 'Thrift sneakers', q: 'Thrift sneakers', style: '', state: '' },
+            { label: "Ladies' handbags", q: 'handbags', style: '', state: '' },
+            { label: "Men's thrift clothing", q: 'mens clothing', style: '', state: '' },
+            { label: 'Thrift vendors in Abuja', q: '', style: '', state: 'FCT' },
+          ].map((pill) => {
+            const isActive = searchTerm === pill.q && styleFilter === pill.style && state === pill.state && (pill.q || pill.state);
+            return (
+              <button
+                key={pill.label}
+                type="button"
+                onClick={() => {
+                  const next = {};
+                  if (pill.q) next.q = pill.q;
+                  if (pill.style) next.style = pill.style;
+                  if (pill.state) next.state = pill.state;
+                  setSearchParams(next);
+                }}
+                style={{
+                  padding: '0.4rem 0.85rem',
+                  borderRadius: 999,
+                  border: isActive ? '1.5px solid #16b865' : '1px solid #e2e8f0',
+                  background: isActive ? '#dcfce7' : 'white',
+                  color: isActive ? '#15803d' : '#475569',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                {pill.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Matching Verified Vendors Section (Section 5 — Return relevant vendors alongside catalog items) */}
+        {!loading && matchingVendors.length > 0 && (
+          <div style={{ marginBottom: '2.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Store size={20} color="#16b865" />
+                <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>
+                  Matching Verified Vendors ({matchingVendors.length})
+                </h2>
+              </div>
+              <Link to="/verified-vendors" style={{ color: '#16b865', fontWeight: 700, fontSize: '0.85rem', textDecoration: 'none' }}>
+                See all verified vendors →
+              </Link>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1.25rem' }}>
+              {matchingVendors.map((v, idx) => (
+                <RecommendationCard
+                  key={v.id}
+                  vendor={v}
+                  surface="discover"
+                  position={idx}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Catalog Items Header */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: '1rem' }}>
+          <Package size={20} color="#3b82f6" />
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>
+            Catalog Items ({total})
+          </h2>
+        </div>
 
         {error ? (
           <ErrorState error={error} onRetry={retry} title="Couldn't load products" />

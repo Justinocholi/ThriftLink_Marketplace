@@ -57,6 +57,7 @@ const UserDashboard = () => {
   });
 
   const [recommendations, setRecommendations] = useState([]);
+  const [recSurface, setRecSurface] = useState('recommended_for_you');
   const [recLoading, setRecLoading] = useState(true);
   const [saveToast, setSaveToast] = useState('');
 
@@ -96,11 +97,11 @@ const UserDashboard = () => {
     }
   }, [data?.interests]);
 
-  // Load recommendations whenever interests or component mounts
-  const loadRecommendations = async () => {
+  // Load recommendations whenever interests or surface changes
+  const loadRecommendations = async (surfaceToLoad = recSurface) => {
     setRecLoading(true);
     try {
-      const res = await recApi.getRecommendations({ surface: 'recommended_for_you', limit: 4 });
+      const res = await recApi.getRecommendations({ surface: surfaceToLoad, limit: 4 });
       setRecommendations(Array.isArray(res.vendors) ? res.vendors : []);
     } catch (err) {
       console.error('Failed to load personalized recommendations:', err);
@@ -110,8 +111,8 @@ const UserDashboard = () => {
   };
 
   useEffect(() => {
-    loadRecommendations();
-  }, []);
+    loadRecommendations(recSurface);
+  }, [recSurface]);
 
   // Quick 1-click add or remove preference with immediate save
   const handleQuickToggle = async (tag) => {
@@ -403,9 +404,9 @@ const UserDashboard = () => {
         </div>
       </div>
 
-      {/* Recommended For You Section (Directly on Buyer Dashboard) */}
+      {/* Recommended For You / Following / New Arrivals Section (Directly on Buyer Dashboard) */}
       <div style={{ marginBottom: '2.5rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span className="tl-glass-pill" style={{ color: '#059669', borderColor: 'rgba(16, 185, 129, 0.3)', padding: '0.2rem 0.65rem' }}>
@@ -413,10 +414,14 @@ const UserDashboard = () => {
               </span>
             </div>
             <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0f172a', margin: '0.25rem 0 0' }}>
-              Recommended Vendors For You
+              {recSurface === 'recommended_for_you' && 'Recommended Vendors For You'}
+              {recSurface === 'following' && 'Updates From Vendors You Follow'}
+              {recSurface === 'new_arrivals' && 'New Arrivals & Fresh Catalogs'}
             </h3>
             <p style={{ color: '#64748b', fontSize: '0.85rem', margin: 0 }}>
-              Curated verified thrift stores matching your saved interests, style, and browsing activity.
+              {recSurface === 'following'
+                ? 'Stay updated on the latest catalog drops from verified thrift vendors you follow.'
+                : 'Curated verified thrift stores matching your saved interests, style, and browsing activity.'}
             </p>
           </div>
 
@@ -436,6 +441,41 @@ const UserDashboard = () => {
           </Link>
         </div>
 
+        {/* Surface Switcher Pills */}
+        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
+          {[
+            { id: 'recommended_for_you', label: 'For You', Icon: Sparkles },
+            { id: 'following', label: 'Following', Icon: Heart },
+            { id: 'new_arrivals', label: 'New Arrivals', Icon: Clock },
+          ].map(({ id, label, Icon }) => {
+            const active = recSurface === id;
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setRecSurface(id)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '0.45rem 0.95rem',
+                  borderRadius: 999,
+                  border: active ? '1.5px solid #10b981' : '1px solid #e2e8f0',
+                  background: active ? 'rgba(16, 185, 129, 0.12)' : 'white',
+                  color: active ? '#047857' : '#64748b',
+                  fontWeight: active ? 700 : 600,
+                  fontSize: '0.82rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <Icon size={14} />
+                {label}
+              </button>
+            );
+          })}
+        </div>
+
         {recLoading ? (
           <div style={{ padding: '3rem', textAlign: 'center' }}>
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500 mx-auto mb-2" />
@@ -453,7 +493,7 @@ const UserDashboard = () => {
               <RecommendationCard
                 key={vendor.id}
                 vendor={vendor}
-                surface="recommended_for_you"
+                surface={recSurface}
                 position={index}
                 rankingVersion={vendor.rankingVersion || 'v1.0'}
               />
@@ -463,14 +503,16 @@ const UserDashboard = () => {
           <div className="tl-glass-card" style={{ padding: '2.5rem', textAlign: 'center' }}>
             <Store size={36} color="#94a3b8" style={{ marginBottom: '0.75rem' }} />
             <h4 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0f172a', margin: '0 0 0.5rem' }}>
-              Discovering New Verified Vendors
+              {recSurface === 'following' ? 'No Followed Vendors Yet' : 'Discovering New Verified Vendors'}
             </h4>
             <p style={{ color: '#64748b', fontSize: '0.85rem', maxWidth: 440, margin: '0 auto 1.25rem' }}>
-              Select more preferences above or browse categories to help the algorithm personalize your storefront recommendations.
+              {recSurface === 'following'
+                ? "Follow your favorite thrift stores in the 'For You' tab to see their catalog updates here."
+                : 'Select more preferences above or browse categories to help the algorithm personalize your storefront recommendations.'}
             </p>
             <button
               type="button"
-              onClick={() => setInterestModalOpen(true)}
+              onClick={() => recSurface === 'following' ? setRecSurface('recommended_for_you') : setInterestModalOpen(true)}
               style={{
                 padding: '0.6rem 1.25rem',
                 borderRadius: 999,
@@ -482,7 +524,7 @@ const UserDashboard = () => {
                 cursor: 'pointer',
               }}
             >
-              Select Your Interests
+              {recSurface === 'following' ? 'Browse Recommended Vendors' : 'Select Your Interests'}
             </button>
           </div>
         )}

@@ -191,18 +191,18 @@ function scoreVendor(vendor, context, weights = DEFAULT_WEIGHTS) {
 
   const normalizedScore = Math.min(100, Math.max(0, Math.round(totalScore * 100)));
 
-  // Generate transparent explanation reasons for UI
+  // Generate transparent explanation reasons for UI (Section 6 of Blueprint)
   const reasons = [];
   if (userInterests.includes(vendor.category)) {
-    reasons.push(`Matches your interest in ${vendor.category}`);
+    reasons.push(`Based on your interest in ${vendor.category}`);
   } else if (matchedStyleName) {
-    reasons.push(`Matches your ${matchedStyleName} style`);
+    reasons.push(`Based on your interest in ${matchedStyleName.toLowerCase()}`);
   }
   if (isPeerFollowed) {
-    reasons.push('Popular with shoppers sharing your style');
+    reasons.push('Because you follow similar vendors');
   }
   if (activityFreshness > 0.6) {
-    reasons.push('Recently active catalog');
+    reasons.push('Recently added by a verified vendor');
   }
   if (vendor.rating >= 4.5 && vendor.total_reviews >= 3) {
     reasons.push(`Highly rated (${vendor.rating.toFixed(1)}/5)`);
@@ -324,6 +324,11 @@ async function getRecommendations({
     // Exclude target vendor when generating similar vendors
     if (surface === 'similar' && vendorId && v.id === vendorId) return false;
 
+    // For "following" surface, ONLY include vendors the user follows
+    if (surface === 'following') {
+      return followedSet.has(v.id);
+    }
+
     // For "recommended_for_you" or discovery follow suggestions, optionally exclude already followed
     if (excludeFollowed && (surface === 'recommended_for_you' || surface === 'discover') && followedSet.has(v.id)) {
       return false;
@@ -344,7 +349,22 @@ async function getRecommendations({
   // 4. Surface-specific ranking logic
   let ranked = [];
 
-  if (surface === 'similar' && vendorId) {
+  if (surface === 'following') {
+    ranked = candidatePool
+      .map((v) => {
+        const scored = scoreVendor(v, scoringContext, DEFAULT_WEIGHTS);
+        return {
+          ...scored,
+          reasons: ['Following this vendor', ...(scored.reasons || []).slice(0, 2)],
+        };
+      })
+      .sort((a, b) => {
+        const timeA = new Date(a.latest_catalog_update || 0).getTime();
+        const timeB = new Date(b.latest_catalog_update || 0).getTime();
+        if (timeB !== timeA) return timeB - timeA;
+        return b.score - a.score;
+      });
+  } else if (surface === 'similar' && vendorId) {
     // Similar vendors: match category overlap, catalog size, and rating
     const targetVendor = eligibleVendors.find((v) => v.id === vendorId);
     if (!targetVendor) return { vendors: [], total: 0, rankingVersion: RANKING_VERSION };

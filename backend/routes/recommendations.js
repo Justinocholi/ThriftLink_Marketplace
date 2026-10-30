@@ -10,12 +10,15 @@ const ALLOWED_SURFACES = new Set([
   'discover',
   'similar',
   'new_arrivals',
+  'following',
 ]);
 
 const ALLOWED_EVENT_TYPES = new Set([
+  'post_view',
   'profile_view',
   'catalog_view',
   'save',
+  'share',
   'follow',
   'contact_click',
   'dismiss',
