@@ -146,6 +146,59 @@ async function getVendorFollowerCount(vendorId) {
   return row ? row.count : 0;
 }
 
+/**
+ * Step 5 of Algorithm Blueprint: Collaborative Filtering
+ * Finds vendors followed by other shoppers who have similar/overlapping preferences
+ */
+async function getCollaborativePeerVendorIds(userId, userInterests = []) {
+  if (!userId || !Array.isArray(userInterests) || userInterests.length === 0) return new Set();
+
+  try {
+    if (isSupabase()) {
+      const db = supabaseData.getDataClient();
+      const peers = supabaseData.unwrap(
+        await db.from('user_interests')
+          .select('user_id')
+          .in('category', userInterests)
+          .neq('user_id', userId)
+          .limit(30)
+      ) || [];
+      const peerUserIds = Array.from(new Set(peers.map((p) => p.user_id)));
+      if (peerUserIds.length > 0) {
+        const follows = supabaseData.unwrap(
+          await db.from('vendor_follows')
+            .select('vendor_id')
+            .in('user_id', peerUserIds)
+            .limit(30)
+        ) || [];
+        return new Set(follows.map((f) => f.vendor_id));
+      }
+      return new Set();
+    }
+
+    const db = getDb();
+    const placeholders = userInterests.map(() => '?').join(',');
+    const rows = db.prepare(`
+      SELECT DISTINCT vf.vendor_id
+      FROM vendor_follows vf
+      WHERE vf.user_id IN (
+        SELECT DISTINCT ui.user_id
+        FROM user_interests ui
+        WHERE ui.category IN (${placeholders}) AND ui.user_id != ?
+        LIMIT 30
+      )
+      AND vf.vendor_id NOT IN (
+        SELECT vendor_id FROM vendor_follows WHERE user_id = ?
+      )
+      LIMIT 30
+    `).all(...userInterests, userId, userId);
+    return new Set(rows.map((r) => r.vendor_id));
+  } catch (err) {
+    console.error('getCollaborativePeerVendorIds error:', err);
+    return new Set();
+  }
+}
+
 // ---------------------------------------------------------------------------
 // 3. Interactions & Anti-Abuse Deduplication
 // ---------------------------------------------------------------------------
@@ -649,6 +702,7 @@ module.exports = {
   isFollowing,
   getUserFollowedVendorIds,
   getVendorFollowerCount,
+  getCollaborativePeerVendorIds,
   logInteraction,
   getDismissedVendorIds,
   getUserInteractionSignals,

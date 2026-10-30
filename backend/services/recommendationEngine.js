@@ -82,19 +82,51 @@ function scoreVendor(vendor, context, weights = DEFAULT_WEIGHTS) {
   // 1. Interest Match (0.0 - 1.0)
   let interestMatch = 0.0;
   const vendorCategories = vendor.categories || (vendor.category ? [vendor.category] : []);
+  const vendorBio = `${vendor.shop_name || ''} ${vendor.description || ''} ${vendor.category || ''}`.toLowerCase();
+  let matchedStyleName = null;
+
   if (userInterests.length > 0) {
-    const matchesPrimary = userInterests.includes(vendor.category);
-    const matchesAny = vendorCategories.some((c) => userInterests.includes(c));
-    if (matchesPrimary) {
-      interestMatch = 1.0;
-    } else if (matchesAny) {
-      interestMatch = 0.7;
+    let matchPoints = 0;
+    let maxPoints = 0;
+
+    for (const interest of userInterests) {
+      maxPoints += 1;
+      const lower = interest.toLowerCase();
+      // Category match
+      if (vendorCategories.some((c) => c && (c.toLowerCase().includes(lower) || lower.includes(c.toLowerCase())))) {
+        matchPoints += 1.0;
+      }
+      // Style / keyword match in vendor bio / shop name
+      else if (
+        (lower.includes('vintage') && (vendorBio.includes('vintage') || vendorBio.includes('retro'))) ||
+        (lower.includes('y2k') && (vendorBio.includes('y2k') || vendorBio.includes('90s') || vendorBio.includes('2000s'))) ||
+        (lower.includes('streetwear') && (vendorBio.includes('streetwear') || vendorBio.includes('casual') || vendorBio.includes('hoodie'))) ||
+        (lower.includes('luxury') && (vendorBio.includes('luxury') || vendorBio.includes('designer') || vendorBio.includes('brand'))) ||
+        (lower.includes('chic') && (vendorBio.includes('chic') || vendorBio.includes('corporate') || vendorBio.includes('formal'))) ||
+        (vendorBio.includes(lower))
+      ) {
+        matchPoints += 0.85;
+        matchedStyleName = interest;
+      }
+      // Location match
+      else if (
+        (vendor.state && lower.includes(vendor.state.toLowerCase())) ||
+        (vendor.city && lower.includes(vendor.city.toLowerCase()))
+      ) {
+        matchPoints += 0.75;
+      }
+    }
+
+    if (maxPoints > 0 && matchPoints > 0) {
+      interestMatch = Math.min(1.0, 0.35 + (matchPoints / maxPoints) * 0.65);
+    } else {
+      interestMatch = 0.2;
     }
   } else {
     // Infer interest from past interaction categories
     const catWeight = interactionSignals.categoryWeights[vendor.category] || 0;
     if (catWeight > 0) {
-      interestMatch = Math.min(1.0, catWeight / 10);
+      interestMatch = Math.min(1.0, 0.3 + (catWeight / 10) * 0.7);
     } else {
       // Cold-start neutral value
       interestMatch = 0.5;
@@ -119,8 +151,12 @@ function scoreVendor(vendor, context, weights = DEFAULT_WEIGHTS) {
 
   // 5. Relationship Relevance (0.0 - 1.0)
   let relationshipRelevance = 0.1;
+  const isPeerFollowed = Boolean(context.peerFollowedVendorIds && context.peerFollowedVendorIds.has(vendor.id));
   if (userFollowedIds.has(vendor.id)) {
     relationshipRelevance = 1.0;
+  } else if (isPeerFollowed) {
+    // Collaborative filtering boost
+    relationshipRelevance = 0.85;
   } else if ((interactionSignals.vendorWeights[vendor.id] || 0) > 0) {
     relationshipRelevance = Math.min(0.9, 0.3 + (interactionSignals.vendorWeights[vendor.id] / 15));
   }
@@ -159,6 +195,11 @@ function scoreVendor(vendor, context, weights = DEFAULT_WEIGHTS) {
   const reasons = [];
   if (userInterests.includes(vendor.category)) {
     reasons.push(`Matches your interest in ${vendor.category}`);
+  } else if (matchedStyleName) {
+    reasons.push(`Matches your ${matchedStyleName} style`);
+  }
+  if (isPeerFollowed) {
+    reasons.push('Popular with shoppers sharing your style');
   }
   if (activityFreshness > 0.6) {
     reasons.push('Recently active catalog');
@@ -267,6 +308,11 @@ async function getRecommendations({
   const followedSet = new Set(followedVendorIds);
   const dismissedSet = new Set(dismissedVendorIds);
 
+  // Collaborative peer lookup (Step 5 of algorithm spec)
+  const peerFollowedVendorIds = userId && userInterests.length > 0
+    ? await recommendationsRepo.getCollaborativePeerVendorIds(userId, userInterests)
+    : new Set();
+
   // 3. Filter candidates by safety & eligibility
   const candidatePool = eligibleVendors.filter((v) => {
     // Exclude current user's own vendor profile
@@ -290,6 +336,7 @@ async function getRecommendations({
     userInterests,
     interactionSignals,
     userFollowedIds: followedSet,
+    peerFollowedVendorIds,
     impressionCounts,
     userLocation,
   };

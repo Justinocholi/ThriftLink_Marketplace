@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import { Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { subscriptions as subsApi } from '../../services/api';
 
 const PricingCard = ({ title, price, features, recommended, onSubscribe }) => (
   <div style={{ 
@@ -52,10 +53,22 @@ const PricingCard = ({ title, price, features, recommended, onSubscribe }) => (
 
 const PricingPlans = () => {
   const navigate = useNavigate();
+  const [plans, setPlans] = useState([]);
+
+  useEffect(() => {
+    subsApi.getPlans()
+      .then((res) => {
+        if (Array.isArray(res.plans)) setPlans(res.plans);
+      })
+      .catch(() => {});
+  }, []);
 
   const handleSubscribe = () => {
     navigate('/vendor/subscription');
   };
+
+  const basicPlan = plans.find((p) => p.id === 'basic');
+  const proPlan = plans.find((p) => p.id === 'pro');
 
   return (
     <div style={{ fontFamily: "'Inter', sans-serif", background: '#f9fafb', minHeight: '100vh' }}>
@@ -77,13 +90,13 @@ const PricingPlans = () => {
         />
         <PricingCard 
           title="Basic" 
-          price="₦3,000"
+          price={basicPlan ? `₦${basicPlan.price.toLocaleString()}` : '₦3,000'}
           features={["50 Product Listings", "Verified Badge", "Priority Support", "Advanced Analytics", "Featured Listings"]} 
           onSubscribe={handleSubscribe}
         />
         <PricingCard 
           title="Pro Vendor" 
-          price="₦5,000"
+          price={proPlan ? `₦${proPlan.price.toLocaleString()}` : '₦5,000'}
           features={["Unlimited Listings", "Verified Badge", "Dedicated Support", "Custom Analytics", "Homepage Feature", "Multiple Locations"]} 
           recommended={true}
           onSubscribe={handleSubscribe}
