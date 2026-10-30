@@ -1,51 +1,55 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
-import { vendors as vendorsApi, products as productsApi, recommendations as recApi } from '../../services/api';
-import { ShieldCheck, ShieldAlert, Globe, MessageCircle, Users, Flag, Star, Sparkles, Compass, Clock, SlidersHorizontal, Heart, Layers, ArrowRight, MapPin } from 'lucide-react';
-import ProductCard from '../../components/ProductCard';
-import RecommendationCard from '../../components/RecommendationCard';
 import FeedPostCard from '../../components/FeedPostCard';
+import InFeedSuggestedVendors from '../../components/InFeedSuggestedVendors';
 import InterestSelectorModal from '../../components/InterestSelectorModal';
+import { recommendations as recApi, vendors as vendorsApi, products as productsApi } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import { cldUrl } from '../../utils/cloudinary';
-import { useFetch } from '../../hooks/useFetch';
-import ErrorState from '../../components/ErrorState';
 import { ROUTES } from '../../routes';
-import LetterAvatar from '../../components/LetterAvatar';
+import {
+  Globe,
+  Sparkles,
+  Heart,
+  ShieldCheck,
+  ShieldAlert,
+  Search,
+  MapPin,
+  SlidersHorizontal,
+  PlusCircle,
+  Compass,
+  Bookmark,
+  MessageCircle,
+  Layers,
+  Store,
+  ChevronRight,
+  ArrowRight,
+  Star,
+  Check,
+  RefreshCw,
+  ShoppingBag,
+  TrendingUp,
+} from 'lucide-react';
 
-// Import Assets
-import checklistIcon from '../../assets/checklist.png';
-import shieldIcon from '../../assets/shield.png';
-import whatsappIcon from '../../assets/whatsapp (1).png';
-import whatsappBtnIcon from '../../assets/whatsapp.png';
-import searchIcon from '../../assets/search.png';
-import messageIcon from '../../assets/message.png';
-import packageIcon from '../../assets/package.png';
-import starIcon from '../../assets/star.png';
-
-// Category Icons
-import smartphoneIcon from '../../assets/smartphone.png';
-import womanIcon from '../../assets/woman.png';
-import beautyIcon from '../../assets/beauty-product.png';
-import fastFoodIcon from '../../assets/fast-food.png';
-import mansionIcon from '../../assets/mansion.png';
-import briefcaseIcon from '../../assets/briefcase.png';
-import sportCarIcon from '../../assets/sport-car.png';
-import educationIcon from '../../assets/education.png';
-
-// Deterministic avatar gradient + initials for vendors without a logo.
 const AVATAR_GRADIENTS = [
   'linear-gradient(135deg, #25D366, #128C7E)',
+  'linear-gradient(135deg, #1877f2, #1d4ed8)',
   'linear-gradient(135deg, #ec4899, #be185d)',
-  'linear-gradient(135deg, #3b82f6, #1d4ed8)',
   'linear-gradient(135deg, #f59e0b, #b45309)',
   'linear-gradient(135deg, #8b5cf6, #6d28d9)',
   'linear-gradient(135deg, #14b8a6, #0f766e)',
 ];
 
 const initialsOf = (name = '') =>
-  name.split(' ').filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase() || 'TL';
+  name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase() || 'TL';
 
 const gradientFor = (id = '') => {
   let sum = 0;
@@ -53,1162 +57,1107 @@ const gradientFor = (id = '') => {
   return AVATAR_GRADIENTS[sum % AVATAR_GRADIENTS.length];
 };
 
-const MONTHLY_COLORS = ['#3b82f6', '#ec4899', '#f97316'];
+const NIGERIAN_STATES = [
+  'All Nigeria',
+  'Lagos',
+  'Abuja (FCT)',
+  'Rivers (Port Harcourt)',
+  'Oyo (Ibadan)',
+  'Edo (Benin)',
+  'Enugu',
+  'Delta',
+  'Kaduna',
+  'Kano',
+  'Ogun',
+  'Anambra',
+];
+
+const POPULAR_CATEGORIES = [
+  { id: '', label: 'All Categories' },
+  { id: 'fashion', label: 'Fashion & Clothes' },
+  { id: 'shoes', label: 'Shoes & Sneakers' },
+  { id: 'bags', label: 'Bags & Purses' },
+  { id: 'vintage', label: 'Vintage & Retro' },
+  { id: 'y2k', label: '90s & Y2K' },
+  { id: 'streetwear', label: 'Streetwear' },
+  { id: 'accessories', label: 'Accessories' },
+];
 
 const Home = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [location, setLocation] = useState('');
-  const [recent, setRecent] = useState([]);
+  const { user } = useAuth();
   const navigate = useNavigate();
 
-  const { data: vendorsData, error: vendorsError, loading: vendorsLoading, retry: retryVendors } = useFetch(
-    async () => {
-      const data = await vendorsApi.list({ featured: 'true', limit: 8 });
-      const list = Array.isArray(data?.vendors) ? data.vendors : [];
-      if (list.length > 0) return list;
-      const d = await vendorsApi.list({ limit: 8 });
-      return Array.isArray(d?.vendors) ? d.vendors : [];
-    },
-    []
-  );
-  const vendors = vendorsData || [];
+  // Search & Filter State
+  const [searchInput, setSearchInput] = useState('');
+  const [selectedState, setSelectedState] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [surface, setSurface] = useState('recommended_for_you'); // 'recommended_for_you' | 'new_arrivals' | 'following'
+  const [verificationFilter, setVerificationFilter] = useState('all'); // 'all' | 'verified' | 'restricted'
 
-  useEffect(() => {
-    try {
-      const ids = JSON.parse(localStorage.getItem('tl_recent') || '[]');
-      if (!Array.isArray(ids) || !ids.length) return;
-      Promise.all(ids.slice(0, 10).map(id => productsApi.get(id).catch(() => null)))
-        .then(rs => setRecent(rs.filter(Boolean)));
-    } catch {}
-  }, []);
-
-  const featuredVendors = vendors.slice(0, 8);
-  const monthlyVendors = vendors.slice(0, 3);
-
-  // Recommendation Engine & News Feed State
-  const [recSurface, setRecSurface] = useState('recommended_for_you');
-  const [recVendors, setRecVendors] = useState([]);
-  const [feedPosts, setFeedPosts] = useState([]);
-  const [homeFeedFilter, setHomeFeedFilter] = useState('all'); // 'all' | 'verified' | 'restricted'
-  const [recLoading, setRecLoading] = useState(true);
+  // Data State
+  const [posts, setPosts] = useState([]);
+  const [suggestedVendors, setSuggestedVendors] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const [interestModalOpen, setInterestModalOpen] = useState(false);
 
-  const fetchRecommendations = (surface = recSurface) => {
-    setRecLoading(true);
-    Promise.all([
-      recApi.getVendors({ surface, limit: 8 }).catch(() => ({ vendors: [] })),
-      recApi.getFeed({ surface, limit: 12 }).catch(() => ({ posts: [] })),
-    ])
-      .then(([vRes, fRes]) => {
-        setRecVendors(Array.isArray(vRes?.vendors) ? vRes.vendors : []);
-        setFeedPosts(Array.isArray(fRes?.posts) ? fRes.posts : []);
-      })
-      .finally(() => setRecLoading(false));
-  };
+  // Load feed and suggested vendors based on recommendation algorithm
+  const loadFeedData = useCallback(async (activeSurface = surface, currentPage = 1, append = false) => {
+    if (currentPage === 1) {
+      setLoading(true);
+    } else {
+      setLoadingMore(true);
+    }
+
+    try {
+      const [feedRes, vendorsRes] = await Promise.all([
+        recApi.getFeed({ surface: activeSurface, limit: 16, page: currentPage }).catch(() => ({ posts: [] })),
+        recApi.getVendors({ surface: 'recommended_for_you', limit: 12 }).catch(() => ({ vendors: [] })),
+      ]);
+
+      const fetchedPosts = Array.isArray(feedRes?.posts) ? feedRes.posts : [];
+      const fetchedVendors = Array.isArray(vendorsRes?.vendors) ? vendorsRes.vendors : [];
+
+      if (append) {
+        setPosts((prev) => [...prev, ...fetchedPosts]);
+      } else {
+        setPosts(fetchedPosts);
+      }
+
+      setSuggestedVendors(fetchedVendors);
+      setHasMore(fetchedPosts.length >= 12);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  }, [surface]);
 
   useEffect(() => {
-    fetchRecommendations(recSurface);
-  }, [recSurface]);
+    setPage(1);
+    loadFeedData(surface, 1, false);
+  }, [surface, loadFeedData]);
 
-  const handleDismissRecVendor = (dismissedId) => {
-    setRecVendors((prev) => prev.filter((v) => v.id !== dismissedId));
+  const handleLoadMore = () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    loadFeedData(surface, nextPage, true);
   };
 
-  const handleSearch = () => {
-    navigate(`/category/all?q=${encodeURIComponent(searchTerm)}&state=${encodeURIComponent(location)}`);
+  const handleSearchSubmit = (e) => {
+    if (e) e.preventDefault();
+    if (!searchInput.trim() && !selectedState) return;
+    // Client-side quick filter first; user can also jump to full directory
+    if (searchInput.trim().length > 3) {
+      navigate(`/category/all?q=${encodeURIComponent(searchInput.trim())}&state=${encodeURIComponent(selectedState === 'All Nigeria' ? '' : selectedState)}`);
+    }
   };
 
-  const categories = [
-    { name: 'Electronics', count: '12k+ ads', icon: smartphoneIcon, color: '#e0f2fe', link: '/category/electronics' },
-    { name: 'Fashion & Beauty', count: '8k+ ads', icon: womanIcon, color: '#fce7f3', link: '/category/fashion' },
-    { name: 'Cars & Vehicles', count: '5k+ ads', icon: sportCarIcon, color: '#ffedd5', link: '/category/cars' },
-    { name: 'Real Estate', count: '3k+ ads', icon: mansionIcon, color: '#dcfce7', link: '/category/real-estate' },
-    { name: 'Jobs', count: '1k+ ads', icon: briefcaseIcon, color: '#f3f4f6', link: '/category/jobs' },
-    { name: 'Services', count: '2k+ ads', icon: educationIcon, color: '#fae8ff', link: '/category/services' },
-    { name: 'Food & Drinks', count: '4k+ ads', icon: fastFoodIcon, color: '#fef3c7', link: '/category/food' },
-    { name: 'Health & Beauty', count: '6k+ ads', icon: beautyIcon, color: '#ffe4e6', link: '/category/health' }
-  ];
+  const handleFollowVendor = (vendorId, isFollowed) => {
+    // If on following surface and unfollowed, we can refresh
+    if (surface === 'following' && !isFollowed) {
+      setPosts((prev) => prev.filter((p) => p.vendor_id !== vendorId));
+    }
+  };
+
+  // Filter posts by verification, category, search, and location
+  const filteredPosts = posts.filter((post) => {
+    // Verification filter
+    if (verificationFilter === 'verified' && !post.is_verified) return false;
+    if (verificationFilter === 'restricted' && post.is_verified) return false;
+
+    // Search query filter
+    if (searchInput.trim()) {
+      const q = searchInput.toLowerCase();
+      const match =
+        (post.name || '').toLowerCase().includes(q) ||
+        (post.description || '').toLowerCase().includes(q) ||
+        (post.vendor_name || '').toLowerCase().includes(q) ||
+        (post.category || '').toLowerCase().includes(q);
+      if (!match) return false;
+    }
+
+    // Category filter
+    if (selectedCategory) {
+      const cat = selectedCategory.toLowerCase();
+      const match =
+        (post.category || '').toLowerCase().includes(cat) ||
+        (post.name || '').toLowerCase().includes(cat);
+      if (!match) return false;
+    }
+
+    // State location filter
+    if (selectedState && selectedState !== 'All Nigeria') {
+      const stateQuery = selectedState.split(' ')[0].toLowerCase();
+      const vendorState = (post.vendor_state || post.state || '').toLowerCase();
+      if (!vendorState.includes(stateQuery)) return false;
+    }
+
+    return true;
+  });
+
+  const verifiedCount = posts.filter((p) => p.is_verified).length;
+  const restrictedCount = posts.filter((p) => !p.is_verified).length;
 
   return (
-    <div style={{ fontFamily: "'Inter', sans-serif", background: 'var(--tl-bg)', color: 'var(--tl-ink)', overflowX: 'hidden' }}>
-      <style>
-        {`
-          @media (max-width: 768px) {
-            .hero { padding: 5.5rem 1.25rem 3rem !important; }
-            .hero h1 { font-size: 2rem !important; }
-            .trust-indicators { flex-direction: column; gap: 1rem !important; align-items: center !important; }
-            .trust-item { width: auto; justify-content: center !important; align-self: center !important; }
-            .timeline-step { text-align: center; }
-            .timeline-step > div:first-child { margin-left: auto !important; margin-right: auto !important; }
-            .main-search { flex-direction: column; }
-            .main-search .location-input,
-            .main-search .search-btn { border-left: none !important; border-top: 1px solid rgba(15,23,42,0.06) !important; }
-            .search-section, .categories, .featured-vendors,
-            .top-vendors-month, .how-it-works, .stats-section, .cta-section {
-              padding-left: 1.25rem !important; padding-right: 1.25rem !important;
-            }
-            .categories-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 1rem !important; }
-            .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
-            .cta-buttons { flex-direction: column; align-items: center; }
-            .cta-buttons .btn, .cta-buttons .btn-white { width: 100%; justify-content: center; }
-            .vendors-grid { grid-template-columns: 1fr !important; }
-            .monthly-vendors-grid { grid-template-columns: 1fr !important; }
-            .monthly-card { flex-direction: column !important; text-align: center; }
-            .section-title { font-size: 1.6rem !important; }
+    <div style={{ fontFamily: "'Inter', 'Lucida Grande', Tahoma, sans-serif", background: '#edeff4', minHeight: '100vh', color: '#1e293b' }}>
+      <style>{`
+        /* Early-Facebook Wall 3-Column Responsive Grid */
+        .fb-wall-layout {
+          display: grid;
+          grid-template-columns: 240px minmax(0, 1fr) 300px;
+          gap: 1.25rem;
+          align-items: start;
+        }
+
+        .fb-sticky-col {
+          position: sticky;
+          top: 5rem;
+        }
+
+        @media (max-width: 1080px) {
+          .fb-wall-layout {
+            grid-template-columns: 210px minmax(0, 1fr);
           }
-          @media (max-width: 420px) {
-            .categories-grid { grid-template-columns: 1fr 1fr !important; }
-            .stats-grid { grid-template-columns: 1fr !important; }
+          .fb-right-col {
+            display: none !important;
           }
-          /* New trust-first sections */
-          .why-grid { grid-template-columns: repeat(4, 1fr); }
-          .timeline-grid { grid-template-columns: repeat(4, 1fr); }
-          .testi-grid { grid-template-columns: repeat(3, 1fr); }
-          .vendor-band-grid { grid-template-columns: 1.4fr 1fr; }
-          .why-card:hover { transform: translateY(-4px); border-color: rgba(22,184,101,0.35) !important; box-shadow: 0 16px 32px -16px rgba(15,23,42,0.12); }
-          @media (max-width: 960px) {
-            .why-grid { grid-template-columns: repeat(2, 1fr) !important; }
-            .timeline-grid { grid-template-columns: repeat(2, 1fr) !important; }
-            .testi-grid { grid-template-columns: 1fr !important; }
-            .vendor-band-grid { grid-template-columns: 1fr !important; }
-            .vendor-band-grid > div:last-child { justify-content: flex-start !important; }
+        }
+
+        @media (max-width: 768px) {
+          .fb-wall-layout {
+            grid-template-columns: 1fr !important;
+            gap: 1rem !important;
           }
-          @media (max-width: 640px) {
-            .hero { padding: 5rem 1rem 2.5rem !important; }
-            .why-grid { grid-template-columns: 1fr !important; }
-            .timeline-grid { grid-template-columns: 1fr !important; }
-            .hero-cta-row { flex-direction: column; align-items: stretch; }
-            .hero-cta-row a { width: 100%; justify-content: center; }
-            .why-tl, .protects, .testimonials, .vendor-band { padding-left: 1rem !important; padding-right: 1rem !important; }
+          .fb-left-col {
+            position: static !important;
           }
-          @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+          .hero-intro-header {
+            padding: 4.5rem 1rem 1.5rem !important;
           }
-          .animate-on-scroll { animation: fadeInUp 0.6s ease forwards; }
-          @media (max-width: 768px) {
-            .why-tl, .protects, .testimonials, .vendor-band, .search-section, .categories,
-            .featured-vendors, .top-vendors-month, .how-it-works, .stats-section, .cta-section {
-              padding-top: var(--tl-space-4) !important; padding-bottom: var(--tl-space-4) !important;
-            }
+          .hero-search-form {
+            flex-direction: column !important;
           }
-        `}
-      </style>
-      
+          .hero-search-form input,
+          .hero-search-form select,
+          .hero-search-form button {
+            width: 100% !important;
+            border-left: none !important;
+            border-top: 1px solid #e2e8f0 !important;
+          }
+        }
+
+        /* Post Card subtle hover */
+        .fb-card-hover {
+          transition: box-shadow 0.18s ease;
+        }
+        .fb-card-hover:hover {
+          box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08) !important;
+        }
+      `}</style>
+
       <Navbar />
 
-      {/* Hero Section */}
-      <section className="hero" style={{ padding: '8rem 2rem 5rem', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-        {/* Floating orbs for futuristic depth */}
-        <div aria-hidden style={{ position: 'absolute', top: '-100px', left: '-100px', width: '400px', height: '400px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(167,139,250,0.35) 0%, transparent 70%)', filter: 'blur(40px)', animation: 'tl-float 8s ease-in-out infinite' }} />
-        <div aria-hidden style={{ position: 'absolute', top: '-50px', right: '-150px', width: '500px', height: '500px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,217,61,0.35) 0%, transparent 70%)', filter: 'blur(40px)', animation: 'tl-float 9s ease-in-out infinite reverse' }} />
-        <div aria-hidden style={{ position: 'absolute', bottom: '-150px', left: '30%', width: '450px', height: '450px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(22,184,101,0.35) 0%, transparent 70%)', filter: 'blur(40px)', animation: 'tl-float 7s ease-in-out infinite' }} />
-
-        <div className="hero-content" style={{ maxWidth: '880px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
-          {/* Eyebrow pill */}
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.45rem 1rem', borderRadius: '999px', background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(22, 184, 101, 0.2)', boxShadow: '0 4px 12px rgba(22, 184, 101, 0.08)', fontSize: '0.82rem', fontWeight: 700, color: '#0e9a52', marginBottom: '1.5rem', letterSpacing: '0.02em' }}>
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'linear-gradient(135deg, #1ed373, #16b865)', boxShadow: '0 0 12px rgba(22,184,101,0.6)', animation: 'tl-pulse-dot 1.8s ease-out infinite' }} />
-            Verified WhatsApp thrift vendors · Nigeria
-          </div>
-
-          <h1 style={{ fontSize: 'clamp(2rem, 5.5vw, 4rem)', fontWeight: 800, lineHeight: 1.08, marginBottom: '1.25rem', letterSpacing: '-0.035em' }}>
-            Shop confidently from <span style={{ background: 'linear-gradient(135deg, #16b865 0%, #A78BFA 60%, #FF6B6B 100%)', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>verified thrift vendors.</span>
-          </h1>
-          <p className="hero-subtitle" style={{ fontSize: 'clamp(0.98rem, 1.8vw, 1.2rem)', color: '#475569', maxWidth: '680px', margin: '0 auto 2.5rem', lineHeight: 1.55 }}>
-            Browse trusted thrift shops, chat directly on WhatsApp before you buy, and shop with confidence. ThriftLink keeps the marketplace safe.
-          </p>
-
-          {/* CTA pair */}
-          <div className="hero-cta-row" style={{ display: 'flex', justifyContent: 'center', gap: '0.85rem', flexWrap: 'wrap', marginBottom: '3rem' }}>
-            <Link to="/categories" className="hero-cta-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.6rem', padding: '0.95rem 1.8rem', borderRadius: 999, background: 'linear-gradient(135deg, #1ed373 0%, #16b865 100%)', color: 'white', fontWeight: 700, fontSize: '1rem', textDecoration: 'none', boxShadow: '0 14px 28px -8px rgba(22, 184, 101, 0.45)', transition: 'transform 0.18s, box-shadow 0.18s' }}>
-              Start Shopping <span style={{ fontSize: '1.2rem' }}>→</span>
-            </Link>
-            <Link to="/login" className="hero-cta-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.6rem', padding: '0.95rem 1.8rem', borderRadius: 999, background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', color: '#0f172a', fontWeight: 700, fontSize: '1rem', textDecoration: 'none', border: '1px solid rgba(15,23,42,0.08)' }}>
-              Become a Verified Vendor
-            </Link>
-          </div>
-
-          {/* Trust pills — frosted glass with lucide icons */}
-          <div className="trust-indicators" style={{ display: 'flex', justifyContent: 'center', gap: '0.8rem', flexWrap: 'wrap' }}>
-            {[
-              { Icon: ShieldCheck, label: 'Verified Vendors', color: '#16b865' },
-              { Icon: MessageCircle, label: 'Direct Messaging', color: '#3b82f6' },
-              { Icon: Users, label: 'Trusted Community', color: '#A78BFA' },
-            ].map(({ Icon, label, color }) => (
-              <div key={label} className="trust-item" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.55rem 1rem', borderRadius: 999, background: 'rgba(255,255,255,0.78)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(15,23,42,0.06)', boxShadow: '0 6px 16px -8px rgba(15,23,42,0.10)', color: '#0f172a', fontWeight: 600, fontSize: '0.85rem' }}>
-                <Icon size={16} color={color} />
-                <span>{label}</span>
+      {/* 1. INTRODUCTION SECTION: Early-Facebook Styled ThriftLink Intro & Quick Search */}
+      <section
+        className="hero-intro-header"
+        style={{
+          paddingTop: '5.25rem',
+          paddingBottom: '1.75rem',
+          background: 'linear-gradient(180deg, #1e3a8a 0%, #1e40af 100%)',
+          color: 'white',
+          borderBottom: '1px solid #172554',
+          boxShadow: '0 4px 12px rgba(15, 23, 42, 0.08)',
+        }}
+      >
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 1rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.25rem' }}>
+            <div style={{ maxWidth: '680px' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '0.25rem 0.65rem', borderRadius: 999, background: 'rgba(255,255,255,0.14)', fontSize: '0.76rem', fontWeight: 700, color: '#86efac', marginBottom: '0.5rem' }}>
+                <Globe size={13} /> ThriftLink Wall & Marketplace · Nigeria
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Why ThriftLink */}
-      <section className="why-tl" style={{ padding: 'var(--tl-space-5) 2rem', background: 'var(--tl-surface)' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-            <h2 className="section-title" style={{ fontSize: 'var(--tl-text-h2)', fontWeight: 700, color: 'var(--tl-ink)', marginBottom: '0.6rem' }}>Why ThriftLink?</h2>
-            <p style={{ color: '#64748b', maxWidth: 600, margin: '0 auto' }}>Built around verification, direct chat, and an active safety net.</p>
-          </div>
-          <div className="why-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.25rem' }}>
-            {[
-              { Icon: ShieldCheck, color: '#16b865', bg: 'rgba(22,184,101,0.12)', title: 'Verified Vendors', body: 'Every approved vendor goes through ID + business verification before listing.' },
-              { Icon: MessageCircle, color: '#3b82f6', bg: 'rgba(59,130,246,0.12)', title: 'Direct Messaging', body: 'Chat with vendors on WhatsApp or in-app before you spend a naira.' },
-              { Icon: Flag, color: '#FF6B6B', bg: 'rgba(255,107,107,0.12)', title: 'Safer Shopping', body: 'Built-in reporting tools and a watchful admin team keep bad actors out.' },
-              { Icon: Users, color: '#A78BFA', bg: 'rgba(167,139,250,0.14)', title: 'Community Driven', body: "Built for Nigeria's thrift community — by people who actually thrift." },
-            ].map(({ Icon, color, bg, title, body }) => (
-              <div key={title} className="why-card tl-card tl-card-hover" style={{ padding: '1.5rem 1.25rem' }}>
-                <div style={{ width: 52, height: 52, borderRadius: '50%', background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}>
-                  <Icon size={24} color={color} />
-                </div>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.4rem' }}>{title}</h3>
-                <p style={{ fontSize: '0.95rem', color: '#64748b', lineHeight: 1.55 }}>{body}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* How ThriftLink Protects You */}
-      <section className="protects" style={{ padding: 'var(--tl-space-5) 2rem', background: 'linear-gradient(135deg, rgba(22,184,101,0.08), rgba(167,139,250,0.06))' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-            <h2 className="section-title" style={{ fontSize: 'var(--tl-text-h2)', fontWeight: 700, color: 'var(--tl-ink)', marginBottom: '0.6rem' }}>How ThriftLink Protects You</h2>
-            <p style={{ color: '#475569', maxWidth: 620, margin: '0 auto' }}>Trust isn't a slogan. It's a process — here's ours.</p>
-          </div>
-          <div className="timeline-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem', position: 'relative' }}>
-            {[
-              { n: '01', title: 'Vendors apply for verification', body: 'NIN + government ID + business details required upfront.' },
-              { n: '02', title: 'Buyers chat before purchasing', body: 'Ask questions, see real photos, confirm fit on WhatsApp.' },
-              { n: '03', title: 'Users report suspicious behavior', body: 'One tap to flag a vendor, listing, or message.' },
-              { n: '04', title: 'ThriftLink reviews and removes', body: 'Admins act on every report and remove bad actors quickly.' },
-            ].map((s) => (
-              <div key={s.n} className="timeline-step tl-card" style={{ padding: '1.5rem 1.25rem', position: 'relative' }}>
-                <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#16b865', marginBottom: '0.5rem', letterSpacing: '-0.02em', fontFamily: "'Space Grotesk', sans-serif" }}>{s.n}</div>
-                <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.4rem' }}>{s.title}</h3>
-                <p style={{ fontSize: '0.9rem', color: '#64748b', lineHeight: 1.55 }}>{s.body}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Recently Viewed strip */}
-      {recent.length > 0 && (
-        <section style={{ padding: '3rem 2rem 1rem', background: '#f9fafb' }}>
-          <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-            <h2 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#0f172a', marginBottom: '1rem' }}>Recently viewed</h2>
-            <div style={{ display: 'flex', gap: '1rem', overflowX: 'auto', paddingBottom: '1rem', scrollSnapType: 'x mandatory' }}>
-              {recent.map(p => (
-                <div key={p.id} style={{ minWidth: 220, maxWidth: 220, scrollSnapAlign: 'start' }}>
-                  <ProductCard product={p} />
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Search Section */}
-      <section className="search-section" style={{ background: 'linear-gradient(135deg, rgba(37,211,102,0.05), rgba(59,130,246,0.05))', padding: 'var(--tl-space-5) 2rem' }}>
-        <div className="search-container" style={{ maxWidth: '1000px', margin: '0 auto' }}>
-          <h2 className="search-title" style={{ textAlign: 'center', fontSize: 'var(--tl-text-h2)', fontWeight: 700, color: 'var(--tl-ink)', marginBottom: '2rem' }}>
-            Find Trusted WhatsApp Vendors Near You
-          </h2>
-
-          <div className="main-search" style={{
-            display: 'flex',
-            maxWidth: '800px',
-            margin: '0 auto 2rem',
-            background: 'rgba(255,255,255,0.6)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255,255,255,0.8)',
-            borderRadius: '24px',
-            overflow: 'hidden',
-            boxShadow: '0 20px 50px rgba(15,23,42,0.08), inset 0 1px 0 rgba(255,255,255,0.9)'
-          }}>
-            <input 
-              type="text" 
-              className="search-input" 
-              placeholder="What are you looking for? (e.g. iPhone, fashion, food)"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={{ flex: 1, padding: '1rem 1.5rem', border: 'none', outline: 'none', fontSize: '1rem', background: 'transparent' }}
-            />
-            <select 
-              className="location-input" 
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              style={{ padding: '1rem 1.5rem', border: 'none', borderLeft: '1px solid rgba(15,23,42,0.06)', outline: 'none', minWidth: '150px', background: 'transparent', cursor: 'pointer' }}
-            >
-              <option value="">All Nigeria</option>
-              <option value="Abia">Abia</option>
-              <option value="Adamawa">Adamawa</option>
-              <option value="Akwa Ibom">Akwa Ibom</option>
-              <option value="Anambra">Anambra</option>
-              <option value="Bauchi">Bauchi</option>
-              <option value="Bayelsa">Bayelsa</option>
-              <option value="Benue">Benue</option>
-              <option value="Borno">Borno</option>
-              <option value="Cross River">Cross River</option>
-              <option value="Delta">Delta</option>
-              <option value="Ebonyi">Ebonyi</option>
-              <option value="Edo">Edo</option>
-              <option value="Ekiti">Ekiti</option>
-              <option value="Enugu">Enugu</option>
-              <option value="FCT">FCT - Abuja</option>
-              <option value="Gombe">Gombe</option>
-              <option value="Imo">Imo</option>
-              <option value="Jigawa">Jigawa</option>
-              <option value="Kaduna">Kaduna</option>
-              <option value="Kano">Kano</option>
-              <option value="Katsina">Katsina</option>
-              <option value="Kebbi">Kebbi</option>
-              <option value="Kogi">Kogi</option>
-              <option value="Kwara">Kwara</option>
-              <option value="Lagos">Lagos</option>
-              <option value="Nasarawa">Nasarawa</option>
-              <option value="Niger">Niger</option>
-              <option value="Ogun">Ogun</option>
-              <option value="Ondo">Ondo</option>
-              <option value="Osun">Osun</option>
-              <option value="Oyo">Oyo</option>
-              <option value="Plateau">Plateau</option>
-              <option value="Rivers">Rivers</option>
-              <option value="Sokoto">Sokoto</option>
-              <option value="Taraba">Taraba</option>
-              <option value="Yobe">Yobe</option>
-              <option value="Zamfara">Zamfara</option>
-            </select>
-            <button 
-              onClick={handleSearch}
-              className="search-btn" 
-              style={{
-                padding: '1rem 2rem',
-                background: 'linear-gradient(135deg, #16a34a 0%, #25D366 100%)',
-                color: 'white',
-                border: 'none',
-                borderLeft: '1px solid rgba(15,23,42,0.06)',
-                cursor: 'pointer',
-                fontWeight: '600',
-                boxShadow: '0 8px 24px rgba(34,197,94,0.35), inset 0 1px 0 rgba(255,255,255,0.4)',
-                transition: 'transform 0.2s ease, box-shadow 0.2s ease'
-              }}
-              onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; }}
-              onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; }}
-            >
-              Search
-            </button>
-          </div>
-
-          <div className="quick-filters" style={{ display: 'flex', justifyContent: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
-            {[
-              { label: 'Vintage shirts', to: '/category/all?q=Vintage+shirts' },
-              { label: 'Thrift sneakers', to: '/category/all?q=Thrift+sneakers' },
-              { label: "Ladies' handbags", to: '/category/all?q=handbags' },
-              { label: "Men's thrift clothing", to: '/category/all?q=mens+clothing' },
-              { label: 'Thrift vendors in Abuja', to: '/category/all?state=FCT' },
-              { label: 'Under ₦5,000', to: '/category/all?max_price=5000' },
-            ].map(item => (
-              <Link to={item.to} key={item.label} className="filter-chip" style={{
-                padding: '0.5rem 1rem',
-                background: 'rgba(255,255,255,0.75)',
-                backdropFilter: 'blur(12px)',
-                WebkitBackdropFilter: 'blur(12px)',
-                border: '1px solid rgba(15,23,42,0.08)',
-                borderRadius: '20px',
-                fontSize: '0.84rem',
-                fontWeight: 600,
-                color: '#374151',
-                textDecoration: 'none',
-                transition: 'all 0.2s ease',
-                display: 'inline-block'
-              }}
-              onMouseOver={(e) => { e.currentTarget.style.borderColor = '#25D366'; e.currentTarget.style.color = '#0e9a52'; }}
-              onMouseOut={(e) => { e.currentTarget.style.borderColor = 'rgba(15,23,42,0.08)'; e.currentTarget.style.color = '#374151'; }}>
-                {item.label}
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Categories Section */}
-      <section className="categories" style={{ padding: 'var(--tl-space-5) 2rem', background: 'var(--tl-bg)' }}>
-        <div className="section-container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <h2 className="section-title" style={{ textAlign: 'center', fontSize: 'var(--tl-text-h2)', fontWeight: 700, marginBottom: '2rem', color: 'var(--tl-ink)' }}>
-            Browse Categories
-          </h2>
-          
-          <div className="categories-grid" style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-            gap: '1.5rem',
-            maxWidth: '900px',
-            margin: '0 auto'
-          }}>
-            {categories.map((cat, index) => (
-              <Link to={cat.link} key={index} className="category-card tl-card tl-card-hover" style={{
-                padding: '2rem 1rem',
-                textAlign: 'center',
-                cursor: 'pointer',
-                textDecoration: 'none',
-                color: 'inherit',
-                display: 'block'
-              }}>
-                <div className="category-icon" style={{
-                  width: '60px',
-                  height: '60px',
-                  borderRadius: '50%',
-                  background: cat.color,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 1rem'
-                }}>
-                  <img src={cat.icon} alt={cat.name} style={{ width: '30px', height: '30px', objectFit: 'contain' }} />
-                </div>
-                <h3 className="category-name" style={{ fontSize: '1rem', fontWeight: '600', color: '#1f2937', marginBottom: '0.5rem' }}>
-                  {cat.name}
-                </h3>
-                <span className="category-count" style={{ fontSize: '0.8rem', color: '#6b7280' }}>
-                  {cat.count}
-                </span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Recommendation Discovery Hub */}
-      <section className="recommendation-hub" style={{ padding: 'var(--tl-space-5) 2rem', background: 'var(--tl-bg)' }}>
-        <div className="section-container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-            <div>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#16b865', fontSize: '0.85rem', fontWeight: 700, marginBottom: 4 }}>
-                <Sparkles size={16} /> Intelligent Discovery
-              </div>
-              <h2 className="section-title" style={{ fontSize: 'var(--tl-text-h2)', fontWeight: 800, color: 'var(--tl-ink)', margin: 0 }}>
-                {recSurface === 'recommended_for_you' && 'Recommended For You'}
-                {recSurface === 'following' && 'Updates From Vendors You Follow'}
-                {recSurface === 'discover' && 'Discover Emerging & Verified Vendors'}
-                {recSurface === 'new_arrivals' && 'New Arrivals & Fresh Catalogs'}
-              </h2>
+              <h1 style={{ fontSize: 'clamp(1.4rem, 2.8vw, 2.1rem)', fontWeight: 800, margin: '0 0 0.4rem', letterSpacing: '-0.02em', lineHeight: 1.2 }}>
+                Shop Confidently from Verified Thrift Vendors
+              </h1>
+              <p style={{ fontSize: '0.88rem', color: 'rgba(255,255,255,0.88)', margin: 0, lineHeight: 1.5 }}>
+                Browse live catalog drops and updates directly on the Wall. Connect with independent thrift stores on WhatsApp before you buy.
+              </p>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
               <button
+                type="button"
                 onClick={() => setInterestModalOpen(true)}
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: 6,
                   padding: '0.55rem 1rem',
-                  borderRadius: 999,
-                  background: 'white',
-                  border: '1px solid #d1d5db',
-                  color: '#334155',
-                  fontWeight: 600,
-                  fontSize: '0.85rem',
-                  cursor: 'pointer',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.04)',
-                }}
-              >
-                <SlidersHorizontal size={14} />
-                Personalize Preferences
-              </button>
-            </div>
-          </div>
-
-          {/* Surface Switcher Tabs */}
-          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem', flexWrap: 'wrap' }}>
-            {[
-              { id: 'recommended_for_you', label: 'Recommended For You', Icon: Sparkles },
-              { id: 'following', label: 'Following', Icon: Heart },
-              { id: 'discover', label: 'Discover Vendors', Icon: Compass },
-              { id: 'new_arrivals', label: 'New Arrivals', Icon: Clock },
-            ].map(({ id, label, Icon }) => {
-              const active = recSurface === id;
-              return (
-                <button
-                  key={id}
-                  onClick={() => setRecSurface(id)}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    padding: '0.6rem 1.15rem',
-                    borderRadius: 999,
-                    border: active ? '1.5px solid #16b865' : '1px solid transparent',
-                    background: active ? '#dcfce7' : 'transparent',
-                    color: active ? '#15803d' : '#64748b',
-                    fontWeight: active ? 700 : 500,
-                    fontSize: '0.88rem',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease',
-                  }}
-                >
-                  <Icon size={15} />
-                  {label}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Recommendations Grid */}
-          {recLoading ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1.5rem' }}>
-              {[0, 1, 2, 3].map((i) => (
-                <div key={i} className="tl-skeleton" style={{ height: '340px', borderRadius: '16px' }} />
-              ))}
-            </div>
-          ) : recVendors.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '3.5rem 1rem', background: 'white', borderRadius: '16px', border: '1px dashed #cbd5e1' }}>
-              <p style={{ color: '#64748b', fontSize: '1rem', margin: '0 0 1rem' }}>
-                {recSurface === 'following'
-                  ? "You aren't following any thrift vendors yet. Follow vendors in 'For You' or 'Discover' to track their latest catalog drops here."
-                  : 'No recommendations found for this surface right now.'}
-              </p>
-              <button
-                onClick={() => recSurface === 'following' ? setRecSurface('recommended_for_you') : setInterestModalOpen(true)}
-                style={{
-                  padding: '0.65rem 1.25rem',
-                  borderRadius: 999,
-                  border: 'none',
-                  background: '#16b865',
+                  borderRadius: 4,
+                  background: 'rgba(255,255,255,0.15)',
+                  border: '1px solid rgba(255,255,255,0.3)',
                   color: 'white',
                   fontWeight: 700,
+                  fontSize: '0.82rem',
                   cursor: 'pointer',
+                  transition: 'background 0.15s ease',
                 }}
               >
-                {recSurface === 'following' ? 'Explore Recommended Vendors →' : 'Select Your Favorite Categories →'}
+                <SlidersHorizontal size={14} /> Personalize Preferences
               </button>
-            </div>
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1.5rem' }}>
-              {recVendors.map((vendor, idx) => (
-                <RecommendationCard
-                  key={vendor.id}
-                  vendor={vendor}
-                  surface={recSurface}
-                  position={idx}
-                  onDismiss={handleDismissRecVendor}
-                />
-              ))}
-            </div>
-          )}
 
-          {/* Early-Facebook Aesthetic Home Wall: Every Vendor's New Update (Verified + Restricted Unverified) */}
-          {!recLoading && feedPosts.length > 0 && (
-            <div
+              <Link
+                to={user?.role === 'vendor' ? '/vendor/products' : '/login'}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '0.55rem 1.15rem',
+                  borderRadius: 4,
+                  background: '#16a34a',
+                  border: '1px solid #15803d',
+                  color: 'white',
+                  fontWeight: 700,
+                  fontSize: '0.82rem',
+                  textDecoration: 'none',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+                }}
+              >
+                <PlusCircle size={14} /> Post Vendor Update
+              </Link>
+            </div>
+          </div>
+
+          {/* Quick Search & City Discovery Strip */}
+          <form
+            onSubmit={handleSearchSubmit}
+            className="hero-search-form"
+            style={{
+              display: 'flex',
+              background: '#ffffff',
+              borderRadius: 6,
+              overflow: 'hidden',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+              border: '1px solid #cbd5e1',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', paddingLeft: '0.9rem', color: '#64748b' }}>
+              <Search size={18} />
+            </div>
+            <input
+              type="text"
+              placeholder="What are you looking to thrift? (e.g. Vintage jackets, Nike sneakers, Y2K bags, dresses...)"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
               style={{
-                marginTop: '3rem',
-                background: '#edeff4',
-                border: '1px solid #d8dfea',
-                borderRadius: '6px',
-                overflow: 'hidden',
+                flex: 1,
+                padding: '0.8rem 0.9rem',
+                border: 'none',
+                outline: 'none',
+                fontSize: '0.92rem',
+                color: '#0f172a',
+              }}
+            />
+            <select
+              value={selectedState}
+              onChange={(e) => setSelectedState(e.target.value)}
+              style={{
+                padding: '0.8rem 1rem',
+                border: 'none',
+                borderLeft: '1px solid #e2e8f0',
+                background: '#f8fafc',
+                fontSize: '0.85rem',
+                color: '#334155',
+                cursor: 'pointer',
+                outline: 'none',
+                fontWeight: 600,
               }}
             >
-              {/* Classic Early-Facebook Navy Header Bar */}
-              <div
+              {NIGERIAN_STATES.map((s) => (
+                <option key={s} value={s === 'All Nigeria' ? '' : s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+            <button
+              type="submit"
+              style={{
+                padding: '0.8rem 1.6rem',
+                background: '#1877f2',
+                border: 'none',
+                color: 'white',
+                fontWeight: 700,
+                fontSize: '0.88rem',
+                cursor: 'pointer',
+                transition: 'background 0.15s ease',
+              }}
+            >
+              Search Feed
+            </button>
+          </form>
+
+          {/* Quick Filter Tag Chips */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.85rem', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '0.74rem', color: 'rgba(255,255,255,0.75)', fontWeight: 600 }}>Quick Tags:</span>
+            {[
+              { label: 'Vintage Shirts', cat: 'vintage' },
+              { label: 'Sneakers & Shoes', cat: 'shoes' },
+              { label: 'Ladies Handbags', cat: 'bags' },
+              { label: 'Streetwear Bales', cat: 'streetwear' },
+              { label: 'Under ₦5,000', cat: 'budget' },
+            ].map((chip) => (
+              <button
+                key={chip.label}
+                type="button"
+                onClick={() => {
+                  setSelectedCategory(selectedCategory === chip.cat ? '' : chip.cat);
+                }}
                 style={{
-                  background: '#1e3a8a',
-                  borderBottom: '1px solid #172554',
-                  padding: '0.75rem 1.25rem',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  flexWrap: 'wrap',
-                  gap: '0.75rem',
-                  color: 'white',
+                  padding: '0.22rem 0.65rem',
+                  borderRadius: 999,
+                  border: selectedCategory === chip.cat ? '1px solid #ffffff' : '1px solid rgba(255,255,255,0.35)',
+                  background: selectedCategory === chip.cat ? '#ffffff' : 'rgba(255,255,255,0.12)',
+                  color: selectedCategory === chip.cat ? '#1e3a8a' : '#ffffff',
+                  fontSize: '0.72rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <Globe size={18} color="#4ade80" />
-                  <div>
-                    <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'white', margin: 0 }}>
-                      ThriftLink Home Wall · Live Vendor Updates
-                    </h3>
-                    <p style={{ fontSize: '0.76rem', color: 'rgba(255,255,255,0.85)', margin: 0 }}>
-                      See every vendor's new update · Non-verified vendors are displayed in restricted mode
-                    </p>
+                {chip.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 2. MAIN EARLY-FACEBOOK WALL SECTION: Direct Feed with Posts & Interleaved Vendor Suggestions */}
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '1.25rem 1rem 3.5rem' }}>
+        <div className="fb-wall-layout">
+
+          {/* ============================================================== */}
+          {/* LEFT SIDEBAR: User Quick Access, Feed Views, and Filters       */}
+          {/* ============================================================== */}
+          <aside className="fb-left-col fb-sticky-col" style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+            
+            {/* User Profile Mini-Box (Classic Facebook Left Rail) */}
+            <div
+              style={{
+                background: '#ffffff',
+                border: '1px solid #d8dfea',
+                borderRadius: '4px',
+                padding: '0.85rem',
+                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)',
+              }}
+            >
+              {user ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div
+                    style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: '50%',
+                      background: gradientFor(user.id),
+                      color: 'white',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 800,
+                      fontSize: '0.95rem',
+                      overflow: 'hidden',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {user.avatar ? (
+                      <img src={cldUrl(user.avatar, 90)} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      initialsOf(user.name)
+                    )}
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {user.name}
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: '#64748b', textTransform: 'capitalize' }}>
+                      {user.role === 'vendor' ? 'Verified Vendor' : 'Thrift Buyer'}
+                    </div>
                   </div>
                 </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
-                  {[
-                    { id: 'all', label: `All Updates (${feedPosts.length})` },
-                    { id: 'verified', label: `Verified (${feedPosts.filter(p => p.is_verified).length})` },
-                    { id: 'restricted', label: `Restricted / Unverified (${feedPosts.filter(p => !p.is_verified).length})` },
-                  ].map((tab) => {
-                    const active = homeFeedFilter === tab.id;
-                    return (
-                      <button
-                        key={tab.id}
-                        type="button"
-                        onClick={() => setHomeFeedFilter(tab.id)}
-                        style={{
-                          padding: '0.32rem 0.7rem',
-                          borderRadius: '3px',
-                          border: active ? '1px solid #ffffff' : '1px solid rgba(255,255,255,0.35)',
-                          background: active ? '#ffffff' : 'rgba(255,255,255,0.12)',
-                          color: active ? '#1e3a8a' : '#ffffff',
-                          fontSize: '0.74rem',
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                        }}
-                      >
-                        {tab.label}
-                      </button>
-                    );
-                  })}
-
+              ) : (
+                <div>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#1e3a8a', marginBottom: '0.2rem' }}>
+                    Welcome to ThriftLink
+                  </div>
+                  <p style={{ fontSize: '0.75rem', color: '#64748b', margin: '0 0 0.65rem', lineHeight: 1.4 }}>
+                    Sign in to save items, chat with vendors, and get personalized recommendations.
+                  </p>
                   <Link
-                    to="/feed"
+                    to="/login"
                     style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 5,
-                      padding: '0.34rem 0.8rem',
-                      borderRadius: '3px',
-                      background: '#16a34a',
-                      border: '1px solid #15803d',
+                      display: 'block',
+                      textAlign: 'center',
+                      padding: '0.4rem 0.75rem',
+                      borderRadius: 3,
+                      background: '#1877f2',
                       color: 'white',
+                      fontSize: '0.76rem',
                       fontWeight: 700,
-                      fontSize: '0.75rem',
                       textDecoration: 'none',
                     }}
                   >
-                    Full Wall <ArrowRight size={13} />
+                    Sign In or Register
                   </Link>
                 </div>
-              </div>
+              )}
+            </div>
 
-              {/* Wall Body: Classic Timeline Stream + Right Safety Sidebar */}
+            {/* Feeds Switcher (News Feed Streams) */}
+            <div
+              style={{
+                background: '#ffffff',
+                border: '1px solid #d8dfea',
+                borderRadius: '4px',
+                padding: '0.75rem',
+                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)',
+              }}
+            >
               <div
                 style={{
-                  padding: '1.25rem',
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 340px), 1fr))',
-                  gap: '1rem',
+                  fontSize: '0.72rem',
+                  fontWeight: 800,
+                  color: '#64748b',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em',
+                  padding: '0.25rem 0.4rem 0.5rem',
+                  borderBottom: '1px solid #e2e8f0',
+                  marginBottom: '0.45rem',
                 }}
               >
-                {feedPosts
-                  .filter((p) => {
-                    if (homeFeedFilter === 'verified') return p.is_verified;
-                    if (homeFeedFilter === 'restricted') return !p.is_verified;
-                    return true;
-                  })
-                  .map((post) => (
-                    <FeedPostCard key={post.id} post={post} surface={recSurface} />
-                  ))}
+                Feed Views
               </div>
-            </div>
-          )}
-        </div>
-      </section>
 
-      {/* Curated Collections Section (Section 7 — Organic Growth & Discovery Collections) */}
-      <section className="curated-collections" style={{ padding: 'var(--tl-space-5) 2rem', background: 'linear-gradient(180deg, var(--tl-bg) 0%, #f0fdf4 100%)' }}>
-        <div className="section-container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-            <div>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#059669', fontSize: '0.85rem', fontWeight: 700, marginBottom: 4 }}>
-                <Layers size={16} /> Curated Collections
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                {[
+                  { id: 'recommended_for_you', label: 'For You (Ranked)', Icon: Sparkles },
+                  { id: 'new_arrivals', label: 'All Updates (Recent)', Icon: Globe },
+                  { id: 'following', label: 'Following Wall', Icon: Heart },
+                ].map(({ id, label, Icon }) => {
+                  const active = surface === id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => setSurface(id)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        width: '100%',
+                        textAlign: 'left',
+                        padding: '0.48rem 0.6rem',
+                        borderRadius: '4px',
+                        border: 'none',
+                        background: active ? '#d8dfea' : 'transparent',
+                        color: active ? '#1e3a8a' : '#334155',
+                        fontWeight: active ? 800 : 600,
+                        fontSize: '0.8rem',
+                        cursor: 'pointer',
+                        transition: 'background 0.12s ease',
+                      }}
+                    >
+                      <Icon size={15} color={active ? '#1e3a8a' : '#64748b'} />
+                      <span>{label}</span>
+                    </button>
+                  );
+                })}
               </div>
-              <h2 className="section-title" style={{ fontSize: 'var(--tl-text-h2)', fontWeight: 800, color: 'var(--tl-ink)', margin: 0 }}>
-                Explore ThriftLink Collections
-              </h2>
-              <p style={{ color: '#64748b', margin: '0.35rem 0 0', fontSize: '0.95rem' }}>
-                Handpicked themes to help you discover verified Nigerian thrift vendors by style, budget, and city.
-              </p>
-            </div>
-            <Link to="/verified-vendors" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#16a34a', fontWeight: 700, textDecoration: 'none', fontSize: '0.9rem' }}>
-              View All Verified Vendors <ArrowRight size={16} />
-            </Link>
-          </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
-            {[
-              {
-                title: 'Best Vintage Clothing Vendors in Nigeria',
-                subtitle: 'Retro tees, 90s denim, and authentic vintage bales',
-                badge: 'Vintage & Retro',
-                gradient: 'linear-gradient(135deg, #065f46 0%, #10b981 100%)',
-                to: '/category/all?q=vintage&style=Vintage',
-              },
-              {
-                title: 'Affordable Thrift Fashion Finds',
-                subtitle: 'Quality verified thrift pieces under ₦5,000',
-                badge: 'Budget Friendly',
-                gradient: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
-                to: '/category/all?max_price=5000',
-              },
-              {
-                title: "Men's Thrift Fashion & Streetwear",
-                subtitle: 'Oversized shirts, cargo pants, jerseys & sneakers',
-                badge: "Men's Edit",
-                gradient: 'linear-gradient(135deg, #4c1d95 0%, #8b5cf6 100%)',
-                to: '/category/all?q=mens&style=Streetwear',
-              },
-              {
-                title: "Women's Thrift Collections & Bags",
-                subtitle: 'Dresses, corporate wear, heels & designer handbags',
-                badge: "Women's Edit",
-                gradient: 'linear-gradient(135deg, #831843 0%, #ec4899 100%)',
-                to: '/category/all?q=bags&style=Chic',
-              },
-              {
-                title: 'Thrift Vendors in Abuja & Lagos',
-                subtitle: 'Connect with verified vendors in your city for fast delivery',
-                badge: 'Local Discovery',
-                gradient: 'linear-gradient(135deg, #7c2d12 0%, #f97316 100%)',
-                to: '/category/all?state=FCT',
-              },
-            ].map((col) => (
-              <Link
-                key={col.title}
-                to={col.to}
-                className="tl-card tl-card-hover"
+              {/* Verification Stream Filter */}
+              <div
                 style={{
-                  position: 'relative',
-                  padding: '1.5rem 1.35rem',
-                  borderRadius: '18px',
-                  background: col.gradient,
-                  color: 'white',
-                  textDecoration: 'none',
+                  fontSize: '0.72rem',
+                  fontWeight: 800,
+                  color: '#64748b',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em',
+                  padding: '0.75rem 0.4rem 0.45rem',
+                  borderBottom: '1px solid #e2e8f0',
+                  marginBottom: '0.45rem',
+                }}
+              >
+                Verification
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                {[
+                  { id: 'all', label: `Every Vendor (${posts.length})`, Icon: Layers, color: '#3b82f6' },
+                  { id: 'verified', label: `Verified (${verifiedCount})`, Icon: ShieldCheck, color: '#16a34a' },
+                  { id: 'restricted', label: `Restricted (${restrictedCount})`, Icon: ShieldAlert, color: '#d97706' },
+                ].map(({ id, label, Icon, color }) => {
+                  const active = verificationFilter === id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => setVerificationFilter(id)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        width: '100%',
+                        textAlign: 'left',
+                        padding: '0.45rem 0.6rem',
+                        borderRadius: '4px',
+                        border: 'none',
+                        background: active ? '#e2e8f0' : 'transparent',
+                        color: active ? '#0f172a' : '#475569',
+                        fontWeight: active ? 700 : 500,
+                        fontSize: '0.78rem',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <Icon size={14} color={color} />
+                      <span>{label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Categories & Styles List */}
+              <div
+                style={{
+                  fontSize: '0.72rem',
+                  fontWeight: 800,
+                  color: '#64748b',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em',
+                  padding: '0.75rem 0.4rem 0.45rem',
+                  borderBottom: '1px solid #e2e8f0',
+                  marginBottom: '0.45rem',
+                }}
+              >
+                Browse Categories
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                {POPULAR_CATEGORIES.map((cat) => {
+                  const active = selectedCategory === cat.id;
+                  return (
+                    <button
+                      key={cat.id || 'all'}
+                      type="button"
+                      onClick={() => setSelectedCategory(active ? '' : cat.id)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        width: '100%',
+                        textAlign: 'left',
+                        padding: '0.38rem 0.6rem',
+                        borderRadius: '3px',
+                        border: 'none',
+                        background: active ? '#eff6ff' : 'transparent',
+                        color: active ? '#1d4ed8' : '#475569',
+                        fontWeight: active ? 700 : 500,
+                        fontSize: '0.76rem',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <span>{cat.label}</span>
+                      {active && <Check size={12} color="#1d4ed8" />}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Shortcuts */}
+              <div
+                style={{
+                  fontSize: '0.72rem',
+                  fontWeight: 800,
+                  color: '#64748b',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em',
+                  padding: '0.75rem 0.4rem 0.45rem',
+                  borderBottom: '1px solid #e2e8f0',
+                  marginBottom: '0.45rem',
+                }}
+              >
+                Shortcuts
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: '0.78rem' }}>
+                <Link to="/categories" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0.35rem 0.6rem', color: '#1e3a8a', textDecoration: 'none', fontWeight: 600 }}>
+                  <Store size={14} /> Full Category Directory
+                </Link>
+                <Link to={ROUTES.user.saved} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0.35rem 0.6rem', color: '#1e3a8a', textDecoration: 'none', fontWeight: 600 }}>
+                  <Bookmark size={14} /> My Saved Items
+                </Link>
+                <Link to={ROUTES.messages} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0.35rem 0.6rem', color: '#1e3a8a', textDecoration: 'none', fontWeight: 600 }}>
+                  <MessageCircle size={14} /> Messages & Enquiries
+                </Link>
+              </div>
+            </div>
+          </aside>
+
+          {/* ============================================================== */}
+          {/* CENTER COLUMN: THE MAIN WALL (Stream + Interleaved Suggestions) */}
+          {/* ============================================================== */}
+          <main style={{ display: 'flex', flexDirection: 'column', gap: '1rem', minWidth: 0 }}>
+
+            {/* Early-Facebook Wall Status Composer Box */}
+            <div
+              style={{
+                background: '#ffffff',
+                border: '1px solid #d8dfea',
+                borderRadius: '6px',
+                overflow: 'hidden',
+                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+              }}
+            >
+              <div
+                style={{
+                  background: '#f0f2f5',
+                  borderBottom: '1px solid #d8dfea',
+                  padding: '0.55rem 0.95rem',
                   display: 'flex',
-                  flexDirection: 'column',
+                  alignItems: 'center',
                   justifyContent: 'space-between',
-                  minHeight: '190px',
-                  boxShadow: '0 10px 25px -8px rgba(15, 23, 42, 0.2)',
-                  overflow: 'hidden',
+                  fontSize: '0.78rem',
+                  fontWeight: 700,
+                  color: '#1e3a8a',
+                }}
+              >
+                <span>ThriftLink Wall · What are you looking to thrift today?</span>
+                <span style={{ color: '#64748b', fontWeight: 500, fontSize: '0.74rem' }}>
+                  Showing {filteredPosts.length} posts
+                </span>
+              </div>
+
+              <div style={{ padding: '0.85rem 0.95rem', display: 'flex', gap: '0.65rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                <input
+                  type="text"
+                  placeholder="Ask vendors or search thrift items (e.g. vintage jacket, baggy jeans, heels)..."
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  style={{
+                    flex: 1,
+                    minWidth: 220,
+                    padding: '0.6rem 0.85rem',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '4px',
+                    fontSize: '0.84rem',
+                    background: '#f8fafc',
+                    outline: 'none',
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => navigate(user?.role === 'vendor' ? '/vendor/products' : '/login')}
+                  style={{
+                    padding: '0.6rem 1.15rem',
+                    borderRadius: '4px',
+                    border: '1px solid #1877f2',
+                    background: '#1877f2',
+                    color: 'white',
+                    fontWeight: 700,
+                    fontSize: '0.8rem',
+                    cursor: 'pointer',
+                    boxShadow: '0 1px 3px rgba(24,119,242,0.3)',
+                  }}
+                >
+                  Share Drop
+                </button>
+              </div>
+
+              {/* Status Composer Filter Subbar */}
+              <div
+                style={{
+                  padding: '0.45rem 0.95rem',
+                  background: '#f8fafc',
+                  borderTop: '1px solid #e2e8f0',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.45rem',
+                  flexWrap: 'wrap',
+                }}
+              >
+                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#64748b' }}>Filter:</span>
+                {['', 'fashion', 'shoes', 'bags', 'vintage'].map((catKey) => {
+                  const active = selectedCategory === catKey;
+                  const labelMap = {
+                    '': 'All Wall Updates',
+                    fashion: 'Clothes',
+                    shoes: 'Shoes',
+                    bags: 'Bags',
+                    vintage: 'Vintage',
+                  };
+                  return (
+                    <button
+                      key={catKey || 'all'}
+                      type="button"
+                      onClick={() => setSelectedCategory(catKey)}
+                      style={{
+                        padding: '0.22rem 0.6rem',
+                        borderRadius: '3px',
+                        border: active ? '1px solid #1877f2' : '1px solid #cbd5e1',
+                        background: active ? '#1877f2' : '#ffffff',
+                        color: active ? '#ffffff' : '#475569',
+                        fontSize: '0.73rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {labelMap[catKey]}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Active Filter Notice if any */}
+            {(selectedCategory || selectedState || searchInput || verificationFilter !== 'all') && (
+              <div
+                style={{
+                  background: '#eff6ff',
+                  border: '1px solid #bfdbfe',
+                  borderRadius: 4,
+                  padding: '0.5rem 0.85rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '0.5rem',
+                  fontSize: '0.76rem',
+                  color: '#1e40af',
                 }}
               >
                 <div>
-                  <span style={{
-                    display: 'inline-block',
-                    padding: '0.25rem 0.65rem',
-                    borderRadius: 999,
-                    background: 'rgba(255,255,255,0.2)',
-                    backdropFilter: 'blur(6px)',
-                    fontSize: '0.72rem',
-                    fontWeight: 700,
-                    letterSpacing: '0.03em',
-                    marginBottom: '0.85rem',
-                  }}>
-                    {col.badge}
-                  </span>
-                  <h3 style={{ fontSize: '1.08rem', fontWeight: 800, lineHeight: 1.3, margin: '0 0 0.45rem', color: 'white' }}>
-                    {col.title}
-                  </h3>
-                  <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.88)', margin: 0, lineHeight: 1.45 }}>
-                    {col.subtitle}
-                  </p>
+                  <strong>Active Filter:</strong>{' '}
+                  {verificationFilter !== 'all' && `[${verificationFilter.toUpperCase()}] `}
+                  {selectedCategory && `Category: "${selectedCategory}" `}
+                  {selectedState && `Location: "${selectedState}" `}
+                  {searchInput && `Query: "${searchInput}"`}
                 </div>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: '0.82rem', fontWeight: 700, marginTop: '1rem', color: 'white' }}>
-                  Explore Collection <ArrowRight size={14} />
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Featured Vendors */}
-      <section className="featured-vendors" style={{ padding: 'var(--tl-space-5) 2rem', background: 'var(--tl-surface)' }}>
-        <div className="section-container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <h2 className="section-title" style={{ textAlign: 'center', fontSize: 'var(--tl-text-h2)', fontWeight: 700, marginBottom: '2rem', color: 'var(--tl-ink)' }}>
-            Top Rated Vendors
-          </h2>
-          
-          {vendorsError ? (
-            <ErrorState error={vendorsError} onRetry={retryVendors} title="Couldn't load vendors" />
-          ) : vendorsLoading ? (
-            <div className="vendors-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1.25rem' }}>
-              {[0,1,2,3].map(i => (
-                <div key={i} className="tl-skeleton" style={{ borderRadius: 'var(--tl-radius-md)', aspectRatio: '1 / 1' }} />
-              ))}
-            </div>
-          ) : featuredVendors.length === 0 ? (
-            <div style={{ textAlign: 'center', color: '#6b7280', padding: '2rem', maxWidth: '500px', margin: '0 auto' }}>
-              No verified vendors yet. <Link to="/login" style={{ color: '#25D366', fontWeight: 600 }}>Become the first vendor →</Link>
-            </div>
-          ) : (
-          <div className="vendors-grid" style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-            gap: '1.25rem'
-          }}>
-            <style>{`
-              .ig-vendor-card { transition: transform .2s ease, box-shadow .2s ease; }
-              .ig-vendor-card:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 20px 40px -12px rgba(15,23,42,0.25); }
-            `}</style>
-            {featuredVendors.map(vendor => {
-              const cover = vendor.shop_banner_url || vendor.banner_url || vendor.first_product_image || vendor.logo;
-              return (
-                <div
-                  key={vendor.id}
-                  className="ig-vendor-card"
-                  onClick={() => navigate(`/vendor/${vendor.id}`)}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedCategory('');
+                    setSelectedState('');
+                    setSearchInput('');
+                    setVerificationFilter('all');
+                  }}
                   style={{
-                    position: 'relative',
-                    borderRadius: 'var(--tl-radius-md)',
-                    overflow: 'hidden',
+                    background: 'none',
+                    border: 'none',
+                    color: '#1d4ed8',
+                    fontWeight: 700,
                     cursor: 'pointer',
-                    background: cover ? `#0f172a url(${cldUrl(cover, 400)}) center/cover` : gradientFor(vendor.id),
-                    aspectRatio: '1 / 1',
-                    boxShadow: 'var(--tl-shadow-1)',
+                    fontSize: '0.74rem',
+                    textDecoration: 'underline',
                   }}
                 >
-                  {!cover && (
-                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '2.5rem', fontWeight: 800, letterSpacing: '0.05em' }}>
-                      {initialsOf(vendor.shop_name)}
-                    </div>
-                  )}
-                  {/* gradient overlay bottom-to-top */}
-                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(15,23,42,0.85) 0%, rgba(15,23,42,0.25) 45%, rgba(15,23,42,0) 70%)' }} />
-                  {vendor.is_featured ? (
-                    <div style={{ position: 'absolute', top: 10, left: 10, background: 'rgba(250,204,21,0.95)', color: '#7c4a03', padding: '0.2rem 0.55rem', borderRadius: 999, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.04em', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                      <Star size={11} fill="#7c4a03" strokeWidth={0} /> FEATURED
-                    </div>
-                  ) : null}
-                  <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '0.9rem 0.9rem 0.85rem', color: 'white' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                      <h3 style={{ fontSize: '1rem', fontWeight: 700, lineHeight: 1.2, textShadow: '0 1px 6px rgba(0,0,0,0.45)' }}>
-                        {vendor.shop_name}
-                      </h3>
-                      {vendor.is_verified ? (
-                        <span title="Verified vendor" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <ShieldCheck size={16} color="#fff" fill="#3b82f6" strokeWidth={2.5} />
-                        </span>
-                      ) : null}
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.78rem', opacity: 0.95, marginBottom: 8 }}>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-                        <Star size={11} fill="#eab308" color="#eab308" />
-                        {Number(vendor.rating || 0).toFixed(1)}
-                      </span>
-                      <span style={{ opacity: 0.5 }}>•</span>
-                      <span>{vendor.product_count || vendor.total_products || 0} products</span>
-                    </div>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '0.3rem 0.7rem', borderRadius: 999, background: 'rgba(255,255,255,0.95)', color: '#0e9a52', fontWeight: 700, fontSize: '0.72rem' }}>
-                      Visit Store →
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          )}
-        </div>
-      </section>
-
-      {/* Top Vendors of the Month Section */}
-      {monthlyVendors.length > 0 && (
-      <section className="top-vendors-month" style={{ padding: 'var(--tl-space-5) 2rem', background: 'var(--tl-green-tint)' }}>
-        <div className="section-container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-            <span style={{ 
-              background: '#dcfce7', 
-              color: '#166534', 
-              padding: '0.45rem 1rem', 
-              borderRadius: '20px', 
-              fontSize: '0.85rem', 
-              fontWeight: '600',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              marginBottom: '1rem'
-            }}>
-              <Sparkles size={14} color="#16a34a" /> Monthly Highlights
-            </span>
-            <h2 className="section-title" style={{ fontSize: 'var(--tl-text-h2)', fontWeight: 700, color: 'var(--tl-ink)', marginBottom: '1rem' }}>
-              Top Vendors of the Month
-            </h2>
-            <p style={{ color: '#6b7280', maxWidth: '600px', margin: '0 auto' }}>
-              Celebrating our most outstanding vendors for their exceptional service, quality products, and customer satisfaction.
-            </p>
-          </div>
-          
-          <div className="monthly-vendors-grid" style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-            gap: '2rem'
-          }}>
-            {monthlyVendors.map((vendor, index) => {
-              const color = MONTHLY_COLORS[index % MONTHLY_COLORS.length];
-              return (
-              <div key={vendor.id} className="monthly-card tl-card tl-card-hover" style={{
-                padding: '2rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '1.5rem',
-                position: 'relative',
-                overflow: 'hidden'
-              }}>
-                <div style={{
-                  position: 'absolute',
-                  top: 0,
-                  right: 0,
-                  background: color,
-                  color: 'white',
-                  padding: '0.25rem 1rem',
-                  borderBottomLeftRadius: '12px',
-                  fontSize: '0.8rem',
-                  fontWeight: '600'
-                }}>
-                  #{index + 1} Vendor
-                </div>
-
-                <div className="monthly-icon" style={{
-                  width: '80px',
-                  height: '80px',
-                  borderRadius: '50%',
-                  background: vendor.logo ? `url(${cldUrl(vendor.logo, 400)}) center/cover` : gradientFor(vendor.id),
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                  color: 'white',
-                  fontWeight: 'bold',
-                  fontSize: '1.5rem'
-                }}>
-                  {!vendor.logo && initialsOf(vendor.shop_name)}
-                </div>
-
-                <div className="monthly-info">
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#1f2937', marginBottom: '0.5rem' }}>
-                    {vendor.shop_name}
-                  </h3>
-                  <div style={{ display: 'flex', gap: '1rem', fontSize: '0.9rem', color: '#6b7280', marginBottom: '1rem' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                      <img src={starIcon} alt="Rating" style={{ width: '14px', height: '14px' }} />
-                      {Number(vendor.rating || 0).toFixed(1)}
-                    </span>
-                    <span>•</span>
-                    <span>{vendor.total_reviews || 0} Reviews</span>
-                  </div>
-                  <Link to={`/vendor/${vendor.id}`} style={{
-                    color: color,
-                    fontWeight: '600',
-                    textDecoration: 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    fontSize: '0.9rem'
-                  }}>
-                    View Profile
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M5 12h14M12 5l7 7-7 7"/>
-                    </svg>
-                  </Link>
-                </div>
+                  Clear Filters
+                </button>
               </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-      )}
+            )}
 
-      {/* Stats Section */}
-      <section className="stats-section" style={{ background: 'var(--tl-green)', color: 'white', padding: 'var(--tl-space-5) 2rem', textAlign: 'center' }}>
-        <div className="stats-grid" style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '2rem',
-          maxWidth: '800px',
-          margin: '0 auto'
-        }}>
-          <div className="stat-item">
-            <span className="stat-number" style={{ fontSize: '2.5rem', fontWeight: '800', marginBottom: '0.5rem', display: 'block' }}>500+</span>
-            <span className="stat-label" style={{ fontSize: '0.9rem', opacity: 0.9 }}>Verified Vendors</span>
-          </div>
-          <div className="stat-item">
-            <span className="stat-number" style={{ fontSize: '2.5rem', fontWeight: '800', marginBottom: '0.5rem', display: 'block' }}>10k+</span>
-            <span className="stat-label" style={{ fontSize: '0.9rem', opacity: 0.9 }}>Monthly Visitors</span>
-          </div>
-          <div className="stat-item">
-            <span className="stat-number" style={{ fontSize: '2.5rem', fontWeight: '800', marginBottom: '0.5rem', display: 'block' }}>98%</span>
-            <span className="stat-label" style={{ fontSize: '0.9rem', opacity: 0.9 }}>Satisfaction Rate</span>
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works */}
-      <section className="how-it-works" style={{ padding: 'var(--tl-space-5) 2rem', background: 'var(--tl-bg)' }}>
-        <div className="section-container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <h2 className="section-title" style={{ textAlign: 'center', fontSize: 'var(--tl-text-h2)', fontWeight: 700, marginBottom: '2rem', color: 'var(--tl-ink)' }}>
-            How It Works
-          </h2>
-          
-          <div className="steps-container" style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-            gap: '2rem',
-            maxWidth: '900px',
-            margin: '2rem auto 0'
-          }}>
-            {[
-              { title: 'Search', desc: 'Find what you need using our powerful search or browse categories.', icon: searchIcon, step: 1 },
-              { title: 'Chat', desc: 'Connect directly with verified vendors on WhatsApp. No middlemen.', icon: messageIcon, step: 2 },
-              { title: 'Deal', desc: 'Agree on price and delivery terms safely and conveniently.', icon: packageIcon, step: 3 }
-            ].map((step) => (
-              <div key={step.step} className="step-card tl-card" style={{
-                padding: '2rem 1.5rem',
-                textAlign: 'center',
-                position: 'relative'
-              }}>
-                <div className="step-number" style={{
-                  position: 'absolute',
-                  top: '-15px',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  background: '#25D366',
-                  color: 'white',
-                  width: '30px',
-                  height: '30px',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 'bold',
-                  fontSize: '0.9rem'
-                }}>{step.step}</div>
-                <div className="step-icon" style={{ marginBottom: '1rem' }}>
-                  <img src={step.icon} alt={step.title} style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
-                </div>
-                <h3 className="step-title" style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '1rem', color: '#1f2937' }}>{step.title}</h3>
-                <p className="step-description" style={{ color: '#6b7280', lineHeight: '1.6', fontSize: '0.9rem' }}>{step.desc}</p>
+            {/* FEED STREAM: Posts + Interleaved "Suggested Thrift Vendors" */}
+            {loading ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="tl-skeleton" style={{ height: 320, borderRadius: 6 }} />
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
+            ) : filteredPosts.length === 0 ? (
+              <div
+                style={{
+                  background: '#ffffff',
+                  border: '1px solid #d8dfea',
+                  borderRadius: '6px',
+                  padding: '3rem 1.5rem',
+                  textAlign: 'center',
+                  boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                }}
+              >
+                <div style={{ width: 48, height: 48, borderRadius: '50%', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', color: '#1877f2' }}>
+                  <Store size={24} />
+                </div>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.4rem' }}>
+                  No posts match your filters
+                </h3>
+                <p style={{ fontSize: '0.84rem', color: '#64748b', maxWidth: 420, margin: '0 auto 1.25rem', lineHeight: 1.5 }}>
+                  Try switching back to "All Wall Updates" or adjusting your category/location filters to see live vendor posts.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedCategory('');
+                    setSelectedState('');
+                    setSearchInput('');
+                    setVerificationFilter('all');
+                    setSurface('new_arrivals');
+                  }}
+                  style={{
+                    padding: '0.55rem 1.25rem',
+                    borderRadius: 4,
+                    border: '1px solid #1877f2',
+                    background: '#1877f2',
+                    color: 'white',
+                    fontWeight: 700,
+                    fontSize: '0.82rem',
+                    cursor: 'pointer',
+                  }}
+                >
+                  View All Vendor Updates
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {filteredPosts.map((post, index) => {
+                  const showFirstSuggestions = index === 2 && suggestedVendors.length > 0;
+                  const showSecondSuggestions = index === 6 && suggestedVendors.length > 5;
 
-{/* Testimonials */}
-<section className="testimonials" style={{ padding: 'var(--tl-space-5) 2rem', background: 'var(--tl-surface)' }}>
-  <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-    <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-      <h2 className="section-title" style={{ fontSize: 'var(--tl-text-h2)', fontWeight: 700, color: 'var(--tl-ink)', marginBottom: '0.6rem' }}>What our community says</h2>
-      <p style={{ color: '#64748b', maxWidth: 600, margin: '0 auto' }}>Real buyers, real vendors, real stories.</p>
-    </div>
-    <div className="testi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem' }}>
-      {[
-        { name: 'Adaeze O.', meta: 'Buyer · Lagos', seed: 'Adaeze', quote: 'I was nervous about thrift shopping online until I found ThriftLink. The vendor I bought from had real reviews and we chatted on WhatsApp first. My ankara jacket arrived exactly as shown.' },
-        { name: 'Tunde A.', meta: 'Vendor · Abuja', seed: 'Tunde', quote: 'Selling on ThriftLink doubled my reach. Buyers trust the verified badge and reach out directly — no haggling with bots.' },
-        { name: 'Chiamaka E.', meta: 'Buyer · Port Harcourt', seed: 'Chiamaka', quote: 'The reporting tool saved me from a fake account. Admin removed them within a day.' },
-      ].map(t => (
-        <div key={t.name} className="testi-card tl-card" style={{ padding: '1.75rem 1.5rem' }}>
-          <div style={{ display: 'flex', gap: 2, marginBottom: '0.85rem' }}>
-            {[0,1,2,3,4].map(i => <Star key={i} size={16} color="#facc15" fill="#facc15" />)}
-          </div>
-          <p style={{ color: '#334155', lineHeight: 1.6, fontSize: '0.95rem', marginBottom: '1.25rem' }}>"{t.quote}"</p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <LetterAvatar name={t.name} size={44} alt={t.name} />
-            <div>
-              <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.95rem' }}>{t.name}</div>
-              <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{t.meta}</div>
+                  return (
+                    <React.Fragment key={post.id || index}>
+                      {/* 1. Vendor Wall Post Card */}
+                      <FeedPostCard
+                        post={post}
+                        surface={surface}
+                        onFollowChange={handleFollowVendor}
+                      />
+
+                      {/* 2. Interleaved "Suggested Thrift Vendors" Module (Inserted between posts!) */}
+                      {showFirstSuggestions && (
+                        <InFeedSuggestedVendors
+                          vendors={suggestedVendors.slice(0, 6)}
+                          surface={surface}
+                          title="Suggested Thrift Vendors For You"
+                          subtitle="Verified stores matching your thrifting interests & browsing activity"
+                          onFollowChange={handleFollowVendor}
+                        />
+                      )}
+
+                      {/* 3. Second Interleaved "More Vendors You May Like" Module */}
+                      {showSecondSuggestions && (
+                        <InFeedSuggestedVendors
+                          vendors={suggestedVendors.slice(6, 12)}
+                          surface={surface}
+                          title="More Verified Vendors You May Like"
+                          subtitle="Trending thrift fashion & shoe sellers across Nigeria"
+                          onFollowChange={handleFollowVendor}
+                        />
+                      )}
+                    </React.Fragment>
+                  );
+                })}
+
+                {/* Load More Button */}
+                {hasMore && (
+                  <div style={{ textAlign: 'center', padding: '1rem 0' }}>
+                    <button
+                      type="button"
+                      disabled={loadingMore}
+                      onClick={handleLoadMore}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        padding: '0.65rem 1.75rem',
+                        borderRadius: 4,
+                        border: '1px solid #cbd5e1',
+                        background: '#ffffff',
+                        color: '#1e3a8a',
+                        fontWeight: 700,
+                        fontSize: '0.85rem',
+                        cursor: loadingMore ? 'wait' : 'pointer',
+                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      {loadingMore ? (
+                        <>
+                          <RefreshCw size={14} className="tl-spin" /> Loading more updates...
+                        </>
+                      ) : (
+                        'Load More Vendor Updates ↓'
+                      )}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </main>
+
+          {/* ============================================================== */}
+          {/* RIGHT SIDEBAR: Suggested Vendors Widget & Safety Callouts      */}
+          {/* ============================================================== */}
+          <aside className="fb-right-col fb-sticky-col" style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+            
+            {/* "Suggested Vendors to Follow" Right Rail Widget (Like Facebook's People You May Know) */}
+            <div
+              style={{
+                background: '#ffffff',
+                border: '1px solid #d8dfea',
+                borderRadius: '4px',
+                overflow: 'hidden',
+                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)',
+              }}
+            >
+              <div
+                style={{
+                  background: '#f0f2f5',
+                  borderBottom: '1px solid #d8dfea',
+                  padding: '0.55rem 0.75rem',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  fontSize: '0.78rem',
+                  fontWeight: 800,
+                  color: '#334155',
+                }}
+              >
+                <span>Suggested Vendors</span>
+                <Link to="/verified-vendors" style={{ color: '#1877f2', textDecoration: 'none', fontSize: '0.74rem', fontWeight: 700 }}>
+                  See All
+                </Link>
+              </div>
+
+              <div style={{ padding: '0.65rem', display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+                {suggestedVendors.slice(0, 5).map((v) => (
+                  <div
+                    key={v.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '0.55rem',
+                      paddingBottom: '0.6rem',
+                      borderBottom: '1px solid #f1f5f9',
+                    }}
+                  >
+                    <div
+                      onClick={() => navigate(`/vendor/${v.id}`)}
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', cursor: 'pointer', minWidth: 0, flex: 1 }}
+                    >
+                      <div
+                        style={{
+                          width: 38,
+                          height: 38,
+                          borderRadius: '4px',
+                          background: v.logo ? `url(${cldUrl(v.logo, 80)}) center/cover` : gradientFor(v.id),
+                          color: 'white',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontWeight: 800,
+                          fontSize: '0.8rem',
+                          overflow: 'hidden',
+                          flexShrink: 0,
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                        }}
+                      >
+                        {!v.logo && initialsOf(v.shop_name)}
+                      </div>
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#1e3a8a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <span>{v.shop_name}</span>
+                          {Boolean(v.is_verified) && <ShieldCheck size={12} color="#fff" fill="#16a34a" />}
+                        </div>
+                        <div style={{ fontSize: '0.7rem', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {v.category || 'Thrift Store'} {v.state ? `· ${v.state}` : ''}
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/vendor/${v.id}`)}
+                      style={{
+                        padding: '0.28rem 0.6rem',
+                        borderRadius: '3px',
+                        border: '1px solid #cbd5e1',
+                        background: '#f8fafc',
+                        color: '#1e3a8a',
+                        fontSize: '0.72rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        flexShrink: 0,
+                      }}
+                    >
+                      View
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+
+            {/* Restricted Mode & Verification Notice Box */}
+            <div
+              style={{
+                background: '#fffbeb',
+                border: '1px solid #fde68a',
+                borderRadius: '4px',
+                padding: '0.85rem',
+                fontSize: '0.76rem',
+                color: '#92400e',
+                lineHeight: 1.45,
+                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.03)',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 800, marginBottom: '0.35rem' }}>
+                <ShieldAlert size={15} color="#d97706" />
+                <span>Restricted Vendor Mode</span>
+              </div>
+              <p style={{ margin: 0 }}>
+                Every vendor's update appears on the Wall. However, <strong>non-verified vendors</strong> have blurred media and locked WhatsApp links until they complete NIN/ID verification.
+              </p>
+            </div>
+
+            {/* Quick Safe Thrifting Tips */}
+            <div
+              style={{
+                background: '#ffffff',
+                border: '1px solid #d8dfea',
+                borderRadius: '4px',
+                padding: '0.85rem',
+                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)',
+                fontSize: '0.76rem',
+                color: '#334155',
+              }}
+            >
+              <div style={{ fontWeight: 800, color: '#1e3a8a', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <ShieldCheck size={14} color="#16a34a" /> Safe Thrift Shopping
+              </div>
+              <ul style={{ margin: 0, paddingLeft: '1.1rem', lineHeight: 1.5, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <li>Look for the green <strong>Verified</strong> badge on vendor profiles.</li>
+                <li>Chat directly on WhatsApp to confirm size, condition, and actual item photos.</li>
+                <li>Report any suspicious listings or spam using the post flag icon.</li>
+              </ul>
+            </div>
+
+            {/* Classic Early-Facebook Footer Links */}
+            <div style={{ padding: '0.25rem 0.5rem', fontSize: '0.72rem', color: '#94a3b8', lineHeight: 1.6 }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '0.3rem' }}>
+                <Link to="/how-it-works" style={{ color: '#64748b', textDecoration: 'none' }}>About</Link> ·
+                <Link to="/safety-tips" style={{ color: '#64748b', textDecoration: 'none' }}>Safety</Link> ·
+                <Link to="/vendor-policy" style={{ color: '#64748b', textDecoration: 'none' }}>Vendor Policy</Link> ·
+                <Link to="/terms" style={{ color: '#64748b', textDecoration: 'none' }}>Terms</Link> ·
+                <Link to="/privacy" style={{ color: '#64748b', textDecoration: 'none' }}>Privacy</Link>
+              </div>
+              <div>ThriftLink Marketplace © 2026</div>
+            </div>
+
+          </aside>
+
         </div>
-      ))}
-    </div>
-  </div>
-</section>
+      </div>
 
-{/* Become a Vendor CTA band */}
-<section className="vendor-band" style={{ padding: 'var(--tl-space-5) 2rem', background: 'linear-gradient(135deg, #0e9a52 0%, #16b865 50%, #1ed373 100%)', color: 'white', position: 'relative', overflow: 'hidden' }}>
-  <div aria-hidden style={{ position: 'absolute', top: -120, right: -80, width: 320, height: 320, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.18) 0%, transparent 70%)' }} />
-  <div className="vendor-band-grid" style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '2.5rem', alignItems: 'center', position: 'relative' }}>
-    <div>
-      <h2 style={{ fontSize: 'clamp(1.6rem, 3vw, 2.2rem)', fontWeight: 800, lineHeight: 1.15, marginBottom: '1rem', color: 'white' }}>
-        Run a thrift shop? Get the verified badge.
-      </h2>
-      <p style={{ fontSize: '1.05rem', opacity: 0.95, marginBottom: '1.5rem', maxWidth: 560 }}>
-        Join a community of trusted Nigerian thrift vendors selling directly to buyers who already trust ThriftLink.
-      </p>
-      <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.6rem 1.5rem', maxWidth: 560 }}>
-        {['Reach more buyers', 'Build trust through verification', 'Chat directly with customers', 'Easily manage listings'].map(item => (
-          <li key={item} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.95rem' }}>
-            <ShieldCheck size={18} color="#facc15" /> {item}
-          </li>
-        ))}
-      </ul>
-    </div>
-    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-      <Link to="/login" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.6rem', padding: '1rem 1.75rem', borderRadius: 999, background: 'white', color: '#0e9a52', fontWeight: 800, textDecoration: 'none', boxShadow: '0 16px 32px -10px rgba(15,23,42,0.25)', fontSize: '1rem' }}>
-        Apply to Become a Verified Vendor →
-      </Link>
-    </div>
-  </div>
-</section>
-
-{/* CTA Section */}
-<section className="cta-section" style={{
-  background: 'linear-gradient(135deg, #1f2937 0%, #374151 100%)',
-  color: 'white',
-  padding: 'var(--tl-space-5) 2rem',
-  textAlign: 'center'
-}}>
-  <div className="cta-content" style={{ maxWidth: '600px', margin: '0 auto' }}>
-    <h2 style={{ fontSize: 'var(--tl-text-h2)', fontWeight: 700, marginBottom: '1rem', lineHeight: '1.3' }}>
-      Ready to grow your business?
-    </h2>
-    <p style={{ fontSize: '1.1rem', marginBottom: '2rem', opacity: 0.9 }}>
-      Join thousands of vendors selling on Thrift Link today.
-    </p>
-    <div className="cta-buttons" style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-      <Link to={ROUTES.vendorRegister} className="btn" style={{
-        padding: '0.8rem 2rem',
-        background: '#25D366',
-        color: 'white',
-        borderRadius: '6px',
-        fontWeight: '600',
-        textDecoration: 'none',
-        transition: 'all 0.3s ease',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.5rem'
-      }}>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-          <circle cx="9" cy="7" r="4"/>
-          <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
-          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-        </svg>
-        Become a Vendor
-      </Link>
-      <Link to="/how-it-works" className="btn-white" style={{
-        padding: '0.8rem 2rem',
-        background: 'white',
-        color: '#1f2937',
-        borderRadius: '6px',
-        fontWeight: '600',
-        textDecoration: 'none',
-        transition: 'all 0.3s ease',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.5rem'
-      }}>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="10"/>
-          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-          <path d="M12 17h.01"/>
-        </svg>
-        Learn More
-      </Link>
-    </div>
-  </div>
-</section>
-
+      {/* Preferences Modal (Instant Sync with Algorithm) */}
       <InterestSelectorModal
         isOpen={interestModalOpen}
         onClose={() => setInterestModalOpen(false)}
-        onSaved={() => fetchRecommendations()}
+        onSaved={() => loadFeedData(surface, 1, false)}
       />
 
       <Footer />
