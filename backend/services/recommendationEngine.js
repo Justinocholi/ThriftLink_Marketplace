@@ -528,27 +528,35 @@ async function getPersonalizedFeed({
   }
 
   const scoredPosts = candidatePosts.map((post) => {
+    const isVerified = Boolean(post.is_verified);
     const scoredVendor = vendorScoreMap.get(post.vendor_id);
-    const vendorScore = scoredVendor ? scoredVendor.score : 65;
+    const vendorScore = scoredVendor ? scoredVendor.score : (isVerified ? 68 : 42);
     const postFreshness = calculateFreshness(post.created_at, 14);
     const isFollowed = followedSet.has(post.vendor_id);
 
-    // Combine vendor relevance + post recency
-    const feedScore = surface === 'new_arrivals'
+    // Combine vendor relevance + post recency (unverified vendors capped in restricted tier)
+    const rawFeedScore = surface === 'new_arrivals'
       ? Math.round((postFreshness * 70) + (vendorScore * 0.3))
       : Math.round((vendorScore * 0.65) + (postFreshness * 35));
+    const feedScore = isVerified
+      ? Math.min(99, Math.max(55, rawFeedScore))
+      : Math.min(58, Math.max(35, rawFeedScore));
 
     const reasons = [];
-    if (isFollowed) {
-      reasons.push('From a vendor you follow');
-    }
-    if (scoredVendor && Array.isArray(scoredVendor.reasons)) {
-      for (const r of scoredVendor.reasons) {
-        if (!reasons.includes(r)) reasons.push(r);
+    if (!isVerified) {
+      reasons.push('Unverified Vendor — Restricted Preview');
+    } else {
+      if (isFollowed) {
+        reasons.push('From a vendor you follow');
       }
-    }
-    if (reasons.length === 0) {
-      reasons.push('Recently added by a verified vendor');
+      if (scoredVendor && Array.isArray(scoredVendor.reasons)) {
+        for (const r of scoredVendor.reasons) {
+          if (!reasons.includes(r)) reasons.push(r);
+        }
+      }
+      if (reasons.length === 0) {
+        reasons.push('Recently added by a verified vendor');
+      }
     }
 
     let images = [];
@@ -560,6 +568,7 @@ async function getPersonalizedFeed({
 
     return {
       id: post.id,
+      post_type: post.post_type || 'catalog_drop',
       name: post.name,
       description: post.description,
       price: Number(post.price || 0),
@@ -577,10 +586,11 @@ async function getPersonalizedFeed({
       vendor_city: post.vendor_city,
       vendor_rating: Number(post.vendor_rating || 0),
       vendor_reviews: Number(post.vendor_reviews || 0),
-      whatsapp_number: post.whatsapp_number,
-      is_verified: Boolean(post.is_verified),
+      whatsapp_number: isVerified ? post.whatsapp_number : null,
+      is_verified: isVerified,
+      is_restricted: !isVerified,
       isFollowed,
-      score: Math.min(99, Math.max(50, feedScore)),
+      score: feedScore,
       reasons,
       rankingVersion: RANKING_VERSION,
     };
@@ -593,10 +603,18 @@ async function getPersonalizedFeed({
     scoredPosts.sort((a, b) => b.score - a.score || (new Date(b.created_at || 0) - new Date(a.created_at || 0)));
   }
 
-  // Interleave so the same vendor doesn't appear more than twice in a row
+  // Separate verified and restricted (unverified) posts so we can interleave them
+  // (3 verified posts : 1 restricted unverified vendor update) while preventing same-vendor clustering
+  const verifiedPool = scoredPosts.filter((p) => p.is_verified);
+  const restrictedPool = scoredPosts
+    .filter((p) => !p.is_verified)
+    .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+
   const diversified = [];
-  const pool = [...scoredPosts];
-  while (pool.length > 0) {
+  let vCounter = 0;
+
+  const pickNextFrom = (pool) => {
+    if (pool.length === 0) return null;
     let pickIdx = 0;
     if (diversified.length >= 1) {
       const lastVendor = diversified[diversified.length - 1].vendor_id;
@@ -604,7 +622,31 @@ async function getPersonalizedFeed({
       if (altIdx !== -1) pickIdx = altIdx;
     }
     const [picked] = pool.splice(pickIdx, 1);
-    diversified.push(picked);
+    return picked;
+  };
+
+  while (verifiedPool.length > 0 || restrictedPool.length > 0) {
+    if (surface === 'new_arrivals') {
+      // Pure chronological stream across all vendors
+      const nextV = verifiedPool[0];
+      const nextR = restrictedPool[0];
+      if (nextV && (!nextR || new Date(nextV.created_at || 0) >= new Date(nextR.created_at || 0))) {
+        diversified.push(pickNextFrom(verifiedPool));
+      } else if (nextR) {
+        diversified.push(pickNextFrom(restrictedPool));
+      }
+    } else {
+      // Interleave 3 verified posts then 1 restricted (unverified) vendor update
+      if ((vCounter < 3 && verifiedPool.length > 0) || restrictedPool.length === 0) {
+        const picked = pickNextFrom(verifiedPool);
+        if (picked) diversified.push(picked);
+        vCounter++;
+      } else if (restrictedPool.length > 0) {
+        const picked = pickNextFrom(restrictedPool);
+        if (picked) diversified.push(picked);
+        vCounter = 0;
+      }
+    }
   }
 
   const total = diversified.length;

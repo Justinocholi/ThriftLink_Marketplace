@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import { vendors as vendorsApi, products as productsApi, recommendations as recApi } from '../../services/api';
-import { ShieldCheck, MessageCircle, Users, Flag, Star, Sparkles, Compass, Clock, SlidersHorizontal, Heart, Layers, ArrowRight, MapPin } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, Globe, MessageCircle, Users, Flag, Star, Sparkles, Compass, Clock, SlidersHorizontal, Heart, Layers, ArrowRight, MapPin } from 'lucide-react';
 import ProductCard from '../../components/ProductCard';
 import RecommendationCard from '../../components/RecommendationCard';
 import FeedPostCard from '../../components/FeedPostCard';
@@ -89,6 +89,7 @@ const Home = () => {
   const [recSurface, setRecSurface] = useState('recommended_for_you');
   const [recVendors, setRecVendors] = useState([]);
   const [feedPosts, setFeedPosts] = useState([]);
+  const [homeFeedFilter, setHomeFeedFilter] = useState('all'); // 'all' | 'verified' | 'restricted'
   const [recLoading, setRecLoading] = useState(true);
   const [interestModalOpen, setInterestModalOpen] = useState(false);
 
@@ -96,7 +97,7 @@ const Home = () => {
     setRecLoading(true);
     Promise.all([
       recApi.getVendors({ surface, limit: 8 }).catch(() => ({ vendors: [] })),
-      recApi.getFeed({ surface, limit: 6 }).catch(() => ({ posts: [] })),
+      recApi.getFeed({ surface, limit: 12 }).catch(() => ({ posts: [] })),
     ])
       .then(([vRes, fRes]) => {
         setRecVendors(Array.isArray(vRes?.vendors) ? vRes.vendors : []);
@@ -599,44 +600,110 @@ const Home = () => {
             </div>
           )}
 
-          {/* Personalized News Feed of Vendor Posts & New Arrivals */}
+          {/* Early-Facebook Aesthetic Home Wall: Every Vendor's New Update (Verified + Restricted Unverified) */}
           {!recLoading && feedPosts.length > 0 && (
-            <div style={{ marginTop: '3rem', paddingTop: '2.5rem', borderTop: '1px solid #e2e8f0' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-                <div>
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#059669', fontSize: '0.82rem', fontWeight: 700, marginBottom: 4 }}>
-                    <Sparkles size={15} /> Live News Feed
+            <div
+              style={{
+                marginTop: '3rem',
+                background: '#edeff4',
+                border: '1px solid #d8dfea',
+                borderRadius: '6px',
+                overflow: 'hidden',
+              }}
+            >
+              {/* Classic Early-Facebook Navy Header Bar */}
+              <div
+                style={{
+                  background: '#1e3a8a',
+                  borderBottom: '1px solid #172554',
+                  padding: '0.75rem 1.25rem',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: '0.75rem',
+                  color: 'white',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <Globe size={18} color="#4ade80" />
+                  <div>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'white', margin: 0 }}>
+                      ThriftLink Home Wall · Live Vendor Updates
+                    </h3>
+                    <p style={{ fontSize: '0.76rem', color: 'rgba(255,255,255,0.85)', margin: 0 }}>
+                      See every vendor's new update · Non-verified vendors are displayed in restricted mode
+                    </p>
                   </div>
-                  <h3 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>
-                    Vendor Posts & New Catalog Drops
-                  </h3>
-                  <p style={{ color: '#64748b', fontSize: '0.9rem', margin: '0.25rem 0 0' }}>
-                    Discover a post → Open the vendor → Browse their catalog → Save or follow → Enquire directly.
-                  </p>
                 </div>
-                <Link
-                  to="/feed"
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    padding: '0.6rem 1.2rem',
-                    borderRadius: 999,
-                    background: '#16b865',
-                    color: 'white',
-                    fontWeight: 700,
-                    fontSize: '0.86rem',
-                    textDecoration: 'none',
-                  }}
-                >
-                  Open Full News Feed <ArrowRight size={15} />
-                </Link>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
+                  {[
+                    { id: 'all', label: `All Updates (${feedPosts.length})` },
+                    { id: 'verified', label: `Verified (${feedPosts.filter(p => p.is_verified).length})` },
+                    { id: 'restricted', label: `Restricted / Unverified (${feedPosts.filter(p => !p.is_verified).length})` },
+                  ].map((tab) => {
+                    const active = homeFeedFilter === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setHomeFeedFilter(tab.id)}
+                        style={{
+                          padding: '0.32rem 0.7rem',
+                          borderRadius: '3px',
+                          border: active ? '1px solid #ffffff' : '1px solid rgba(255,255,255,0.35)',
+                          background: active ? '#ffffff' : 'rgba(255,255,255,0.12)',
+                          color: active ? '#1e3a8a' : '#ffffff',
+                          fontSize: '0.74rem',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {tab.label}
+                      </button>
+                    );
+                  })}
+
+                  <Link
+                    to="/feed"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 5,
+                      padding: '0.34rem 0.8rem',
+                      borderRadius: '3px',
+                      background: '#16a34a',
+                      border: '1px solid #15803d',
+                      color: 'white',
+                      fontWeight: 700,
+                      fontSize: '0.75rem',
+                      textDecoration: 'none',
+                    }}
+                  >
+                    Full Wall <ArrowRight size={13} />
+                  </Link>
+                </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: '1.5rem' }}>
-                {feedPosts.map((post) => (
-                  <FeedPostCard key={post.id} post={post} surface={recSurface} />
-                ))}
+              {/* Wall Body: Classic Timeline Stream + Right Safety Sidebar */}
+              <div
+                style={{
+                  padding: '1.25rem',
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 340px), 1fr))',
+                  gap: '1rem',
+                }}
+              >
+                {feedPosts
+                  .filter((p) => {
+                    if (homeFeedFilter === 'verified') return p.is_verified;
+                    if (homeFeedFilter === 'restricted') return !p.is_verified;
+                    return true;
+                  })
+                  .map((post) => (
+                    <FeedPostCard key={post.id} post={post} surface={recSurface} />
+                  ))}
               </div>
             </div>
           )}

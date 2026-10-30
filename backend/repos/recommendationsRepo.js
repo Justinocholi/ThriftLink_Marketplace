@@ -786,23 +786,30 @@ async function getRecommendationMetrics(days = 30) {
 // 8. News Feed Candidate Posts (Products & Vendor Drops)
 // ---------------------------------------------------------------------------
 
-async function getRecentFeedPosts(limit = 60) {
+async function getRecentFeedPosts(limit = 80) {
   if (isSupabase()) {
     try {
       const db = supabaseData.getDataClient();
-      const { data, error } = await db
-        .from('products')
-        .select('*, vendor_profiles!inner(id,shop_name,whatsapp_number,rating,total_reviews,state,city,is_verified,logo,description,category,created_at)')
-        .eq('is_available', true)
-        .eq('vendor_profiles.is_verified', true)
-        .order('created_at', { ascending: false })
-        .limit(limit);
-      if (error) throw error;
-      return (data || []).map((row) => {
+      const [prodRes, vendorRes] = await Promise.all([
+        db
+          .from('products')
+          .select('*, vendor_profiles!inner(id,shop_name,whatsapp_number,rating,total_reviews,state,city,is_verified,logo,description,category,created_at)')
+          .eq('is_available', true)
+          .order('created_at', { ascending: false })
+          .limit(limit),
+        db
+          .from('vendor_profiles')
+          .select('id,shop_name,whatsapp_number,rating,total_reviews,state,city,is_verified,logo,description,category,created_at')
+          .order('created_at', { ascending: false })
+          .limit(30),
+      ]);
+
+      const productPosts = (prodRes.data || []).map((row) => {
         const vp = row.vendor_profiles || {};
         const { vendor_profiles, ...prod } = row;
         return {
           ...prod,
+          post_type: 'catalog_drop',
           vendor_id: vp.id || prod.vendor_id,
           vendor_name: vp.shop_name,
           vendor_logo: vp.logo,
@@ -815,6 +822,35 @@ async function getRecentFeedPosts(limit = 60) {
           is_verified: vp.is_verified ? 1 : 0,
         };
       });
+
+      const vendorsWithPosts = new Set(productPosts.map((p) => p.vendor_id));
+      const statusUpdates = (vendorRes.data || [])
+        .filter((vp) => !vendorsWithPosts.has(vp.id))
+        .map((vp) => ({
+          id: `status-${vp.id}`,
+          post_type: 'vendor_status',
+          name: `${vp.shop_name} joined ThriftLink Marketplace`,
+          description: vp.description || `New thrift vendor in ${vp.state || 'Nigeria'} specializing in ${vp.category || 'thrift fashion'}.`,
+          price: 0,
+          original_price: null,
+          category: vp.category || 'Fashion',
+          condition: 'new_vendor',
+          images: vp.logo ? JSON.stringify([vp.logo]) : '[]',
+          views: 0,
+          created_at: vp.created_at,
+          vendor_id: vp.id,
+          vendor_name: vp.shop_name,
+          vendor_logo: vp.logo,
+          vendor_category: vp.category || 'Fashion',
+          vendor_state: vp.state,
+          vendor_city: vp.city,
+          vendor_rating: Number(vp.rating || 0),
+          vendor_reviews: Number(vp.total_reviews || 0),
+          whatsapp_number: vp.whatsapp_number,
+          is_verified: vp.is_verified ? 1 : 0,
+        }));
+
+      return [...productPosts, ...statusUpdates].slice(0, limit);
     } catch (err) {
       console.error('Supabase getRecentFeedPosts error:', err.message);
       return [];
@@ -838,14 +874,52 @@ async function getRecentFeedPosts(limit = 60) {
         v.is_verified
       FROM products p
       JOIN vendor_profiles v ON p.vendor_id = v.id
-      WHERE p.is_available = 1 AND v.is_verified = 1
+      WHERE p.is_available = 1
       ORDER BY p.created_at DESC
       LIMIT ?
     `).all(limit);
-    return rows.map((r) => ({
+
+    const productPosts = rows.map((r) => ({
       ...r,
+      post_type: 'catalog_drop',
       vendor_id: r.vendor_profile_id || r.vendor_id,
     }));
+
+    const vendorsWithPosts = new Set(productPosts.map((p) => p.vendor_id));
+    const allVendors = db.prepare(`
+      SELECT id, shop_name, whatsapp_number, rating, total_reviews, state, city, is_verified, logo, description, category, created_at
+      FROM vendor_profiles
+      ORDER BY created_at DESC
+      LIMIT 30
+    `).all();
+
+    const statusUpdates = allVendors
+      .filter((vp) => !vendorsWithPosts.has(vp.id))
+      .map((vp) => ({
+        id: `status-${vp.id}`,
+        post_type: 'vendor_status',
+        name: `${vp.shop_name} joined ThriftLink Marketplace`,
+        description: vp.description || `New thrift vendor in ${vp.state || 'Nigeria'} specializing in ${vp.category || 'thrift fashion'}.`,
+        price: 0,
+        original_price: null,
+        category: vp.category || 'Fashion',
+        condition: 'new_vendor',
+        images: vp.logo ? JSON.stringify([vp.logo]) : '[]',
+        views: 0,
+        created_at: vp.created_at,
+        vendor_id: vp.id,
+        vendor_name: vp.shop_name,
+        vendor_logo: vp.logo,
+        vendor_category: vp.category || 'Fashion',
+        vendor_state: vp.state,
+        vendor_city: vp.city,
+        vendor_rating: Number(vp.rating || 0),
+        vendor_reviews: Number(vp.total_reviews || 0),
+        whatsapp_number: vp.whatsapp_number,
+        is_verified: vp.is_verified ? 1 : 0,
+      }));
+
+    return [...productPosts, ...statusUpdates].slice(0, limit);
   } catch (err) {
     console.error('SQLite getRecentFeedPosts error:', err.message);
     return [];
