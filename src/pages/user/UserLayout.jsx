@@ -44,7 +44,7 @@ const UserLayout = () => {
   ];
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#f8fafc', fontFamily: "'Inter', sans-serif", position: 'relative' }}>
+    <div className="tl-dashboard-bg" style={{ display: 'flex', minHeight: '100vh', fontFamily: "'Inter', sans-serif", position: 'relative' }}>
       <style>
         {`
           @media (max-width: 768px) {
@@ -107,8 +107,11 @@ const UserLayout = () => {
       {/* Sidebar */}
       <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`} style={{
         width: '260px',
-        background: 'white',
-        borderRight: '1px solid #e2e8f0',
+        background: 'rgba(255, 255, 255, 0.82)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderRight: '1px solid rgba(255, 255, 255, 0.7)',
+        boxShadow: '4px 0 24px rgba(15, 23, 42, 0.04)',
         display: 'flex',
         flexDirection: 'column',
         padding: '2rem 0',
@@ -206,7 +209,7 @@ const UserLayout = () => {
             </button>
             <div className="user-welcome-block">
               <h1 className="user-welcome-title" style={{ fontSize: '1.75rem', color: '#0f172a', fontWeight: '700', marginBottom: '0.25rem' }}>
-                Welcome back! 👋
+                Welcome back
               </h1>
               <p className="user-welcome-sub" style={{ color: '#64748b' }}>Here's what's happening with your account.</p>
             </div>

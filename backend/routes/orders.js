@@ -14,7 +14,7 @@ const useSupabase = () => process.env.DATA_BACKEND === 'supabase';
 // vendor sees a familiar layout in their inbox.
 function buildVendorOrderDm({ buyerName, items, total, shippingAddress, phone, notes, orderId }) {
   const lines = [];
-  lines.push(`🛍️ New order from ${buyerName || 'a buyer'}`);
+  lines.push(`New order from ${buyerName || 'a buyer'}`);
   lines.push('');
   items.forEach((it, i) => {
     const qty = it.quantity || 1;

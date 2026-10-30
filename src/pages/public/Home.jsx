@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
-import { vendors as vendorsApi, products as productsApi } from '../../services/api';
-import { ShieldCheck, MessageCircle, Users, Flag, Star } from 'lucide-react';
+import { vendors as vendorsApi, products as productsApi, recommendations as recApi } from '../../services/api';
+import { ShieldCheck, MessageCircle, Users, Flag, Star, Sparkles, Compass, Clock, SlidersHorizontal } from 'lucide-react';
 import ProductCard from '../../components/ProductCard';
+import RecommendationCard from '../../components/RecommendationCard';
+import InterestSelectorModal from '../../components/InterestSelectorModal';
 import { cldUrl } from '../../utils/cloudinary';
 import { useFetch } from '../../hooks/useFetch';
 import ErrorState from '../../components/ErrorState';
@@ -81,6 +83,30 @@ const Home = () => {
 
   const featuredVendors = vendors.slice(0, 8);
   const monthlyVendors = vendors.slice(0, 3);
+
+  // Recommendation Engine State
+  const [recSurface, setRecSurface] = useState('recommended_for_you');
+  const [recVendors, setRecVendors] = useState([]);
+  const [recLoading, setRecLoading] = useState(true);
+  const [interestModalOpen, setInterestModalOpen] = useState(false);
+
+  const fetchRecommendations = (surface = recSurface) => {
+    setRecLoading(true);
+    recApi.getVendors({ surface, limit: 8 })
+      .then((res) => {
+        setRecVendors(Array.isArray(res?.vendors) ? res.vendors : []);
+      })
+      .catch(() => setRecVendors([]))
+      .finally(() => setRecLoading(false));
+  };
+
+  useEffect(() => {
+    fetchRecommendations(recSurface);
+  }, [recSurface]);
+
+  const handleDismissRecVendor = (dismissedId) => {
+    setRecVendors((prev) => prev.filter((v) => v.id !== dismissedId));
+  };
 
   const handleSearch = () => {
     navigate(`/category/all?q=${encodeURIComponent(searchTerm)}&state=${encodeURIComponent(location)}`);
@@ -442,7 +468,123 @@ const Home = () => {
         </div>
       </section>
 
-{/* Featured Vendors */}
+      {/* Recommendation Discovery Hub */}
+      <section className="recommendation-hub" style={{ padding: 'var(--tl-space-5) 2rem', background: 'var(--tl-bg)' }}>
+        <div className="section-container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+            <div>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#16b865', fontSize: '0.85rem', fontWeight: 700, marginBottom: 4 }}>
+                <Sparkles size={16} /> Intelligent Discovery
+              </div>
+              <h2 className="section-title" style={{ fontSize: 'var(--tl-text-h2)', fontWeight: 800, color: 'var(--tl-ink)', margin: 0 }}>
+                {recSurface === 'recommended_for_you' && 'Recommended For You'}
+                {recSurface === 'discover' && 'Discover Emerging & Verified Vendors'}
+                {recSurface === 'new_arrivals' && 'New Arrivals & Fresh Catalogs'}
+              </h2>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => setInterestModalOpen(true)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '0.55rem 1rem',
+                  borderRadius: 999,
+                  background: 'white',
+                  border: '1px solid #d1d5db',
+                  color: '#334155',
+                  fontWeight: 600,
+                  fontSize: '0.85rem',
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.04)',
+                }}
+              >
+                <SlidersHorizontal size={14} />
+                Personalize Preferences
+              </button>
+            </div>
+          </div>
+
+          {/* Surface Switcher Tabs */}
+          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem', flexWrap: 'wrap' }}>
+            {[
+              { id: 'recommended_for_you', label: 'Recommended For You', Icon: Sparkles },
+              { id: 'discover', label: 'Discover Vendors', Icon: Compass },
+              { id: 'new_arrivals', label: 'New Arrivals', Icon: Clock },
+            ].map(({ id, label, Icon }) => {
+              const active = recSurface === id;
+              return (
+                <button
+                  key={id}
+                  onClick={() => setRecSurface(id)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '0.6rem 1.15rem',
+                    borderRadius: 999,
+                    border: active ? '1.5px solid #16b865' : '1px solid transparent',
+                    background: active ? '#dcfce7' : 'transparent',
+                    color: active ? '#15803d' : '#64748b',
+                    fontWeight: active ? 700 : 500,
+                    fontSize: '0.88rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  <Icon size={15} />
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Recommendations Grid */}
+          {recLoading ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1.5rem' }}>
+              {[0, 1, 2, 3].map((i) => (
+                <div key={i} className="tl-skeleton" style={{ height: '340px', borderRadius: '16px' }} />
+              ))}
+            </div>
+          ) : recVendors.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '3.5rem 1rem', background: 'white', borderRadius: '16px', border: '1px dashed #cbd5e1' }}>
+              <p style={{ color: '#64748b', fontSize: '1rem', margin: '0 0 1rem' }}>
+                No recommendations found for this surface right now.
+              </p>
+              <button
+                onClick={() => setInterestModalOpen(true)}
+                style={{
+                  padding: '0.65rem 1.25rem',
+                  borderRadius: 999,
+                  border: 'none',
+                  background: '#16b865',
+                  color: 'white',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                Select Your Favorite Categories →
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1.5rem' }}>
+              {recVendors.map((vendor, idx) => (
+                <RecommendationCard
+                  key={vendor.id}
+                  vendor={vendor}
+                  surface={recSurface}
+                  position={idx}
+                  onDismiss={handleDismissRecVendor}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Featured Vendors */}
       <section className="featured-vendors" style={{ padding: 'var(--tl-space-5) 2rem', background: 'var(--tl-surface)' }}>
         <div className="section-container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <h2 className="section-title" style={{ textAlign: 'center', fontSize: 'var(--tl-text-h2)', fontWeight: 700, marginBottom: '2rem', color: 'var(--tl-ink)' }}>
@@ -496,8 +638,8 @@ const Home = () => {
                   {/* gradient overlay bottom-to-top */}
                   <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(15,23,42,0.85) 0%, rgba(15,23,42,0.25) 45%, rgba(15,23,42,0) 70%)' }} />
                   {vendor.is_featured ? (
-                    <div style={{ position: 'absolute', top: 10, left: 10, background: 'rgba(250,204,21,0.95)', color: '#7c4a03', padding: '0.2rem 0.55rem', borderRadius: 999, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.04em' }}>
-                      ★ FEATURED
+                    <div style={{ position: 'absolute', top: 10, left: 10, background: 'rgba(250,204,21,0.95)', color: '#7c4a03', padding: '0.2rem 0.55rem', borderRadius: 999, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.04em', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                      <Star size={11} fill="#7c4a03" strokeWidth={0} /> FEATURED
                     </div>
                   ) : null}
                   <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '0.9rem 0.9rem 0.85rem', color: 'white' }}>
@@ -512,7 +654,10 @@ const Home = () => {
                       ) : null}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.78rem', opacity: 0.95, marginBottom: 8 }}>
-                      <span>★ {Number(vendor.rating || 0).toFixed(1)}</span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                        <Star size={11} fill="#eab308" color="#eab308" />
+                        {Number(vendor.rating || 0).toFixed(1)}
+                      </span>
                       <span style={{ opacity: 0.5 }}>•</span>
                       <span>{vendor.product_count || vendor.total_products || 0} products</span>
                     </div>
@@ -536,14 +681,16 @@ const Home = () => {
             <span style={{ 
               background: '#dcfce7', 
               color: '#166534', 
-              padding: '0.5rem 1rem', 
+              padding: '0.45rem 1rem', 
               borderRadius: '20px', 
-              fontSize: '0.9rem', 
+              fontSize: '0.85rem', 
               fontWeight: '600',
-              display: 'inline-block',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
               marginBottom: '1rem'
             }}>
-              ✨ Monthly Highlights
+              <Sparkles size={14} color="#16a34a" /> Monthly Highlights
             </span>
             <h2 className="section-title" style={{ fontSize: 'var(--tl-text-h2)', fontWeight: 700, color: 'var(--tl-ink)', marginBottom: '1rem' }}>
               Top Vendors of the Month
@@ -824,6 +971,12 @@ const Home = () => {
     </div>
   </div>
 </section>
+
+      <InterestSelectorModal
+        isOpen={interestModalOpen}
+        onClose={() => setInterestModalOpen(false)}
+        onSaved={() => fetchRecommendations()}
+      />
 
       <Footer />
     </div>

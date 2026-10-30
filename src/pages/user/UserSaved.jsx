@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Heart } from 'lucide-react';
+import { Heart, Package, Store } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { userMe } from '../../services/api';
 import { useFetch } from '../../hooks/useFetch';
@@ -34,7 +34,11 @@ const UserSaved = () => {
 
       {saved.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>❤️</div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+            <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#fee2e2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Heart size={32} color="#ef4444" />
+            </div>
+          </div>
           <p>No saved items yet. Browse vendors to save items you like!</p>
         </div>
       ) : (
@@ -45,10 +49,15 @@ const UserSaved = () => {
             return (
               <div key={item.id} style={{ border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden' }}>
                 <div style={{ position: 'relative', height: '200px', background: '#f1f5f9', cursor: 'pointer' }}
-                  onClick={() => item.product_id && navigate(ROUTES.product(item.product_id))}>
+                  onClick={() => {
+                    if (item.product_id) navigate(ROUTES.product(item.product_id));
+                    else if (item.vendor_id || item.vendor_profile_id) navigate(`/vendor/${item.vendor_id || item.vendor_profile_id}`);
+                  }}>
                   {img
-                    ? <img src={img} alt={item.product_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    : <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem' }}>📦</div>}
+                    ? <img src={img} alt={item.product_name || item.vendor_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    : <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}>
+                        {item.product_id ? <Package size={36} strokeWidth={1.5} /> : <Store size={36} strokeWidth={1.5} />}
+                      </div>}
                   <button
                     onClick={(e) => { e.stopPropagation(); handleUnsave(item.id); }}
                     style={{ position: 'absolute', top: '10px', right: '10px', background: 'white', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}

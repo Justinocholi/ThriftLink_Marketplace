@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
 
 /* Tailwind + shadcn/ui base layer.
    Existing inline-styled pages aren't affected — Preflight only resets where
@@ -1329,8 +1330,6 @@ body {
    playful typography, subtle gradients. Zero JSX changes required.
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
-
 :root {
     /* Brand stays anchored to the existing green so nothing visually shifts hue */
     --tl-primary: #16b865;
@@ -1720,5 +1719,144 @@ h1, h2, h3, .section-title, .hero h1 {
 .tl-stat-icon.lavender { background: linear-gradient(135deg, #C4B5FD, #A78BFA); }
 .tl-stat-icon.sun      { background: linear-gradient(135deg, #FFE066, #FFB627); }
 .tl-stat-icon.sky      { background: linear-gradient(135deg, #99F6E4, #67E8F9); }
+
+/* ── Glossy & Glass-morphic Dashboard Design System ─────── */
+.tl-dashboard-bg {
+    background-color: #f8fafc;
+    background-image: 
+        radial-gradient(at 0% 0%, rgba(37, 211, 102, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(59, 130, 246, 0.08) 0px, transparent 50%),
+        radial-gradient(at 50% 100%, rgba(147, 51, 234, 0.05) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(37, 211, 102, 0.06) 0px, transparent 50%);
+    background-attachment: fixed;
+}
+
+.tl-glass-card {
+    background: rgba(255, 255, 255, 0.78) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.85) !important;
+    box-shadow: 
+        0 20px 40px -15px rgba(15, 23, 42, 0.06),
+        0 1px 3px rgba(15, 23, 42, 0.03),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.02) !important;
+    border-radius: 20px !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.tl-glass-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.95) 50%, rgba(255, 255, 255, 0) 100%);
+    pointer-events: none;
+}
+
+.tl-glass-card:hover {
+    box-shadow: 
+        0 24px 48px -12px rgba(15, 23, 42, 0.09),
+        0 2px 6px rgba(15, 23, 42, 0.04),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
+}
+
+.tl-glass-header {
+    background: rgba(255, 255, 255, 0.75) !important;
+    backdrop-filter: blur(24px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.85) !important;
+    box-shadow: 
+        0 10px 30px -10px rgba(15, 23, 42, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+    border-radius: 20px !important;
+}
+
+.tl-glass-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    border-radius: 999px;
+    padding: 0.35rem 0.85rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.tl-glossy-hero {
+    background: 
+        radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.25) 0%, transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(255, 255, 255, 0.18) 0%, transparent 45%),
+        linear-gradient(135deg, #10b981 0%, #059669 45%, #2563eb 100%) !important;
+    color: white !important;
+    border-radius: 24px !important;
+    padding: 2.25rem 2.5rem !important;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 
+        0 20px 48px -16px rgba(16, 185, 129, 0.45),
+        inset 0 1px 1px rgba(255, 255, 255, 0.5),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.15) !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+}
+
+.tl-glossy-hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(125deg, rgba(255, 255, 255, 0.2) 0%, transparent 50%, rgba(255, 255, 255, 0.05) 100%);
+    pointer-events: none;
+}
+
+.tl-glass-sidebar {
+    background: rgba(15, 23, 42, 0.94) !important;
+    backdrop-filter: blur(28px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 8px 0 32px rgba(0, 0, 0, 0.25) !important;
+}
+
+.tl-glass-stat {
+    background: rgba(255, 255, 255, 0.76) !important;
+    backdrop-filter: blur(16px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(16px) saturate(160%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.85) !important;
+    border-radius: 20px !important;
+    padding: 1.5rem !important;
+    box-shadow: 
+        0 12px 30px -10px rgba(15, 23, 42, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.tl-glass-stat:hover {
+    transform: translateY(-4px);
+    background: rgba(255, 255, 255, 0.9) !important;
+    box-shadow: 
+        0 20px 40px -12px rgba(15, 23, 42, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 1) !important;
+}
+
+.tl-glass-stat::before {
+    content: '';
+    position: absolute;
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    top: -50px;
+    right: -50px;
+    opacity: 0.12;
+    pointer-events: none;
+}
+
 
 

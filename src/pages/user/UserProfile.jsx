@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { userMe } from '../../services/api';
+import { userMe, recommendations as recApi } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
-import { User, Shield, Bell, MapPin, Camera, Loader2, Save } from 'lucide-react';
+import { User, Shield, Bell, MapPin, Camera, Loader2, Save, Sparkles, SlidersHorizontal, Check } from 'lucide-react';
 import PasswordField from '../../components/PasswordField';
+import InterestSelectorModal from '../../components/InterestSelectorModal';
 import { useFocusRefetch } from '../../hooks/useFetch';
 
 const NIGERIA_STATES = [
@@ -23,6 +24,14 @@ const UserProfile = () => {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [interests, setInterests] = useState([]);
+  const [interestModalOpen, setInterestModalOpen] = useState(false);
+
+  const loadInterests = useCallback(() => {
+    recApi.getUserInterests()
+      .then(res => setInterests(Array.isArray(res.interests) ? res.interests : []))
+      .catch(() => {});
+  }, []);
 
   const loadProfile = useCallback(() => {
     userMe.getProfile()
@@ -32,7 +41,8 @@ const UserProfile = () => {
       })
       .catch(e => setError(e.message))
       .finally(() => setLoading(false));
-  }, []);
+    loadInterests();
+  }, [loadInterests]);
 
   useEffect(() => { loadProfile(); }, [loadProfile]);
   useFocusRefetch(loadProfile);
@@ -132,6 +142,17 @@ const UserProfile = () => {
             <Shield size={18} /> Security
           </div>
         </button>
+        <button 
+          onClick={() => setActiveTab('interests')}
+          style={{ 
+            padding: '1rem 0.5rem', background: 'none', border: 'none', borderBottom: activeTab === 'interests' ? '2px solid #16b865' : '2px solid transparent',
+            color: activeTab === 'interests' ? '#16b865' : '#64748b', fontWeight: '700', fontSize: '0.95rem', cursor: 'pointer', transition: 'all 0.2s'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Sparkles size={18} /> Thrifting Interests ({interests.length})
+          </div>
+        </button>
       </div>
 
       {/* Notifications */}
@@ -200,7 +221,7 @@ const UserProfile = () => {
               </button>
             </div>
           </form>
-        ) : (
+        ) : activeTab === 'security' ? (
           <form onSubmit={handleUpdatePassword} style={{ display: 'grid', gap: '1.5rem', maxWidth: '500px' }}>
             <div>
               <label style={labelStyle}>Current Password</label>
@@ -222,7 +243,76 @@ const UserProfile = () => {
               </button>
             </div>
           </form>
+        ) : (
+          <div style={{ display: 'grid', gap: '1.5rem', maxWidth: '600px' }}>
+            <div>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.5rem' }}>
+                Your Thrifting Interests
+              </h3>
+              <p style={{ color: '#64748b', fontSize: '0.88rem', margin: 0, lineHeight: 1.5 }}>
+                We use your selected categories to personalize your vendor recommendations, catalog updates, and new arrivals feed.
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.65rem' }}>
+              {interests.length === 0 ? (
+                <div style={{ color: '#94a3b8', fontSize: '0.9rem', fontStyle: 'italic' }}>
+                  No categories selected yet. Click below to personalize your feed!
+                </div>
+              ) : (
+                interests.map((cat) => (
+                  <span
+                    key={cat}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      padding: '0.5rem 1rem',
+                      borderRadius: 999,
+                      background: 'rgba(22, 184, 101, 0.1)',
+                      color: '#15803d',
+                      fontSize: '0.85rem',
+                      fontWeight: 700,
+                    }}
+                  >
+                    <Check size={14} />
+                    {cat}
+                  </span>
+                ))
+              )}
+            </div>
+
+            <div style={{ paddingTop: '0.75rem' }}>
+              <button
+                type="button"
+                onClick={() => setInterestModalOpen(true)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '0.8rem 1.5rem',
+                  borderRadius: 12,
+                  background: '#16b865',
+                  color: 'white',
+                  fontWeight: 700,
+                  fontSize: '0.9rem',
+                  border: 'none',
+                  cursor: 'pointer',
+                  boxShadow: '0 8px 16px -4px rgba(22, 184, 101, 0.4)',
+                }}
+              >
+                <SlidersHorizontal size={16} />
+                Manage Categories
+              </button>
+            </div>
+          </div>
         )}
+
+        <InterestSelectorModal
+          isOpen={interestModalOpen}
+          onClose={() => setInterestModalOpen(false)}
+          onSaved={() => loadInterests()}
+        />
 
       </div>
     </div>

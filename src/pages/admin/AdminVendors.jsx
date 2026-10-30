@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Star, CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
 import { admin } from '../../services/api';
 import { useFetch } from '../../hooks/useFetch';
 import ErrorState from '../../components/ErrorState';
@@ -60,10 +61,10 @@ const AdminVendors = () => {
   const kycSummary = (v) => {
     const hasNin = Boolean(v.nin);
     const hasDoc = Boolean(v.id_document_url);
-    if (!hasNin && !hasDoc) return { key: 'not_started', label: 'Not started', icon: '🚫', bg: '#f1f5f9', fg: '#64748b' };
-    if (v.verification_status === 'approved') return { key: 'approved', label: 'Approved', icon: '✅', bg: '#dcfce7', fg: '#15803d' };
-    if (v.verification_status === 'rejected') return { key: 'rejected', label: 'Rejected', icon: '❌', bg: '#fee2e2', fg: '#dc2626' };
-    return { key: 'pending', label: 'Pending review', icon: '⏳', bg: '#fef3c7', fg: '#b45309' };
+    if (!hasNin && !hasDoc) return { key: 'not_started', label: 'Not started', bg: '#f1f5f9', fg: '#64748b' };
+    if (v.verification_status === 'approved') return { key: 'approved', label: 'Approved', bg: '#dcfce7', fg: '#15803d' };
+    if (v.verification_status === 'rejected') return { key: 'rejected', label: 'Rejected', bg: '#fee2e2', fg: '#dc2626' };
+    return { key: 'pending', label: 'Pending review', bg: '#fef3c7', fg: '#b45309' };
   };
   const maskNin = (n) => (n ? `${'*'.repeat(Math.max(0, n.length - 4))}${n.slice(-4)}` : '—');
 
@@ -91,6 +92,9 @@ const AdminVendors = () => {
             <button
               onClick={() => setFeaturedOnly(v => !v)}
               style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
                 padding: '0.55rem 0.95rem',
                 border: '1px solid ' + (featuredOnly ? '#facc15' : '#e2e8f0'),
                 borderRadius: '999px',
@@ -101,16 +105,17 @@ const AdminVendors = () => {
                 cursor: 'pointer',
               }}
             >
-              {featuredOnly ? '★ Featured only' : '☆ Show featured only'}
+              <Star size={13} fill={featuredOnly ? '#a16207' : 'none'} />
+              <span>{featuredOnly ? 'Featured only' : 'Show featured only'}</span>
             </button>
             <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', alignItems: 'center' }}>
               <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginRight: 4 }}>KYC:</span>
               {[
                 { v: 'all', label: 'All' },
-                { v: 'pending', label: '⏳ Pending review' },
-                { v: 'approved', label: '✅ Approved' },
-                { v: 'rejected', label: '❌ Rejected' },
-                { v: 'not_started', label: '🚫 Not started' },
+                { v: 'pending', label: 'Pending review' },
+                { v: 'approved', label: 'Approved' },
+                { v: 'rejected', label: 'Rejected' },
+                { v: 'not_started', label: 'Not started' },
               ].map((opt) => (
                 <button
                   key={opt.v}
@@ -184,8 +189,10 @@ const AdminVendors = () => {
                                 background: vendor.is_featured ? '#fef9c3' : '#f1f5f9',
                                 color: vendor.is_featured ? '#a16207' : '#64748b',
                                 fontWeight: '600', fontSize: '0.8rem', whiteSpace: 'nowrap',
+                                display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
                               }}>
-                              {vendor.is_featured ? '★ Featured' : '☆ Feature'}
+                              <Star size={13} fill={vendor.is_featured ? '#a16207' : 'none'} />
+                              <span>{vendor.is_featured ? 'Featured' : 'Feature'}</span>
                             </button>
                             {vendor.is_featured && (
                               <>
@@ -219,11 +226,11 @@ const AdminVendors = () => {
                             title="Only verified vendors can be featured. Approve the vendor first."
                             style={{
                               padding: '0.4rem 0.7rem', border: '1px dashed #e2e8f0', borderRadius: '6px',
-                              background: 'white', color: '#cbd5e1', fontWeight: 600, fontSize: '0.78rem',
+                              background: 'white', color: '#94a3b8', fontWeight: 600, fontSize: '0.78rem',
                               cursor: 'not-allowed',
                             }}
                           >
-                            ☆ Verify first
+                            Verify first
                           </button>
                         )}
                       </td>

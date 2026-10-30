@@ -37,26 +37,62 @@ async function vendorAnalytics(vendorId, { days = 30 } = {}) {
 }
 
 // Dashboard data for GET /api/vendors/me/analytics. PostgREST has no GROUP BY,
-// so pull the last-30-days events and tally in JS (per-vendor volume is small).
-async function vendorDashboard(vendorId) {
+// so pull the last-N-days events and tally in JS (per-vendor volume is small).
+async function vendorDashboard(vendorId, { days = 30 } = {}) {
   const db = getDataClient();
-  const since = new Date(Date.now() - 30 * 86400000).toISOString();
+  const since = new Date(Date.now() - days * 86400000).toISOString();
   const events = unwrap(
     await db.from('analytics_events').select('event_type,created_at')
       .eq('vendor_id', vendorId).gte('created_at', since)
   ) || [];
   const byType = new Map();
   const byDay = new Map();
+  const byDayInquiries = new Map();
   for (const e of events) {
     byType.set(e.event_type, (byType.get(e.event_type) || 0) + 1);
+    const day = String(e.created_at).slice(0, 10);
     if (e.event_type === 'profile_view') {
-      const day = String(e.created_at).slice(0, 10);
       byDay.set(day, (byDay.get(day) || 0) + 1);
+    } else if (e.event_type === 'whatsapp_click') {
+      byDayInquiries.set(day, (byDayInquiries.get(day) || 0) + 1);
     }
   }
+
+  let recImpressions = 0;
+  try {
+    const imps = unwrap(
+      await db.from('recommendation_impressions').select('id', { count: 'exact', head: true })
+        .eq('vendor_id', vendorId).gte('created_at', since)
+    );
+    recImpressions = imps || 0;
+  } catch (_) {}
+
+  let followersCount = 0;
+  try {
+    const fols = unwrap(
+      await db.from('vendor_follows').select('id', { count: 'exact', head: true })
+        .eq('vendor_id', vendorId)
+    );
+    followersCount = fols || 0;
+  } catch (_) {}
+
+  let topProducts = [];
+  try {
+    topProducts = unwrap(
+      await db.from('products').select('id,name,price,views,condition,is_available')
+        .eq('vendor_id', vendorId).order('views', { ascending: false }).limit(5)
+    ) || [];
+  } catch (_) {}
+
   return {
     last30days: Array.from(byType.entries()).map(([event_type, count]) => ({ event_type, count })),
     dailyViews: Array.from(byDay.entries()).map(([date, views]) => ({ date, views })).sort((a, b) => a.date.localeCompare(b.date)),
+    dailyInquiries: Array.from(byDayInquiries.entries()).map(([date, inquiries]) => ({ date, inquiries })).sort((a, b) => a.date.localeCompare(b.date)),
+    extraTotals: {
+      recommendation_impressions: recImpressions,
+      followers: followersCount,
+    },
+    topProducts,
   };
 }
 

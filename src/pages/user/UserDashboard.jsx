@@ -41,9 +41,9 @@ const UserDashboard = () => {
         }
       `}</style>
       {/* Hero Welcome — gradient brand banner */}
-      <div className="tl-dash-hero">
-        <h2>Welcome back! 👋</h2>
-        <p>Here's what's happening with your account today.</p>
+      <div className="tl-glossy-hero" style={{ marginBottom: '2.5rem' }}>
+        <h2 style={{ fontSize: '2rem', fontWeight: 800, color: 'white', marginBottom: '0.4rem' }}>Welcome back</h2>
+        <p style={{ color: 'rgba(255,255,255,0.92)', fontSize: '1rem', margin: 0 }}>Here's what's happening with your account today.</p>
       </div>
 
       {/* Stats Grid — branded color tiles */}
@@ -54,7 +54,7 @@ const UserDashboard = () => {
           { to: ROUTES.user.orders, label: 'Active Deliveries', value: loading ? '—' : pendingCount,   icon: <Truck size={26} />,   tone: 'green' },
         ].map((s, i) => (
           <Link key={i} to={s.to} style={{ textDecoration: 'none' }}>
-            <div className={`tl-stat-tile brand-${s.tone}`} style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+            <div className={`tl-glass-stat brand-${s.tone}`} style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
               <div className={`tl-stat-icon ${s.tone}`} style={{ marginBottom: 0 }}>{s.icon}</div>
               <div>
                 <p style={{ color: '#64748b', fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.25rem' }}>{s.label}</p>
@@ -69,7 +69,7 @@ const UserDashboard = () => {
       <div className="ud-main-grid" style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '2rem' }}>
         
         {/* Recent Orders Section */}
-        <div className="ud-card" style={{ background: 'white', borderRadius: '24px', padding: '2rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #f1f5f9' }}>
+        <div className="ud-card tl-glass-card" style={{ padding: '2rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
             <h4 style={{ fontSize: '1.25rem', color: '#0f172a', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Clock size={20} color="#64748b" /> Recent Purchases
@@ -113,7 +113,7 @@ const UserDashboard = () => {
 
         {/* Quick Actions & Help */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          <div className="ud-card" style={{ background: 'white', borderRadius: '24px', padding: '2rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #f1f5f9' }}>
+          <div className="ud-card tl-glass-card" style={{ padding: '2rem' }}>
             <h4 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#1e293b', marginBottom: '1.25rem' }}>Quick Actions</h4>
             <div style={{ display: 'grid', gap: '0.75rem' }}>
               <Link to={ROUTES.user.profile} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', background: '#f8fafc', borderRadius: '12px', textDecoration: 'none', color: '#334155', fontWeight: '600' }}>

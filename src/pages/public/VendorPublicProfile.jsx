@@ -3,10 +3,11 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import ReviewSection from '../../components/ReviewSection';
-import { vendors as vendorsApi, reviews as reviewsApi, userMe } from '../../services/api';
+import RecommendationCard from '../../components/RecommendationCard';
+import { vendors as vendorsApi, reviews as reviewsApi, userMe, recommendations as recApi } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useAuthGate } from '../../context/UIContext';
-import { Flag } from 'lucide-react';
+import { Flag, Share2, Heart, Check, Users, MapPin, Package } from 'lucide-react';
 import checklistIcon from '../../assets/checklist.png';
 import starIcon from '../../assets/star.png';
 import whatsappIcon from '../../assets/whatsapp (1).png';
@@ -22,19 +23,103 @@ const VendorPublicProfile = () => {
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState('');
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followerCount, setFollowerCount] = useState(0);
+  const [followingLoading, setFollowingLoading] = useState(false);
+  const [similarVendors, setSimilarVendors] = useState([]);
+  const [similarLoading, setSimilarLoading] = useState(true);
+  const [shareMsg, setShareMsg] = useState('');
 
   useEffect(() => {
     vendorsApi.get(id)
       .then(setData)
       .catch(e => setError(e.message))
       .finally(() => setLoading(false));
+
+    // Log recommendation profile view
+    recApi.trackEvent(id, 'profile_view', { surface: 'direct_profile' }).catch(() => {});
+
+    // Check referral attribution if link has ?ref=
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+      const ref = searchParams.get('ref');
+      if (ref) {
+        recApi.trackReferral(ref, { targetVendorId: id }).catch(() => {});
+        localStorage.setItem('tl_referral_code', ref);
+      }
+    } catch {}
+
+    // Check follow status & count
+    recApi.getFollowStatus(id)
+      .then(res => {
+        setIsFollowing(Boolean(res.isFollowing));
+        setFollowerCount(Number(res.followerCount || 0));
+      })
+      .catch(() => {});
+
+    // Fetch Surface 4.3: Similar Vendors
+    setSimilarLoading(true);
+    recApi.getSimilar(id, 4)
+      .then(res => setSimilarVendors(Array.isArray(res.vendors) ? res.vendors : []))
+      .catch(() => setSimilarVendors([]))
+      .finally(() => setSimilarLoading(false));
   }, [id]);
 
   const handleWhatsApp = async () => {
     if (!data?.vendor?.whatsapp_number) return;
-    try { await vendorsApi.trackWhatsapp(id); } catch { /* non-critical */ }
+    try {
+      await vendorsApi.trackWhatsapp(id);
+      await recApi.trackEvent(id, 'contact_click', { surface: 'vendor_profile' });
+    } catch { /* non-critical */ }
     const num = data.vendor.whatsapp_number.replace(/\D/g, '');
     window.open(`https://wa.me/${num}`, '_blank');
+  };
+
+  const handleFollowToggle = async () => {
+    if (!user) { navigate('/login'); return; }
+    setFollowingLoading(true);
+    const nextState = !isFollowing;
+    setIsFollowing(nextState);
+    setFollowerCount(prev => Math.max(0, prev + (nextState ? 1 : -1)));
+    try {
+      if (nextState) {
+        await recApi.follow(id);
+      } else {
+        await recApi.unfollow(id);
+      }
+    } catch {
+      setIsFollowing(!nextState);
+      setFollowerCount(prev => Math.max(0, prev + (nextState ? -1 : 1)));
+    } finally {
+      setFollowingLoading(false);
+    }
+  };
+
+  const handleShare = async () => {
+    const vendorName = data?.vendor?.shop_name || 'Thrift Shop';
+    const refCode = data?.vendor?.referral_code || id;
+    const shareUrl = `${window.location.origin}/vendor/${id}?ref=${encodeURIComponent(refCode)}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${vendorName} on ThriftLink`,
+          text: `Check out ${vendorName} on ThriftLink — verified WhatsApp thrift vendor in Nigeria!`,
+          url: shareUrl,
+        });
+        return;
+      } catch (err) {
+        // Fall back to clipboard if user dismissed or share failed
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setShareMsg('Link copied!');
+      setTimeout(() => setShareMsg(''), 2500);
+    } catch {
+      setShareMsg('Failed to copy');
+    }
   };
 
   const handleSaveVendor = async () => {
@@ -42,6 +127,7 @@ const VendorPublicProfile = () => {
     setSaving(true);
     try {
       await userMe.saveItem({ vendor_id: id });
+      await recApi.trackEvent(id, 'save', { surface: 'vendor_profile' });
       setSaveMsg('Saved!');
       setTimeout(() => setSaveMsg(''), 2000);
     } catch (err) {
@@ -123,7 +209,7 @@ const VendorPublicProfile = () => {
                 <span style={{ fontWeight: '600', color: '#1f2937' }}>{vendor.rating > 0 ? vendor.rating.toFixed(1) : 'New'}</span>
                 <span>({vendor.total_reviews} review{vendor.total_reviews !== 1 ? 's' : ''})</span>
               </div>
-              {vendor.state && <><span>•</span><span>📍 {vendor.state}{vendor.city ? `, ${vendor.city}` : ''}</span></>}
+              {vendor.state && <><span>•</span><span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><MapPin size={14} color="#6b7280" /> {vendor.state}{vendor.city ? `, ${vendor.city}` : ''}</span></>}
               {vendor.category && <><span>•</span><span>{vendor.category}</span></>}
             </div>
 
@@ -136,9 +222,47 @@ const VendorPublicProfile = () => {
                 <img src={whatsappIcon} alt="WA" style={{ width: '20px', height: '20px', filter: 'brightness(0) invert(1)' }} />
                 Contact on WhatsApp
               </button>
-              <button onClick={handleSaveVendor} disabled={saving} style={{ background: 'white', border: '1px solid #d1d5db', color: '#374151', padding: '0.8rem 1.5rem', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <button
+                onClick={handleFollowToggle}
+                disabled={followingLoading}
+                style={{
+                  background: isFollowing ? '#dcfce7' : 'white',
+                  border: isFollowing ? '1px solid #16b865' : '1px solid #d1d5db',
+                  color: isFollowing ? '#166534' : '#374151',
+                  padding: '0.8rem 1.4rem',
+                  borderRadius: '8px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                }}
+              >
+                <Heart size={18} fill={isFollowing ? '#16b865' : 'none'} color={isFollowing ? '#16b865' : '#4b5563'} />
+                {isFollowing ? 'Following' : 'Follow'}
+                {followerCount > 0 && <span style={{ opacity: 0.75, fontSize: '0.85rem' }}>({followerCount})</span>}
+              </button>
+              <button
+                onClick={handleShare}
+                style={{
+                  background: 'white',
+                  border: '1px solid #d1d5db',
+                  color: '#374151',
+                  padding: '0.8rem 1.3rem',
+                  borderRadius: '8px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                }}
+              >
+                <Share2 size={18} />
+                {shareMsg || 'Share Shop'}
+              </button>
+              <button onClick={handleSaveVendor} disabled={saving} style={{ background: 'white', border: '1px solid #d1d5db', color: '#374151', padding: '0.8rem 1.3rem', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <img src={heartIcon} alt="Heart" style={{ width: '20px', height: '20px' }} />
-                {saveMsg || 'Save Vendor'}
+                {saveMsg || 'Save'}
               </button>
               <button
                 onClick={() => openReport({ targetType: 'vendor', targetId: id, targetName: vendor.shop_name })}
@@ -177,7 +301,7 @@ const VendorPublicProfile = () => {
                   <div className="vpp-img" style={{ height: '200px', background: '#f3f4f6', overflow: 'hidden' }}>
                     {images[0]
                       ? <img src={images[0]} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      : <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem' }}>📦</div>}
+                      : <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af' }}><Package size={40} strokeWidth={1.5} /></div>}
                   </div>
                   <div style={{ padding: '1rem' }}>
                     <h3 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1f2937' }}>{product.name}</h3>
@@ -196,6 +320,25 @@ const VendorPublicProfile = () => {
         )}
 
         <ReviewSection reviews={reviews} title="Vendor Reviews" />
+
+        {/* Surface 4.3: Similar Vendors */}
+        {similarVendors.length > 0 && (
+          <div style={{ marginTop: '3.5rem', borderTop: '1px solid #e5e7eb', paddingTop: '2.5rem' }}>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <h2 style={{ fontSize: '1.4rem', fontWeight: '800', color: '#1f2937', margin: '0 0 0.35rem' }}>
+                Similar Thrift Vendors
+              </h2>
+              <p style={{ color: '#6b7280', fontSize: '0.9rem', margin: 0 }}>
+                Discover other verified sellers with similar catalogs and collections.
+              </p>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1.5rem' }}>
+              {similarVendors.map((sv, idx) => (
+                <RecommendationCard key={sv.id} vendor={sv} surface="similar" position={idx} />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <Footer />

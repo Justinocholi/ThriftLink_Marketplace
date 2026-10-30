@@ -23,6 +23,7 @@ const messageRoutes = require('../routes/messages');
 const reportRoutes = require('../routes/reports');
 const paymentRoutes = require('../routes/payment');
 const subscriptionRoutes = require('../routes/subscriptions');
+const recommendationRoutes = require('../routes/recommendations');
 
 function buildApp() {
   const app = express();
@@ -45,6 +46,7 @@ function buildApp() {
   app.use('/api/reports', reportRoutes);
   app.use('/api/payment', paymentRoutes);
   app.use('/api/subscriptions', subscriptionRoutes);
+  app.use('/api/recommendations', recommendationRoutes);
 
   app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
   app.use('/api/*', (_req, res) => res.status(404).json({ error: 'API endpoint not found' }));

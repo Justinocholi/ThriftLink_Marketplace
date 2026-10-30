@@ -8,6 +8,7 @@ const usersRepo = require('../repos/usersRepo');
 const savedItemsRepo = require('../repos/savedItemsRepo');
 const ordersRepo = require('../repos/ordersRepo');
 const messagesRepo = require('../repos/messagesRepo');
+const recommendationsRepo = require('../repos/recommendationsRepo');
 
 const router = express.Router();
 const useSupabase = () => process.env.DATA_BACKEND === 'supabase';
@@ -253,6 +254,41 @@ router.post('/me/messages/:partnerId', authenticate, async (req, res) => {
   } catch (err) {
     console.error('me/messages send error:', err);
     res.status(500).json({ error: 'Failed to send message' });
+  }
+});
+
+// GET /api/users/me/interests
+router.get('/me/interests', authenticate, async (req, res) => {
+  try {
+    const interests = await recommendationsRepo.getUserInterests(req.user.id);
+    res.json({ interests });
+  } catch (err) {
+    console.error('me/interests error:', err);
+    res.status(500).json({ error: 'Failed to load interests' });
+  }
+});
+
+// PUT /api/users/me/interests
+router.put('/me/interests', authenticate, async (req, res) => {
+  try {
+    const { interests } = req.body;
+    if (!Array.isArray(interests)) return res.status(400).json({ error: 'interests must be an array' });
+    const updated = await recommendationsRepo.setUserInterests(req.user.id, interests);
+    res.json({ interests: updated });
+  } catch (err) {
+    console.error('me/interests update error:', err);
+    res.status(500).json({ error: 'Failed to update interests' });
+  }
+});
+
+// GET /api/users/me/follows
+router.get('/me/follows', authenticate, async (req, res) => {
+  try {
+    const followedIds = await recommendationsRepo.getUserFollowedVendorIds(req.user.id);
+    res.json({ followedIds });
+  } catch (err) {
+    console.error('me/follows error:', err);
+    res.status(500).json({ error: 'Failed to load follows' });
   }
 });
 

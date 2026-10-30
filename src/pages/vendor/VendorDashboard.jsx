@@ -1,23 +1,26 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { vendorMe } from '../../services/api';
-import { Eye, MessageSquare, TrendingUp, Star, Package, ShoppingCart, ArrowUpRight, ArrowDownRight, Clock, CheckCircle2, Circle, ArrowRight } from 'lucide-react';
+import { Eye, MessageSquare, TrendingUp, Star, Package, ShoppingCart, ArrowUpRight, ArrowDownRight, Clock, CheckCircle2, Circle, ArrowRight, Share2, Copy, Check, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useFetch, useFocusRefetch } from '../../hooks/useFetch';
 import ErrorState from '../../components/ErrorState';
 
 const VendorDashboard = () => {
+  const [copied, setCopied] = useState(false);
   const { data, error, loading, retry } = useFetch(async () => {
-    const [a, o, p, pr] = await Promise.all([
+    const [a, o, p, pr, r] = await Promise.all([
       vendorMe.getAnalytics(),
       vendorMe.getOrders(),
       vendorMe.getProfile().catch(() => null),
-      vendorMe.getProducts().catch(() => [])
+      vendorMe.getProducts().catch(() => []),
+      vendorMe.getReferral().catch(() => null)
     ]);
     return {
       analytics: a,
       recentOrders: (o || []).slice(0, 5),
       profile: p,
-      products: Array.isArray(pr) ? pr : []
+      products: Array.isArray(pr) ? pr : [],
+      referral: r
     };
   }, []);
   useFocusRefetch(retry);
@@ -25,6 +28,7 @@ const VendorDashboard = () => {
   const recentOrders = data?.recentOrders || [];
   const profile = data?.profile || null;
   const products = data?.products || [];
+  const referral = data?.referral || null;
 
   // Onboarding checklist
   const profileDone = Boolean(profile && profile.business_name && profile.business_description);
@@ -103,16 +107,13 @@ const VendorDashboard = () => {
       `}</style>
       {/* Onboarding checklist — shown until all required steps done */}
       {!loading && !allRequiredDone && (
-        <div style={{
-          background: 'white',
-          borderRadius: '16px',
+        <div className="tl-glass-card" style={{
           padding: '1.5rem',
-          marginBottom: '1.5rem',
-          border: '2px solid #25D366',
-          boxShadow: '0 8px 24px -12px rgba(37,211,102,0.25)'
+          marginBottom: '1.75rem',
+          border: '1.5px solid rgba(37,211,102,0.4)',
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.5rem' }}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a' }}>Get your shop ready 🚀</h3>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a' }}>Get your shop ready</h3>
             <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#25D366' }}>
               {requiredDoneCount} of {requiredSteps.length} steps complete
             </span>
@@ -174,13 +175,13 @@ const VendorDashboard = () => {
         </div>
       )}
 
-      {/* Page Header — gradient brand banner with CTA */}
-      <div className="tl-dash-hero" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+      {/* Page Header — glossy brand hero with CTA */}
+      <div className="tl-glossy-hero" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '2.5rem' }}>
         <div>
-          <h2>Store Overview 🏪</h2>
-          <p>Manage your thrift business and track your performance.</p>
+          <h2 style={{ fontSize: '2rem', fontWeight: 800, color: 'white', marginBottom: '0.4rem' }}>Store Overview</h2>
+          <p style={{ color: 'rgba(255,255,255,0.92)', fontSize: '1rem', margin: 0 }}>Manage your thrift business and track your performance.</p>
         </div>
-        <Link to="/vendor/products" style={{ background: 'rgba(255,255,255,0.95)', color: '#0e9a52', padding: '0.85rem 1.5rem', borderRadius: '999px', fontWeight: '700', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem', boxShadow: '0 8px 24px -8px rgba(15,23,42,0.2)', position: 'relative', zIndex: 1 }}>
+        <Link to="/vendor/products" className="tl-glass-pill" style={{ background: 'rgba(255,255,255,0.95)', color: '#0e9a52', padding: '0.85rem 1.6rem', fontWeight: '700', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem', boxShadow: '0 8px 24px -6px rgba(0,0,0,0.15)', position: 'relative', zIndex: 1, fontSize: '0.9rem' }}>
           <Package size={20} /> Add New Product
         </Link>
       </div>
@@ -188,7 +189,7 @@ const VendorDashboard = () => {
       {/* Stats Grid */}
       <div className="vd-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
         {stats.map((s, i) => (
-          <div key={i} className={`tl-stat-tile brand-${s.tone}`}>
+          <div key={i} className={`tl-glass-stat brand-${s.tone}`}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
               <div className={`tl-stat-icon ${s.tone}`}>{s.icon}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', fontWeight: '700', color: s.isUp ? '#10b981' : '#ef4444', background: s.isUp ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', padding: '0.3rem 0.6rem', borderRadius: '999px' }}>
@@ -203,7 +204,7 @@ const VendorDashboard = () => {
 
       <div className="vd-main-grid" style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '2rem' }}>
         {/* Recent Orders */}
-        <div className="vd-card" style={{ background: 'white', borderRadius: '24px', padding: '2rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #f1f5f9' }}>
+        <div className="vd-card tl-glass-card" style={{ padding: '2rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
             <h4 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Clock size={20} color="#64748b" /> Recent Orders
@@ -234,9 +235,68 @@ const VendorDashboard = () => {
           )}
         </div>
 
-        {/* Store Health / Quick Tips */}
+        {/* Store Health & Shareable Storefront */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          <div className="vd-card" style={{ background: 'white', borderRadius: '24px', padding: '2rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #f1f5f9' }}>
+          {/* Shareable Storefront & Growth Referrals */}
+          {profile?.id && (
+            <div className="vd-card tl-glass-card" style={{ padding: '1.75rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.75rem' }}>
+                <Share2 size={20} color="#16b865" />
+                <h4 style={{ fontSize: '1.05rem', fontWeight: '800', color: '#1e293b', margin: 0 }}>
+                  Share Your Store
+                </h4>
+              </div>
+              <p style={{ fontSize: '0.82rem', color: '#64748b', lineHeight: 1.45, margin: '0 0 1rem' }}>
+                Share your personal ThriftLink storefront on WhatsApp Status, Instagram, and TikTok to attract customers.
+              </p>
+
+              {/* Referral link bar */}
+              <div style={{ display: 'flex', alignItems: 'center', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '0.4rem 0.6rem', marginBottom: '1rem' }}>
+                <span style={{ flex: 1, fontSize: '0.78rem', color: '#334155', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'monospace' }}>
+                  {typeof window !== 'undefined' ? `${window.location.origin}/vendor/${profile.id}?ref=${referral?.referralCode || profile.id}` : ''}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const url = `${window.location.origin}/vendor/${profile.id}?ref=${referral?.referralCode || profile.id}`;
+                    navigator.clipboard.writeText(url);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  }}
+                  style={{
+                    background: copied ? '#16b865' : '#0f172a',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '0.4rem 0.75rem',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 4,
+                  }}
+                >
+                  {copied ? <Check size={13} /> : <Copy size={13} />}
+                  {copied ? 'Copied' : 'Copy'}
+                </button>
+              </div>
+
+              {/* Stats Grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', background: '#f8fafc', padding: '0.85rem', borderRadius: '14px' }}>
+                <div>
+                  <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}>Link Visits</div>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0f172a' }}>{referral?.totalVisits || 0}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}>New Customers</div>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#16b865' }}>{referral?.registrations || 0}</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="vd-card tl-glass-card" style={{ padding: '2rem' }}>
             <h4 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#1e293b', marginBottom: '1.25rem' }}>Store Health</h4>
             <div style={{ display: 'grid', gap: '1.25rem' }}>
               <div>
@@ -253,7 +313,9 @@ const VendorDashboard = () => {
           </div>
 
           <div style={{ background: 'linear-gradient(135deg, #25D366, #128C7E)', borderRadius: '24px', padding: '2rem', color: 'white' }}>
-            <h4 style={{ fontWeight: '800', marginBottom: '0.75rem' }}>Pro Tip! 💡</h4>
+            <h4 style={{ fontWeight: '800', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <TrendingUp size={18} /> Pro Tip
+            </h4>
             <p style={{ fontSize: '0.9rem', opacity: 0.9, lineHeight: '1.5' }}>Verified vendors receive 3x more clicks than unverified ones. Submit your ID for verification today.</p>
             <button style={{ marginTop: '1.25rem', width: '100%', padding: '0.8rem', background: 'white', border: 'none', borderRadius: '10px', color: '#128C7E', fontWeight: '700', cursor: 'pointer' }}>Verify Now</button>
           </div>

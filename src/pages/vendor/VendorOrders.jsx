@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ClipboardList } from 'lucide-react';
 import { vendorMe } from '../../services/api';
 import { useToast } from '../../components/ui/Toast';
 import { useFetch } from '../../hooks/useFetch';
@@ -94,7 +95,11 @@ const VendorOrders = () => {
 
       {orders.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📋</div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+            <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <ClipboardList size={32} color="#94a3b8" />
+            </div>
+          </div>
           <p>No orders yet</p>
         </div>
       ) : (

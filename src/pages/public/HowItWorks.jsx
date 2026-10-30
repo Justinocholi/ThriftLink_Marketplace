@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
+import { Shield, CreditCard, MapPin, FileText, Check } from 'lucide-react';
 
 // Import Assets
 import magnifierIcon from '../../assets/magnifier.png';
@@ -343,10 +344,10 @@ const HowItWorks = () => {
             marginBottom: '2rem'
           }}>
             {[
-              { icon: '🔒', title: 'Verify Before You Buy', text: 'Only deal with verified vendors. Check their badges, ratings, and reviews before making any purchase.' },
-              { icon: '💳', title: 'Use Secure Payments', text: 'Prefer bank transfers or cash on delivery. Avoid unusual payment methods or upfront payments to strangers.' },
-              { icon: '📍', title: 'Meet in Safe Places', text: 'For pickups, choose public, well-lit locations. For deliveries, verify the vendor\'s identity first.' },
-              { icon: '📝', title: 'Keep Records', text: 'Save all chat conversations, receipts, and transaction details. This helps resolve any disputes.' }
+              { icon: <Shield size={18} style={{ color: '#25D366', flexShrink: 0 }} />, title: 'Verify Before You Buy', text: 'Only deal with verified vendors. Check their badges, ratings, and reviews before making any purchase.' },
+              { icon: <CreditCard size={18} style={{ color: '#25D366', flexShrink: 0 }} />, title: 'Use Secure Payments', text: 'Prefer bank transfers or cash on delivery. Avoid unusual payment methods or upfront payments to strangers.' },
+              { icon: <MapPin size={18} style={{ color: '#25D366', flexShrink: 0 }} />, title: 'Meet in Safe Places', text: 'For pickups, choose public, well-lit locations. For deliveries, verify the vendor\'s identity first.' },
+              { icon: <FileText size={18} style={{ color: '#25D366', flexShrink: 0 }} />, title: 'Keep Records', text: 'Save all chat conversations, receipts, and transaction details. This helps resolve any disputes.' }
             ].map((tip, idx) => (
               <div key={idx} className="safety-tip" style={{
                 background: 'rgba(255, 255, 255, 0.1)',
@@ -356,7 +357,7 @@ const HowItWorks = () => {
                 textAlign: 'left'
               }}>
                 <h4 style={{ fontWeight: '600', marginBottom: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  {tip.icon} {tip.title}
+                  {tip.icon} <span>{tip.title}</span>
                 </h4>
                 <p style={{ fontSize: '0.9rem', opacity: 0.9, margin: 0 }}>{tip.text}</p>
               </div>
@@ -499,7 +500,7 @@ const GuideCard = ({ title, items }) => (
           alignItems: 'center',
           gap: '0.5rem'
         }}>
-          <span style={{ color: '#25D366', fontWeight: 'bold', fontSize: '0.9rem' }}>✓</span> {item}
+          <Check size={15} color="#25D366" strokeWidth={2.5} style={{ flexShrink: 0 }} /> {item}
         </li>
       ))}
     </ul>

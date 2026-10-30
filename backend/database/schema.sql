@@ -41,6 +41,8 @@ CREATE TABLE IF NOT EXISTS vendor_profiles (
   whatsapp_clicks INTEGER NOT NULL DEFAULT 0,
   rating REAL NOT NULL DEFAULT 0,
   total_reviews INTEGER NOT NULL DEFAULT 0,
+  referral_code TEXT UNIQUE,
+  catalog_updated_at TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -244,3 +246,73 @@ CREATE INDEX IF NOT EXISTS idx_products_category_available ON products(category,
 CREATE INDEX IF NOT EXISTS idx_vendor_profiles_verification ON vendor_profiles(verification_status);
 CREATE INDEX IF NOT EXISTS idx_reports_status ON reports(status);
 -- idx_users_reset_token is created in db.js#ensureIndexes (column added via safeAddColumn).
+
+-- ===========================================================================
+-- RECOMMENDATION & GROWTH TABLES
+-- ===========================================================================
+
+-- User category interests
+CREATE TABLE IF NOT EXISTS user_interests (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  category TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE(user_id, category)
+);
+CREATE INDEX IF NOT EXISTS idx_user_interests_user ON user_interests(user_id);
+
+-- Vendor follows
+CREATE TABLE IF NOT EXISTS vendor_follows (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  vendor_id TEXT NOT NULL REFERENCES vendor_profiles(id) ON DELETE CASCADE,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE(user_id, vendor_id)
+);
+CREATE INDEX IF NOT EXISTS idx_vendor_follows_user ON vendor_follows(user_id);
+CREATE INDEX IF NOT EXISTS idx_vendor_follows_vendor ON vendor_follows(vendor_id);
+
+-- Comprehensive vendor interactions
+CREATE TABLE IF NOT EXISTS vendor_interactions (
+  id TEXT PRIMARY KEY,
+  user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+  vendor_id TEXT NOT NULL REFERENCES vendor_profiles(id) ON DELETE CASCADE,
+  event_type TEXT NOT NULL CHECK(event_type IN ('profile_view', 'catalog_view', 'save', 'follow', 'contact_click', 'dismiss', 'report')),
+  metadata TEXT DEFAULT '{}',
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_vendor_interactions_vendor ON vendor_interactions(vendor_id, event_type);
+CREATE INDEX IF NOT EXISTS idx_vendor_interactions_user ON vendor_interactions(user_id, event_type);
+CREATE INDEX IF NOT EXISTS idx_vendor_interactions_time ON vendor_interactions(created_at);
+
+-- Recommendation impressions tracking
+CREATE TABLE IF NOT EXISTS recommendation_impressions (
+  id TEXT PRIMARY KEY,
+  user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+  session_id TEXT,
+  vendor_id TEXT NOT NULL REFERENCES vendor_profiles(id) ON DELETE CASCADE,
+  surface TEXT NOT NULL CHECK(surface IN ('recommended_for_you', 'discover', 'similar', 'new_arrivals')),
+  position INTEGER NOT NULL DEFAULT 0,
+  score REAL NOT NULL DEFAULT 0,
+  ranking_version TEXT NOT NULL DEFAULT 'v1',
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_rec_impressions_vendor ON recommendation_impressions(vendor_id);
+CREATE INDEX IF NOT EXISTS idx_rec_impressions_user ON recommendation_impressions(user_id, surface);
+CREATE INDEX IF NOT EXISTS idx_rec_impressions_time ON recommendation_impressions(created_at);
+
+-- Vendor referrals and growth attribution
+CREATE TABLE IF NOT EXISTS vendor_referrals (
+  id TEXT PRIMARY KEY,
+  referrer_vendor_id TEXT REFERENCES vendor_profiles(id) ON DELETE SET NULL,
+  referrer_user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+  referral_code TEXT NOT NULL,
+  referred_user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+  conversion_status TEXT NOT NULL DEFAULT 'pending' CHECK(conversion_status IN ('pending', 'registered', 'activated')),
+  metadata TEXT DEFAULT '{}',
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_vendor_referrals_code ON vendor_referrals(referral_code);
+CREATE INDEX IF NOT EXISTS idx_vendor_referrals_vendor ON vendor_referrals(referrer_vendor_id);
+

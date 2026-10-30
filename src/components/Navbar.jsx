@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useRealtime } from '../context/RealtimeContext';
-import { ShoppingCart, User, LogOut, Settings, LayoutDashboard, MessageSquare, Users, ShieldCheck, Wifi, WifiOff } from 'lucide-react';
+import { ShoppingCart, User, LogOut, Settings, LayoutDashboard, MessageSquare, Users, ShieldCheck, Wifi, WifiOff, Menu, X } from 'lucide-react';
 import logo from '../assets/thriftlink-logo-.png';
 import gpsIcon from '../assets/gps.png';
 import LetterAvatar from './LetterAvatar';
@@ -82,8 +82,10 @@ const Navbar = () => {
         <button 
           className="mobile-menu-btn" 
           onClick={toggleMobileMenu}
+          aria-label="Toggle Navigation Menu"
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
-          ☰
+          {isMobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
 
         <nav>

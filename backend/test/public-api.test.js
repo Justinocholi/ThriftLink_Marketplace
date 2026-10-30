@@ -48,8 +48,11 @@ describe('GET /api/subscriptions/plans', () => {
     expect(r.body.plans.map((p) => p.id).sort()).toEqual(['basic', 'free', 'pro']);
     expect(r.body.paymentAccount).toHaveProperty('bankName');
     const basic = r.body.plans.find((p) => p.id === 'basic');
-    expect(basic.price).toBe(1500);
+    expect(basic.price).toBe(3000);
     expect(basic.durationDays).toBe(30);
+    const pro = r.body.plans.find((p) => p.id === 'pro');
+    expect(pro.price).toBe(5000);
+    expect(pro.durationDays).toBe(30);
   });
 });
 

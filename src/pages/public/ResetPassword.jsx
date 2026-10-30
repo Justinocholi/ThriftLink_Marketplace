@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { CheckCircle2 } from 'lucide-react';
 import { passwordReset } from '../../services/api';
 import PasswordField from '../../components/PasswordField';
 
@@ -52,7 +53,11 @@ const ResetPassword = () => {
     return (
       <div style={wrap}>
         <div style={{ ...card, textAlign: 'center' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>✅</div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+            <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <CheckCircle2 size={32} color="#16a34a" />
+            </div>
+          </div>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.5rem' }}>
             Password updated
           </h1>

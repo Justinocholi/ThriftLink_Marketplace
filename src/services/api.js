@@ -81,11 +81,12 @@ export const vendorMe = {
   addProduct: (formData) => upload('/vendors/me/products', formData),
   updateProduct: (id, data) => request(`/vendors/me/products/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteProduct: (id) => request(`/vendors/me/products/${id}`, { method: 'DELETE' }),
-  getAnalytics: () => request('/vendors/me/analytics'),
+  getAnalytics: (range = 30) => request(`/vendors/me/analytics?range=${range}`),
   getOrders: () => request('/vendors/me/orders'),
   updateOrderStatus: (id, status, note) => request(`/vendors/me/orders/${id}/status`, { method: 'PUT', body: JSON.stringify({ status, note }) }),
   getKyc: () => request('/vendors/me/kyc'),
   submitKyc: (formData) => upload('/vendors/me/kyc', formData),
+  getReferral: () => request('/vendors/me/referral'),
 };
 
 // --- Products (public) ---
@@ -206,4 +207,31 @@ export const admin = {
 // --- Reports (authenticated users) ---
 export const reports = {
   submit: (data) => request('/reports', { method: 'POST', body: JSON.stringify(data) }),
+};
+
+// --- Recommendations & Growth ---
+export const recommendations = {
+  getVendors: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request('/recommendations/vendors' + (qs ? `?${qs}` : ''));
+  },
+  getUserInterests: () => request('/recommendations/user-interests'),
+  setUserInterests: (interests) =>
+    request('/recommendations/user-interests', { method: 'PUT', body: JSON.stringify({ interests }) }),
+  trackEvent: (vendorId, eventType, metadata = {}) =>
+    request('/recommendations/events', { method: 'POST', body: JSON.stringify({ vendorId, eventType, metadata }) }),
+  trackImpressions: (impressions, sessionId = null) =>
+    request('/recommendations/impressions', { method: 'POST', body: JSON.stringify({ impressions, sessionId }) }),
+  dismiss: (vendorId, reason = 'not_interested') =>
+    request('/recommendations/feedback', { method: 'POST', body: JSON.stringify({ vendorId, reason }) }),
+  follow: (vendorId) => request(`/vendors/${vendorId}/follow`, { method: 'POST' }),
+  unfollow: (vendorId) => request(`/vendors/${vendorId}/follow`, { method: 'DELETE' }),
+  getFollowStatus: (vendorId) => request(`/vendors/${vendorId}/follow-status`),
+  getMyFollows: () => request('/recommendations/follows/my-follows'),
+  getSimilar: (vendorId, limit = 6) => request(`/vendors/${vendorId}/similar?limit=${limit}`),
+  getReferral: (vendorId) => request(`/recommendations/referrals/vendor/${vendorId}`),
+  trackReferral: (referralCode, metadata = {}) =>
+    request('/recommendations/referrals/track', { method: 'POST', body: JSON.stringify({ referralCode, metadata }) }),
+  attributeReferral: (referralCode) =>
+    request('/recommendations/referrals/attribute', { method: 'POST', body: JSON.stringify({ referralCode }) }),
 };

@@ -23,7 +23,7 @@ const PLANS = {
   basic: {
     id: 'basic',
     name: 'Basic',
-    price: 1500,
+    price: 3000,
     durationDays: 30,
     description: 'For growing vendors who need more listings and visibility.',
     features: [
@@ -37,7 +37,7 @@ const PLANS = {
   pro: {
     id: 'pro',
     name: 'Pro',
-    price: 3000,
+    price: 5000,
     durationDays: 30,
     description: 'Maximum reach for established vendors.',
     features: [

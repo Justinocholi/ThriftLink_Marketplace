@@ -45,7 +45,7 @@ const VendorLayout = () => {
   ];
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#f5f7fa', fontFamily: "'Inter', sans-serif", position: 'relative' }}>
+    <div className="tl-dashboard-bg" style={{ display: 'flex', minHeight: '100vh', fontFamily: "'Inter', sans-serif", position: 'relative' }}>
       <style>
         {`
           @media (max-width: 768px) {
@@ -95,9 +95,8 @@ const VendorLayout = () => {
       )}
 
       {/* Sidebar */}
-      <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`} style={{
+      <aside className={`sidebar tl-glass-sidebar ${isSidebarOpen ? 'open' : ''}`} style={{
         width: '260px',
-        background: '#0f172a',
         color: 'white',
         display: 'flex',
         flexDirection: 'column',
@@ -171,15 +170,12 @@ const VendorLayout = () => {
 
       {/* Main Content */}
       <main className="main-content" style={{ marginLeft: '260px', flex: 1, padding: '2rem', transition: 'margin-left 0.3s ease-in-out' }}>
-        <header className="vendor-header" style={{
+        <header className="vendor-header tl-glass-header" style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           marginBottom: '2rem',
-          background: 'white',
-          padding: '1.5rem 2rem',
-          borderRadius: '16px',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
+          padding: '1.25rem 2rem',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <button 

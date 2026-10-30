@@ -259,6 +259,8 @@ alter table vendor_profiles add column if not exists id_document_url text;
 alter table vendor_profiles add column if not exists kyc_submitted_at timestamptz;
 alter table vendor_profiles add column if not exists kyc_reviewed_at timestamptz;
 alter table vendor_profiles add column if not exists kyc_review_notes text;
+alter table vendor_profiles add column if not exists referral_code text unique;
+alter table vendor_profiles add column if not exists catalog_updated_at timestamptz;
 
 -- orders: manual payment fields
 alter table orders add column if not exists payment_reference text;
@@ -290,6 +292,68 @@ create index if not exists idx_products_category_available on products(category,
 create index if not exists idx_vendor_profiles_verification on vendor_profiles(verification_status);
 create index if not exists idx_reports_status on reports(status);
 create index if not exists idx_users_reset_token on users(reset_token_hash);
+
+-- Recommendation & Growth tables (Supabase Postgres)
+create table if not exists user_interests (
+  id text primary key,
+  user_id text not null references users(id) on delete cascade,
+  category text not null,
+  created_at timestamptz not null default now(),
+  unique (user_id, category)
+);
+create index if not exists idx_user_interests_user on user_interests(user_id);
+
+create table if not exists vendor_follows (
+  id text primary key,
+  user_id text not null references users(id) on delete cascade,
+  vendor_id text not null references vendor_profiles(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  unique (user_id, vendor_id)
+);
+create index if not exists idx_vendor_follows_user on vendor_follows(user_id);
+create index if not exists idx_vendor_follows_vendor on vendor_follows(vendor_id);
+
+create table if not exists vendor_interactions (
+  id text primary key,
+  user_id text references users(id) on delete set null,
+  vendor_id text not null references vendor_profiles(id) on delete cascade,
+  event_type text not null check (event_type in ('profile_view','catalog_view','save','follow','contact_click','dismiss','report')),
+  metadata jsonb default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
+create index if not exists idx_vendor_interactions_vendor on vendor_interactions(vendor_id, event_type);
+create index if not exists idx_vendor_interactions_user on vendor_interactions(user_id, event_type);
+create index if not exists idx_vendor_interactions_time on vendor_interactions(created_at);
+
+create table if not exists recommendation_impressions (
+  id text primary key,
+  user_id text references users(id) on delete set null,
+  session_id text,
+  vendor_id text not null references vendor_profiles(id) on delete cascade,
+  surface text not null check (surface in ('recommended_for_you','discover','similar','new_arrivals')),
+  position integer not null default 0,
+  score double precision not null default 0,
+  ranking_version text not null default 'v1',
+  created_at timestamptz not null default now()
+);
+create index if not exists idx_rec_impressions_vendor on recommendation_impressions(vendor_id);
+create index if not exists idx_rec_impressions_user on recommendation_impressions(user_id, surface);
+create index if not exists idx_rec_impressions_time on recommendation_impressions(created_at);
+
+create table if not exists vendor_referrals (
+  id text primary key,
+  referrer_vendor_id text references vendor_profiles(id) on delete set null,
+  referrer_user_id text references users(id) on delete set null,
+  referral_code text not null,
+  referred_user_id text references users(id) on delete set null,
+  conversion_status text not null default 'pending' check (conversion_status in ('pending','registered','activated')),
+  metadata jsonb default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index if not exists idx_vendor_referrals_code on vendor_referrals(referral_code);
+create index if not exists idx_vendor_referrals_vendor on vendor_referrals(referrer_vendor_id);
+
 
 -- IMPORTANT: the backend talks to these tables with the service_role key,
 -- which bypasses Row Level Security. We therefore do NOT enable RLS here.

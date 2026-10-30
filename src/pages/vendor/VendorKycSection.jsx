@@ -158,7 +158,7 @@ const VendorKycSection = () => {
         <div>
           <label style={labelStyle}>
             <FileText size={14} style={{ display: 'inline', marginRight: 4, verticalAlign: 'middle' }} />
-            ID Document (required for verification) {hasDocOnFile && <span style={{ color: '#16a34a', fontWeight: 600 }}>— uploaded ✓</span>}
+            ID Document (required for verification) {hasDocOnFile && <span style={{ color: '#16a34a', fontWeight: 600 }}>— (Uploaded)</span>}
           </label>
           <input
             type="file"

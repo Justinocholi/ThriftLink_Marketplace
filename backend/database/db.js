@@ -66,6 +66,8 @@ function getDb() {
     // Admin-curated featured/top vendors
     safeAddColumn(db, 'vendor_profiles', 'is_featured', 'is_featured INTEGER NOT NULL DEFAULT 0');
     safeAddColumn(db, 'vendor_profiles', 'featured_rank', 'featured_rank INTEGER');
+    safeAddColumn(db, 'vendor_profiles', 'referral_code', 'referral_code TEXT');
+    safeAddColumn(db, 'vendor_profiles', 'catalog_updated_at', 'catalog_updated_at TEXT');
 
     safeAddColumn(db, 'orders', 'payment_reference', 'payment_reference TEXT');
     safeAddColumn(db, 'orders', 'payment_confirmed_at', 'payment_confirmed_at TEXT');
@@ -89,6 +91,73 @@ function getDb() {
       `);
     } catch (err) {
       console.warn('Failed to ensure order_status_history table:', err.message);
+    }
+
+    // Recommendation and Growth system tables
+    try {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS user_interests (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          category TEXT NOT NULL,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          UNIQUE(user_id, category)
+        );
+        CREATE INDEX IF NOT EXISTS idx_user_interests_user ON user_interests(user_id);
+
+        CREATE TABLE IF NOT EXISTS vendor_follows (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          vendor_id TEXT NOT NULL REFERENCES vendor_profiles(id) ON DELETE CASCADE,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          UNIQUE(user_id, vendor_id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_vendor_follows_user ON vendor_follows(user_id);
+        CREATE INDEX IF NOT EXISTS idx_vendor_follows_vendor ON vendor_follows(vendor_id);
+
+        CREATE TABLE IF NOT EXISTS vendor_interactions (
+          id TEXT PRIMARY KEY,
+          user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+          vendor_id TEXT NOT NULL REFERENCES vendor_profiles(id) ON DELETE CASCADE,
+          event_type TEXT NOT NULL CHECK(event_type IN ('profile_view', 'catalog_view', 'save', 'follow', 'contact_click', 'dismiss', 'report')),
+          metadata TEXT DEFAULT '{}',
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_vendor_interactions_vendor ON vendor_interactions(vendor_id, event_type);
+        CREATE INDEX IF NOT EXISTS idx_vendor_interactions_user ON vendor_interactions(user_id, event_type);
+        CREATE INDEX IF NOT EXISTS idx_vendor_interactions_time ON vendor_interactions(created_at);
+
+        CREATE TABLE IF NOT EXISTS recommendation_impressions (
+          id TEXT PRIMARY KEY,
+          user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+          session_id TEXT,
+          vendor_id TEXT NOT NULL REFERENCES vendor_profiles(id) ON DELETE CASCADE,
+          surface TEXT NOT NULL CHECK(surface IN ('recommended_for_you', 'discover', 'similar', 'new_arrivals')),
+          position INTEGER NOT NULL DEFAULT 0,
+          score REAL NOT NULL DEFAULT 0,
+          ranking_version TEXT NOT NULL DEFAULT 'v1',
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_rec_impressions_vendor ON recommendation_impressions(vendor_id);
+        CREATE INDEX IF NOT EXISTS idx_rec_impressions_user ON recommendation_impressions(user_id, surface);
+        CREATE INDEX IF NOT EXISTS idx_rec_impressions_time ON recommendation_impressions(created_at);
+
+        CREATE TABLE IF NOT EXISTS vendor_referrals (
+          id TEXT PRIMARY KEY,
+          referrer_vendor_id TEXT REFERENCES vendor_profiles(id) ON DELETE SET NULL,
+          referrer_user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+          referral_code TEXT NOT NULL,
+          referred_user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+          conversion_status TEXT NOT NULL DEFAULT 'pending' CHECK(conversion_status IN ('pending', 'registered', 'activated')),
+          metadata TEXT DEFAULT '{}',
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_vendor_referrals_code ON vendor_referrals(referral_code);
+        CREATE INDEX IF NOT EXISTS idx_vendor_referrals_vendor ON vendor_referrals(referrer_vendor_id);
+      `);
+    } catch (err) {
+      console.warn('Failed to ensure recommendation & growth tables:', err.message);
     }
 
     ensureIndexes(db);

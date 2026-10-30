@@ -36,6 +36,7 @@ const messageRoutes = require('./routes/messages');
 const reportRoutes = require('./routes/reports');
 const paymentRoutes = require('./routes/payment');
 const subscriptionRoutes = require('./routes/subscriptions');
+const recommendationRoutes = require('./routes/recommendations');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -151,6 +152,7 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
+app.use('/api/recommendations', recommendationRoutes);
 
 // Health check — pings the configured data backend so orchestrators can
 // distinguish a live process from a usable one.
