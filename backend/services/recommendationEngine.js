@@ -288,7 +288,9 @@ async function getRecommendations({
   excludeFollowed = true,
 }) {
   // 1. Retrieve all verified eligible vendors (hard filter)
-  const eligibleVendors = await recommendationsRepo.getEligibleVendorsForScoring();
+  const eligibleVendors = await Promise.resolve(
+    recommendationsRepo.getEligibleVendorsForScoring()
+  ).catch(() => []);
 
   // 2. Retrieve user context & negative feedback
   const [
@@ -298,11 +300,13 @@ async function getRecommendations({
     interactionSignals,
     impressionCounts,
   ] = await Promise.all([
-    userId ? recommendationsRepo.getUserInterests(userId) : [],
-    userId ? recommendationsRepo.getUserFollowedVendorIds(userId) : [],
-    userId ? recommendationsRepo.getDismissedVendorIds(userId, 30) : [],
-    userId ? recommendationsRepo.getUserInteractionSignals(userId, 30) : { categoryWeights: {}, vendorWeights: {} },
-    recommendationsRepo.getVendorImpressionCounts(30),
+    userId ? Promise.resolve(recommendationsRepo.getUserInterests(userId)).catch(() => []) : [],
+    userId ? Promise.resolve(recommendationsRepo.getUserFollowedVendorIds(userId)).catch(() => []) : [],
+    userId ? Promise.resolve(recommendationsRepo.getDismissedVendorIds(userId, 30)).catch(() => []) : [],
+    userId
+      ? Promise.resolve(recommendationsRepo.getUserInteractionSignals(userId, 30)).catch(() => ({ categoryWeights: {}, vendorWeights: {} }))
+      : { categoryWeights: {}, vendorWeights: {} },
+    Promise.resolve(recommendationsRepo.getVendorImpressionCounts(30)).catch(() => ({})),
   ]);
 
   const followedSet = new Set(followedVendorIds);
@@ -502,18 +506,19 @@ async function getPersonalizedFeed({
   limit = 12,
   page = 1,
 }) {
+  const fetchLimit = Math.max(250, page * limit * 3);
   const [vendorRecs, rawPosts, followedIds, dismissedIds] = await Promise.all([
     getRecommendations({
       userId,
       surface: surface === 'following' ? 'following' : 'recommended_for_you',
       userLocation,
-      limit: 50,
+      limit: 100,
       page: 1,
       excludeFollowed: false,
-    }),
-    recommendationsRepo.getRecentFeedPosts(80),
-    userId ? recommendationsRepo.getUserFollowedVendorIds(userId) : Promise.resolve([]),
-    userId ? recommendationsRepo.getDismissedVendorIds(userId, 30) : Promise.resolve([]),
+    }).catch(() => ({ vendors: [] })),
+    Promise.resolve(recommendationsRepo.getRecentFeedPosts(fetchLimit)).catch(() => []),
+    userId ? Promise.resolve(recommendationsRepo.getUserFollowedVendorIds(userId)).catch(() => []) : Promise.resolve([]),
+    userId ? Promise.resolve(recommendationsRepo.getDismissedVendorIds(userId, 30)).catch(() => []) : Promise.resolve([]),
   ]);
 
   const followedSet = new Set(followedIds || []);
@@ -569,8 +574,10 @@ async function getPersonalizedFeed({
 
     return {
       id: post.id,
+      product_id: post.id,
       post_type: post.post_type || 'catalog_drop',
       name: post.name,
+      title: post.name,
       description: post.description,
       price: Number(post.price || 0),
       original_price: post.original_price ? Number(post.original_price) : null,

@@ -31,11 +31,11 @@ const Support = () => {
       <main style={{ flex: 1, padding: '4rem 2rem', background: '#f8fafc' }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
           
-          <div className="support-hero" style={{ textAlign: 'center', marginBottom: '5rem' }}>
-            <h1 style={{ fontSize: '3rem', fontWeight: '800', color: '#1f2937', marginBottom: '1.5rem' }}>
+          <div className="support-hero" style={{ textAlign: 'center', marginBottom: '4rem', padding: '3.5rem 2rem', background: 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 55%, #16a34a 100%)', borderRadius: '20px', color: 'white', boxShadow: '0 12px 32px -8px rgba(30, 58, 138, 0.35)' }}>
+            <h1 style={{ fontSize: '2.75rem', fontWeight: '800', color: 'white', marginBottom: '1rem' }}>
               We're here to help
             </h1>
-            <p style={{ fontSize: '1.25rem', color: '#6b7280', maxWidth: '600px', margin: '0 auto' }}>
+            <p style={{ fontSize: '1.15rem', color: 'rgba(255,255,255,0.95)', maxWidth: '600px', margin: '0 auto' }}>
               Find answers to common questions or contact our support team directly.
             </p>
           </div>

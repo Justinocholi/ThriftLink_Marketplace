@@ -38,7 +38,7 @@ function createTestVendor({
   totalReviews = 10,
   productCount = 3,
 } = {}) {
-  const { user } = createTestUser({ role: 'vendor', name: `${shopName} Owner`, state });
+  const { user, token } = createTestUser({ role: 'vendor', name: `${shopName} Owner`, state });
   const vendorId = uuidv4();
   db.prepare(`
     INSERT INTO vendor_profiles (
@@ -57,7 +57,7 @@ function createTestVendor({
     `).run(uuidv4(), vendorId, `${shopName} Item ${i + 1}`, 5000 + i * 500, category);
   }
 
-  return { vendorId, userId: user.id, shopName };
+  return { vendorId, userId: user.id, shopName, token };
 }
 
 describe('Recommendation Algorithm Unit Tests', () => {
@@ -276,5 +276,38 @@ describe('Recommendation API & Surfaces Integration Tests', () => {
       .set('Authorization', `Bearer ${customer.token}`);
     expect(authRes.status).toBe(200);
     expect(Array.isArray(authRes.body.posts)).toBe(true);
+  });
+
+  test('Vendor can upload product with condition like_new and it appears on the real feed without synthetic posts', async () => {
+    // 1. Post product as verified vendor with condition 'like_new' and price string
+    const prodRes = await request(app)
+      .post('/api/vendors/me/products')
+      .set('Authorization', `Bearer ${verifiedFashionVendor.token}`)
+      .send({
+        name: 'Vintage Leather Handbag Test',
+        description: 'Authentic leather handbag directly posted by verified vendor',
+        price: '18,500',
+        condition: 'like_new',
+        category: 'Fashion & Clothing',
+        images: JSON.stringify(['https://example.com/test-handbag.jpg']),
+      });
+    expect(prodRes.status).toBe(201);
+    expect(prodRes.body.product).toBeDefined();
+    expect(prodRes.body.product.condition).toBe('like-new');
+
+    // 2. Fetch news feed and verify the newly posted product appears
+    const feedRes = await request(app).get('/api/recommendations/feed?surface=new_arrivals&limit=50');
+    expect(feedRes.status).toBe(200);
+    expect(Array.isArray(feedRes.body.posts)).toBe(true);
+
+    // Verify zero synthetic posts
+    const syntheticPosts = feedRes.body.posts.filter(p => p.post_type === 'vendor_status' || String(p.id).startsWith('status-'));
+    expect(syntheticPosts.length).toBe(0);
+
+    // Verify the newly created product is present in feed
+    const targetId = prodRes.body.product?.id || prodRes.body.id;
+    const found = feedRes.body.posts.find(p => p.id === targetId || p.product_id === targetId || p.name === 'Vintage Leather Handbag Test');
+    expect(found).toBeDefined();
+    expect(found.vendor_name).toBe(verifiedFashionVendor.shopName);
   });
 });

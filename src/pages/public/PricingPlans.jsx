@@ -8,17 +8,17 @@ import { subscriptions as subsApi } from '../../services/api';
 const PricingCard = ({ title, price, features, recommended, onSubscribe }) => (
   <div style={{ 
     background: 'white', padding: '2rem', borderRadius: '16px', 
-    border: recommended ? '2px solid #3b82f6' : '1px solid #e5e7eb',
+    border: recommended ? '2.5px solid #1e3a8a' : '1px solid #e5e7eb',
     position: 'relative',
-    boxShadow: recommended ? '0 10px 30px rgba(59, 130, 246, 0.1)' : '0 1px 3px rgba(0,0,0,0.05)',
+    boxShadow: recommended ? '0 12px 32px rgba(30, 58, 138, 0.18)' : '0 1px 3px rgba(0,0,0,0.05)',
     display: 'flex',
     flexDirection: 'column'
   }}>
     {recommended && (
       <div style={{ 
         position: 'absolute', top: '-12px', left: '50%', transform: 'translateX(-50%)',
-        background: '#3b82f6', color: 'white', padding: '0.3rem 1rem', borderRadius: '20px',
-        fontSize: '0.8rem', fontWeight: '600'
+        background: 'linear-gradient(90deg, #1e3a8a, #1d4ed8)', color: 'white', padding: '0.3rem 1rem', borderRadius: '20px',
+        fontSize: '0.8rem', fontWeight: '700', letterSpacing: '0.04em'
       }}>
         RECOMMENDED
       </div>
@@ -30,7 +30,7 @@ const PricingCard = ({ title, price, features, recommended, onSubscribe }) => (
     <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 2rem 0', display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
       {features.map((feature, idx) => (
         <li key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', color: '#4b5563' }}>
-          <div style={{ background: '#dbeafe', color: '#3b82f6', borderRadius: '50%', padding: '2px', display: 'flex' }}>
+          <div style={{ background: '#eff6ff', color: '#1e3a8a', borderRadius: '50%', padding: '2px', display: 'flex' }}>
             <Check size={14} />
           </div>
           {feature}
@@ -40,11 +40,12 @@ const PricingCard = ({ title, price, features, recommended, onSubscribe }) => (
     <button 
       onClick={onSubscribe}
       style={{ 
-      width: '100%', padding: '1rem', borderRadius: '8px', border: 'none',
-      background: recommended ? '#3b82f6' : '#f3f4f6',
-      color: recommended ? 'white' : '#1f2937',
-      fontWeight: '600', cursor: 'pointer', fontSize: '1rem',
-      transition: 'all 0.2s'
+      width: '100%', padding: '1rem', borderRadius: '999px', border: 'none',
+      background: recommended ? 'linear-gradient(135deg, #1e3a8a, #1d4ed8)' : '#eff6ff',
+      color: recommended ? 'white' : '#1e3a8a',
+      fontWeight: '700', cursor: 'pointer', fontSize: '1rem',
+      transition: 'all 0.2s',
+      boxShadow: recommended ? '0 8px 20px -6px rgba(30, 58, 138, 0.4)' : 'none'
     }}>
       {price === 'Free' ? 'Get Started' : 'Subscribe Now'}
     </button>
@@ -74,9 +75,9 @@ const PricingPlans = () => {
     <div style={{ fontFamily: "'Inter', sans-serif", background: '#f9fafb', minHeight: '100vh' }}>
       <Navbar />
       
-      <div style={{ textAlign: 'center', padding: '8rem 2rem 4rem', background: '#1e293b', color: 'white' }}>
+      <div style={{ textAlign: 'center', padding: '8rem 2rem 4rem', background: 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 55%, #16a34a 100%)', color: 'white', boxShadow: '0 12px 32px -8px rgba(30, 58, 138, 0.35)' }}>
         <h1 style={{ fontSize: '3rem', fontWeight: '800', marginBottom: '1rem' }}>Simple, Transparent Pricing</h1>
-        <p style={{ fontSize: '1.2rem', opacity: 0.8, maxWidth: '600px', margin: '0 auto' }}>
+        <p style={{ fontSize: '1.2rem', opacity: 0.95, maxWidth: '600px', margin: '0 auto' }}>
           Choose the plan that fits your business needs. No hidden fees.
         </p>
       </div>

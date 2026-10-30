@@ -232,9 +232,9 @@ const CategoryDetails = () => {
         }
       `}</style>
 
-      <div style={{ background: '#1f2937', color: 'white', padding: '6rem 2rem 3rem', textAlign: 'center' }}>
+      <div style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 55%, #16a34a 100%)', color: 'white', padding: '7rem 2rem 3rem', textAlign: 'center', boxShadow: '0 12px 32px -8px rgba(30, 58, 138, 0.35)' }}>
         <h1 style={{ fontSize: 'var(--tl-text-h1)', fontWeight: 800, textTransform: 'capitalize' }}>{categoryName}</h1>
-        <p style={{ opacity: 0.8, fontSize: '1.1rem' }}>Browse {total} items in {categoryName}</p>
+        <p style={{ opacity: 0.95, fontSize: '1.1rem' }}>Browse {total} items in {categoryName}</p>
       </div>
 
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem' }}>
@@ -251,7 +251,7 @@ const CategoryDetails = () => {
                 style={{ width: '100%', padding: '0.8rem 1rem 0.8rem 3rem', borderRadius: '8px', border: '1px solid #e5e7eb', outline: 'none' }}
               />
             </div>
-            <button type="submit" className="tl-btn-press" style={{ padding: '0 2rem', background: 'var(--tl-blue)', color: 'white', border: 'none', borderRadius: 'var(--tl-radius-pill)', fontWeight: '600', cursor: 'pointer', boxShadow: 'var(--tl-shadow-1)', transition: 'transform var(--tl-fast) var(--tl-ease)' }}>
+            <button type="submit" className="tl-btn-press" style={{ padding: '0 2rem', background: '#1e3a8a', color: 'white', border: 'none', borderRadius: 'var(--tl-radius-pill)', fontWeight: '700', cursor: 'pointer', boxShadow: '0 4px 14px rgba(30, 58, 138, 0.35)', transition: 'transform var(--tl-fast) var(--tl-ease)' }}>
                 Search
             </button>
           </form>
@@ -336,9 +336,9 @@ const CategoryDetails = () => {
                 style={{
                   padding: '0.4rem 0.85rem',
                   borderRadius: 999,
-                  border: isActive ? '1.5px solid #16b865' : '1px solid #e2e8f0',
-                  background: isActive ? '#dcfce7' : 'white',
-                  color: isActive ? '#15803d' : '#475569',
+                  border: isActive ? '1.5px solid #1e3a8a' : '1px solid #dbeafe',
+                  background: isActive ? '#eff6ff' : 'white',
+                  color: isActive ? '#1e3a8a' : '#475569',
                   fontSize: '0.8rem',
                   fontWeight: 600,
                   cursor: 'pointer',
@@ -355,12 +355,12 @@ const CategoryDetails = () => {
           <div style={{ marginBottom: '2.5rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Store size={20} color="#16b865" />
+                <Store size={20} color="#1e3a8a" />
                 <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>
                   Matching Verified Vendors ({matchingVendors.length})
                 </h2>
               </div>
-              <Link to="/verified-vendors" style={{ color: '#16b865', fontWeight: 700, fontSize: '0.85rem', textDecoration: 'none' }}>
+              <Link to="/verified-vendors" style={{ color: '#1e3a8a', fontWeight: 700, fontSize: '0.85rem', textDecoration: 'none' }}>
                 See all verified vendors →
               </Link>
             </div>

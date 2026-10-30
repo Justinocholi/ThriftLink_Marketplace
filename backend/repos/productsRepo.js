@@ -16,7 +16,7 @@ async function search(q) {
   let query = db
     .from(TABLE)
     .select(
-      `*, vendor_profiles!inner(id,shop_name,whatsapp_number,rating,state,city,is_verified,logo,description)`,
+      `*, vendor_profiles!inner(id,shop_name,whatsapp_number,rating,total_reviews,state,city,is_verified,logo,description,category)`,
       { count: 'exact' }
     )
     .eq('is_available', true);
@@ -54,8 +54,11 @@ async function search(q) {
       ...rest,
       vendor_name: vp?.shop_name,
       vendor_profile_id: vp?.id,
+      vendor_logo: vp?.logo,
+      vendor_category: vp?.category || rest.category,
       whatsapp_number: vp?.whatsapp_number,
       vendor_rating: vp?.rating,
+      vendor_reviews: vp?.total_reviews || 0,
       vendor_state: vp?.state,
       vendor_city: vp?.city,
       is_verified: vp?.is_verified ? 1 : 0,
@@ -107,7 +110,7 @@ async function getById(id) {
 
 async function listByVendor(vendorId, { availableOnly = false, excludeId, limit } = {}) {
   const db = getDataClient();
-  let q = db.from(TABLE).select('*').eq('vendor_id', vendorId);
+  let q = db.from(TABLE).select('*').eq('vendor_id', vendorId).order('created_at', { ascending: false });
   if (availableOnly) q = q.eq('is_available', true);
   if (excludeId) q = q.neq('id', excludeId);
   if (limit) q = q.limit(limit);

@@ -5,7 +5,9 @@ import Footer from '../../components/Footer';
 import FeedPostCard from '../../components/FeedPostCard';
 import InFeedSuggestedVendors from '../../components/InFeedSuggestedVendors';
 import InterestSelectorModal from '../../components/InterestSelectorModal';
-import { recommendations as recApi, vendors as vendorsApi, products as productsApi } from '../../services/api';
+import VendorQuickPostBox from '../../components/VendorQuickPostBox';
+import { recommendations as recApi, vendors as vendorsApi } from '../../services/api';
+import { fetchVendorSiphonedFeed } from '../../utils/feedSiphon';
 import { useAuth } from '../../context/AuthContext';
 import { getSocket } from '../../services/socket';
 import { cldUrl } from '../../utils/cloudinary';
@@ -104,7 +106,7 @@ const Home = () => {
   const [hasMore, setHasMore] = useState(true);
   const [interestModalOpen, setInterestModalOpen] = useState(false);
 
-  // Load feed and suggested vendors based on recommendation algorithm
+  // Load feed and suggested vendors directly from real vendor accounts & uploaded products
   const loadFeedData = useCallback(async (activeSurface = surface, currentPage = 1, append = false) => {
     if (currentPage === 1) {
       setLoading(true);
@@ -113,22 +115,29 @@ const Home = () => {
     }
 
     try {
-      const [feedRes, vendorsRes] = await Promise.all([
-        recApi.getFeed({ surface: activeSurface, limit: 16, page: currentPage }).catch(() => ({ posts: [] })),
+      const [fetchedPosts, vendorsRes] = await Promise.all([
+        fetchVendorSiphonedFeed({ surface: activeSurface, limit: 20, page: currentPage }),
         recApi.getVendors({ surface: 'recommended_for_you', limit: 12 }).catch(() => ({ vendors: [] })),
       ]);
 
-      const fetchedPosts = Array.isArray(feedRes?.posts) ? feedRes.posts : [];
-      const fetchedVendors = Array.isArray(vendorsRes?.vendors) ? vendorsRes.vendors : [];
+      let fetchedVendors = Array.isArray(vendorsRes?.vendors) ? vendorsRes.vendors : [];
+      if (fetchedVendors.length === 0) {
+        const directVendors = await vendorsApi.list({ limit: 12 }).catch(() => ({ vendors: [] }));
+        fetchedVendors = Array.isArray(directVendors?.vendors) ? directVendors.vendors : [];
+      }
 
       if (append) {
-        setPosts((prev) => [...prev, ...fetchedPosts]);
+        setPosts((prev) => {
+          const existingIds = new Set(prev.map((p) => p.id));
+          const uniqueNext = fetchedPosts.filter((p) => !existingIds.has(p.id));
+          return [...prev, ...uniqueNext];
+        });
       } else {
         setPosts(fetchedPosts);
       }
 
       setSuggestedVendors(fetchedVendors);
-      setHasMore(fetchedPosts.length >= 12);
+      setHasMore(fetchedPosts.length >= 16);
     } finally {
       setLoading(false);
       setLoadingMore(false);
@@ -724,7 +733,20 @@ const Home = () => {
           {/* ============================================================== */}
           <main style={{ display: 'flex', flexDirection: 'column', gap: '1rem', minWidth: 0 }}>
 
-            {/* Early-Facebook Wall Status Composer Box */}
+            {/* Live Vendor Quick-Post Composer when logged in as a vendor */}
+            {user?.role === 'vendor' && (
+              <VendorQuickPostBox
+                compact
+                onPostCreated={(newPost) => {
+                  setPosts((prev) => {
+                    if (prev.some((p) => p.id === newPost.id)) return prev;
+                    return [newPost, ...prev];
+                  });
+                }}
+              />
+            )}
+
+            {/* Early-Facebook Wall Status & Search Bar */}
             <div
               style={{
                 background: '#ffffff',

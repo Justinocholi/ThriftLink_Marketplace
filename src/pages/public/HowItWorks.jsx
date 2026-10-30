@@ -69,13 +69,14 @@ const HowItWorks = () => {
 
       {/* Page Header */}
       <section className="page-header" style={{
-        background: 'linear-gradient(135deg, #25D366, #128C7E)',
+        background: 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 55%, #16a34a 100%)',
         color: 'white',
         padding: '8rem 2rem 4rem',
-        textAlign: 'center'
+        textAlign: 'center',
+        boxShadow: '0 12px 32px -8px rgba(30, 58, 138, 0.35)'
       }}>
         <h1 style={{ fontSize: '2.5rem', fontWeight: '800', marginBottom: '1rem' }}>How Thrift Link Works</h1>
-        <p style={{ fontSize: '1.1rem', opacity: 0.9, maxWidth: '700px', margin: '0 auto' }}>
+        <p style={{ fontSize: '1.1rem', opacity: 0.95, maxWidth: '700px', margin: '0 auto' }}>
           Your complete guide to buying and selling on Nigeria's most trusted WhatsApp vendor marketplace. Simple, secure, and reliable.
         </p>
       </section>
@@ -229,12 +230,13 @@ const HowItWorks = () => {
                 <h3 className="step-title" style={{ fontSize: '1.4rem', fontWeight: '700', marginBottom: '1rem', color: '#1f2937' }}>{step.title}</h3>
                 <p className="step-description" style={{ color: '#6b7280', lineHeight: '1.6', fontSize: '1rem', marginBottom: '1.5rem' }}>{step.desc}</p>
                 <a href={step.link} className="step-action" style={{
-                  background: '#f3f4f6',
-                  color: '#25D366',
+                  background: '#eff6ff',
+                  color: '#1e3a8a',
+                  border: '1px solid #bfdbfe',
                   padding: '0.7rem 1.5rem',
                   borderRadius: '8px',
                   textDecoration: 'none',
-                  fontWeight: '600',
+                  fontWeight: '700',
                   transition: 'all 0.3s ease',
                   display: 'inline-block'
                 }}>{step.action}</a>
@@ -273,10 +275,10 @@ const HowItWorks = () => {
                 flex: 1,
                 padding: '1rem 2rem',
                 border: 'none',
-                background: activeTab === 'buyers' ? '#25D366' : 'transparent',
+                background: activeTab === 'buyers' ? '#1e3a8a' : 'transparent',
                 color: activeTab === 'buyers' ? 'white' : '#333',
                 cursor: 'pointer',
-                fontWeight: '600',
+                fontWeight: '700',
                 borderRadius: '6px',
                 transition: 'all 0.3s ease'
               }}
@@ -288,10 +290,10 @@ const HowItWorks = () => {
                 flex: 1,
                 padding: '1rem 2rem',
                 border: 'none',
-                background: activeTab === 'sellers' ? '#25D366' : 'transparent',
+                background: activeTab === 'sellers' ? '#1e3a8a' : 'transparent',
                 color: activeTab === 'sellers' ? 'white' : '#333',
                 cursor: 'pointer',
-                fontWeight: '600',
+                fontWeight: '700',
                 borderRadius: '6px',
                 transition: 'all 0.3s ease'
               }}
@@ -325,12 +327,13 @@ const HowItWorks = () => {
 
         {/* Safety Section */}
         <section id="safety" className="safety-section" style={{
-          background: 'linear-gradient(135deg, #1f2937, #374151)',
+          background: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 60%, #16a34a 100%)',
           color: 'white',
-          borderRadius: '12px',
+          borderRadius: '16px',
           padding: '3rem',
           margin: '3rem 0',
-          textAlign: 'center'
+          textAlign: 'center',
+          boxShadow: '0 12px 32px -8px rgba(30, 58, 138, 0.35)'
         }}>
           <h2 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '1rem' }}>Stay Safe on Thrift Link</h2>
           <p style={{ fontSize: '1.1rem', opacity: 0.9, marginBottom: '2rem', maxWidth: '600px', marginLeft: 'auto', marginRight: 'auto' }}>

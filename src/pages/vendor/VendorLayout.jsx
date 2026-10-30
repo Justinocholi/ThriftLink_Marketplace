@@ -122,13 +122,13 @@ const VendorLayout = () => {
           display: 'flex', alignItems: 'center', gap: '8px',
           margin: '0 1rem 1rem',
           padding: '0.625rem 0.875rem',
-          color: '#60a5fa',
-          background: 'rgba(59, 130, 246, 0.1)',
-          border: '1px solid rgba(59, 130, 246, 0.25)',
+          color: '#93c5fd',
+          background: 'rgba(30, 58, 138, 0.35)',
+          border: '1px solid rgba(147, 197, 253, 0.25)',
           borderRadius: '8px',
           textDecoration: 'none',
           fontSize: '0.875rem',
-          fontWeight: 600
+          fontWeight: 700
         }}>
           <ArrowLeft size={16} />
           <span>Back to ThriftLink</span>
@@ -139,11 +139,12 @@ const VendorLayout = () => {
             <Link key={item.path} to={item.path} onClick={() => setIsSidebarOpen(false)} style={{
               display: 'flex', alignItems: 'center', gap: '10px',
               color: isActive(item.path) ? '#60a5fa' : '#94a3b8',
-              background: isActive(item.path) ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+              background: isActive(item.path) ? 'rgba(30, 58, 138, 0.45)' : 'transparent',
               textDecoration: 'none',
               padding: '0.875rem 1.5rem',
-              borderLeft: `3px solid ${isActive(item.path) ? '#3b82f6' : 'transparent'}`,
-              transition: 'all 0.2s'
+              borderLeft: `3px solid ${isActive(item.path) ? '#60a5fa' : 'transparent'}`,
+              transition: 'all 0.2s',
+              fontWeight: isActive(item.path) ? '700' : '500'
             }}>
               {item.icon}
               <span>{item.label}</span>
@@ -196,14 +197,14 @@ const VendorLayout = () => {
               {navItems.find(i => isActive(i.path))?.label || 'Vendor Dashboard'}
             </h3>
           </div>
-          <ProfileDropdown role="vendor" accent="#3b82f6" />
+          <ProfileDropdown role="vendor" accent="#1e3a8a" />
         </header>
 
         <Outlet />
       </main>
 
       <MobileTabBar
-        accent="#3b82f6"
+        accent="#1d4ed8"
         primary={[
           { path: '/', icon: <Home size={22} />, label: 'Marketplace' },
           { path: '/vendor', icon: <LayoutDashboard size={22} />, label: 'Dashboard' },

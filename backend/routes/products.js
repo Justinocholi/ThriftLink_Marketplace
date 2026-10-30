@@ -67,8 +67,9 @@ router.get('/', async (req, res) => {
   const orderBy = ORDER_BY_MAP[q.sort];
   const prods = db.prepare(`
     SELECT p.*, vp.shop_name as vendor_name, vp.id as vendor_profile_id,
-           vp.whatsapp_number, vp.rating as vendor_rating, vp.state as vendor_state,
-           vp.city as vendor_city, vp.is_verified
+           vp.logo as vendor_logo, vp.category as vendor_category,
+           vp.whatsapp_number, vp.rating as vendor_rating, vp.total_reviews as vendor_reviews,
+           vp.state as vendor_state, vp.city as vendor_city, vp.is_verified
     FROM products p
     JOIN vendor_profiles vp ON vp.id = p.vendor_id
     ${whereClause}

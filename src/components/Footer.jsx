@@ -6,7 +6,7 @@ import logo from '../assets/thriftlink-logo-.png';
 const COL_TITLE = {
   fontSize: '0.85rem',
   fontWeight: 800,
-  color: 'var(--tl-ink)',
+  color: '#1e3a8a',
   textTransform: 'uppercase',
   letterSpacing: '0.08em',
   marginBottom: '0.85rem'
@@ -23,12 +23,13 @@ const LINK_STYLE = {
 
 const Footer = () => {
   return (
-    <footer style={{ background: '#f8fafc', borderTop: '1px solid #e2e8f0', color: 'var(--tl-muted)', fontFamily: "'Inter', sans-serif" }}>
+    <footer style={{ background: '#f8fafc', borderTop: '1px solid #dbeafe', color: 'var(--tl-muted)', fontFamily: "'Inter', sans-serif", position: 'relative' }}>
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, #1e3a8a 0%, #1d4ed8 45%, #25D366 100%)' }} />
       <style>{`
         .tl-footer-grid { display: grid; grid-template-columns: 1.5fr repeat(4, 1fr); gap: var(--tl-space-4); padding: var(--tl-space-4) var(--tl-space-3) var(--tl-space-3); max-width: 1280px; margin: 0 auto; }
-        .tl-footer-link:hover { color: #25D366 !important; }
-        .tl-footer-social { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 999px; background: white; border: 1px solid #e2e8f0; color: #475569; transition: all 0.15s; }
-        .tl-footer-social:hover { color: #25D366; border-color: #25D366; transform: translateY(-1px); }
+        .tl-footer-link:hover { color: #1d4ed8 !important; }
+        .tl-footer-social { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 999px; background: white; border: 1px solid #dbeafe; color: #1e3a8a; transition: all 0.15s; }
+        .tl-footer-social:hover { color: white; background: #1d4ed8; border-color: #1d4ed8; transform: translateY(-1px); }
         @media (max-width: 900px) {
           .tl-footer-grid { grid-template-columns: 1fr 1fr; gap: 2rem; padding: 2.25rem 1.25rem 1.5rem; }
           .tl-footer-brand { grid-column: 1 / -1; }
@@ -51,9 +52,9 @@ const Footer = () => {
 
         <div>
           <div style={COL_TITLE}>Marketplace</div>
-          <Link className="tl-footer-link" to="/categories" style={LINK_STYLE}>Browse</Link>
-          <Link className="tl-footer-link" to="/all-categories" style={LINK_STYLE}>Categories</Link>
-          <Link className="tl-footer-link" to="/vendors" style={LINK_STYLE}>Verified Vendors</Link>
+          <Link className="tl-footer-link" to="/feed" style={{ ...LINK_STYLE, color: '#1e3a8a', fontWeight: 600 }}>News Feed</Link>
+          <Link className="tl-footer-link" to="/categories" style={LINK_STYLE}>Categories</Link>
+          <Link className="tl-footer-link" to="/verified-vendors" style={LINK_STYLE}>Verified Vendors</Link>
           <Link className="tl-footer-link" to="/vendor/guide" style={LINK_STYLE}>Become a Vendor</Link>
         </div>
 
@@ -92,8 +93,8 @@ const Footer = () => {
 
       <div style={{ borderTop: '1px solid #e2e8f0', padding: '1rem 1.5rem', maxWidth: 1280, margin: '0 auto', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}>
         <div style={{ color: '#64748b', fontSize: '0.85rem' }}>© 2026 ThriftLink. All rights reserved.</div>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.3rem 0.7rem', borderRadius: 999, background: 'white', border: '1px solid #e2e8f0', fontSize: '0.78rem', fontWeight: 700, color: '#0f172a' }}>
-          <span style={{ width: 8, height: 8, borderRadius: 999, background: '#25D366' }} />
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.3rem 0.7rem', borderRadius: 999, background: 'white', border: '1px solid #bfdbfe', fontSize: '0.78rem', fontWeight: 700, color: '#1e3a8a' }}>
+          <span style={{ width: 8, height: 8, borderRadius: 999, background: '#16a34a' }} />
           Made in Nigeria
         </span>
       </div>

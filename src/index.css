@@ -59,7 +59,8 @@
 :root {
   /* Brand */
   --tl-green: #25D366; --tl-green-dark: #16a34a; --tl-green-tint: #f0fdf4;
-  --tl-blue: #3b82f6; --tl-ink: #0f172a; --tl-muted: #64748b; --tl-faint: #94a3b8;
+  --tl-navy: #1e3a8a; --tl-royal: #1d4ed8; --tl-blue: #2563eb; --tl-blue-tint: #eff6ff;
+  --tl-ink: #0f172a; --tl-muted: #64748b; --tl-faint: #94a3b8;
   /* Surfaces */
   --tl-bg: #fafafa; --tl-surface: #ffffff;
   /* Radii */
@@ -1399,14 +1400,14 @@ h1, h2, h3, .section-title, .hero h1 {
     box-shadow: 0 14px 28px -8px rgba(22, 184, 101, 0.5);
 }
 .post-ad-btn {
-    background: linear-gradient(135deg, #1ed373 0%, var(--tl-green-dark) 100%) !important;
+    background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%) !important;
     color: #fff !important;
-    box-shadow: 0 10px 24px -8px rgba(22, 184, 101, 0.4);
+    box-shadow: 0 10px 24px -8px rgba(30, 58, 138, 0.45);
 }
 .post-ad-btn:hover {
-    background: linear-gradient(135deg, #16b865 0%, var(--tl-green-dark) 100%) !important;
+    background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%) !important;
     transform: translateY(-2px);
-    box-shadow: 0 14px 28px -8px rgba(22, 184, 101, 0.5);
+    box-shadow: 0 14px 28px -8px rgba(30, 58, 138, 0.55);
 }
 .post-ad-btn:active, .btn-primary:active, .btn-whatsapp:active { transform: scale(0.97); }
 
@@ -1631,16 +1632,16 @@ h1, h2, h3, .section-title, .hero h1 {
 /* Dashboard hero banner — applied via .tl-dash-hero wrapper */
 .tl-dash-hero {
     background:
-        radial-gradient(circle at 20% 30%, rgba(167, 139, 250, 0.25) 0%, transparent 50%),
-        radial-gradient(circle at 80% 70%, rgba(255, 217, 61, 0.18) 0%, transparent 50%),
-        linear-gradient(135deg, #16b865 0%, #1ed373 50%, #67E8F9 100%);
+        radial-gradient(circle at 20% 30%, rgba(30, 58, 138, 0.35) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(22, 163, 74, 0.25) 0%, transparent 50%),
+        linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 45%, #16a34a 100%);
     color: white;
     border-radius: 24px;
     padding: 2rem 2.25rem;
     margin-bottom: 2rem;
     position: relative;
     overflow: hidden;
-    box-shadow: 0 16px 40px -16px rgba(22, 184, 101, 0.4);
+    box-shadow: 0 16px 40px -16px rgba(30, 58, 138, 0.45);
     max-width: 100%;
     box-sizing: border-box;
 }
@@ -1724,10 +1725,10 @@ h1, h2, h3, .section-title, .hero h1 {
 .tl-dashboard-bg {
     background-color: #f8fafc;
     background-image: 
-        radial-gradient(at 0% 0%, rgba(37, 211, 102, 0.08) 0px, transparent 50%),
-        radial-gradient(at 100% 0%, rgba(59, 130, 246, 0.08) 0px, transparent 50%),
-        radial-gradient(at 50% 100%, rgba(147, 51, 234, 0.05) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(37, 211, 102, 0.06) 0px, transparent 50%);
+        radial-gradient(at 0% 0%, rgba(30, 58, 138, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(37, 211, 102, 0.08) 0px, transparent 50%),
+        radial-gradient(at 50% 100%, rgba(29, 78, 216, 0.06) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(30, 58, 138, 0.07) 0px, transparent 50%);
     background-attachment: fixed;
 }
 
@@ -1794,14 +1795,14 @@ h1, h2, h3, .section-title, .hero h1 {
     background: 
         radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.25) 0%, transparent 40%),
         radial-gradient(circle at 85% 85%, rgba(255, 255, 255, 0.18) 0%, transparent 45%),
-        linear-gradient(135deg, #10b981 0%, #059669 45%, #2563eb 100%) !important;
+        linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 45%, #16a34a 100%) !important;
     color: white !important;
     border-radius: 24px !important;
     padding: 2.25rem 2.5rem !important;
     position: relative;
     overflow: hidden;
     box-shadow: 
-        0 20px 48px -16px rgba(16, 185, 129, 0.45),
+        0 20px 48px -16px rgba(30, 58, 138, 0.45),
         inset 0 1px 1px rgba(255, 255, 255, 0.5),
         inset 0 -1px 1px rgba(0, 0, 0, 0.15) !important;
     border: 1px solid rgba(255, 255, 255, 0.25) !important;
@@ -1816,7 +1817,7 @@ h1, h2, h3, .section-title, .hero h1 {
 }
 
 .tl-glass-sidebar {
-    background: rgba(15, 23, 42, 0.94) !important;
+    background: linear-gradient(180deg, #0f172a 0%, #1e3a8a 100%) !important;
     backdrop-filter: blur(28px) saturate(180%) !important;
     -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
     border-right: 1px solid rgba(255, 255, 255, 0.08) !important;

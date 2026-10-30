@@ -114,26 +114,32 @@ async function followVendor(userId, vendorId) {
   if (!userId || !vendorId) throw new Error('userId and vendorId are required');
 
   if (isSupabase()) {
-    const db = supabaseData.getDataClient();
-    await db.from('vendor_follows').upsert(
-      { id: uuidv4(), user_id: userId, vendor_id: vendorId },
-      { onConflict: 'user_id,vendor_id' }
-    );
-    // Notify vendor in-app
     try {
-      const vp = supabaseData.unwrap(await db.from('vendor_profiles').select('user_id').eq('id', vendorId).maybeSingle());
-      if (vp?.user_id) {
-        await db.from('notifications').insert({
-          id: uuidv4(),
-          user_id: vp.user_id,
-          type: 'new_follower',
-          title: 'New Store Follower',
-          message: 'A customer started following your store profile. Keep your catalog updated!',
-          link: '/vendor/analytics',
-        });
-      }
-    } catch (_) {}
-    return { following: true };
+      const db = supabaseData.getDataClient();
+      const { error } = await db.from('vendor_follows').upsert(
+        { id: uuidv4(), user_id: userId, vendor_id: vendorId },
+        { onConflict: 'user_id,vendor_id' }
+      );
+      if (error) console.warn('Supabase followVendor notice:', error.message);
+      // Notify vendor in-app
+      try {
+        const vp = supabaseData.unwrap(await db.from('vendor_profiles').select('user_id').eq('id', vendorId).maybeSingle());
+        if (vp?.user_id) {
+          await db.from('notifications').insert({
+            id: uuidv4(),
+            user_id: vp.user_id,
+            type: 'new_follower',
+            title: 'New Store Follower',
+            message: 'A customer started following your store profile. Keep your catalog updated!',
+            link: '/vendor/analytics',
+          });
+        }
+      } catch (_) {}
+      return { following: true };
+    } catch (err) {
+      console.error('Supabase followVendor error:', err.message);
+      return { following: true };
+    }
   }
 
   const db = getDb();
@@ -164,10 +170,12 @@ async function unfollowVendor(userId, vendorId) {
   if (!userId || !vendorId) throw new Error('userId and vendorId are required');
 
   if (isSupabase()) {
-    const db = supabaseData.getDataClient();
-    supabaseData.unwrap(
-      await db.from('vendor_follows').delete().eq('user_id', userId).eq('vendor_id', vendorId)
-    );
+    try {
+      const db = supabaseData.getDataClient();
+      await db.from('vendor_follows').delete().eq('user_id', userId).eq('vendor_id', vendorId);
+    } catch (err) {
+      console.error('Supabase unfollowVendor error:', err.message);
+    }
     return { following: false };
   }
 
@@ -180,11 +188,16 @@ async function isFollowing(userId, vendorId) {
   if (!userId || !vendorId) return false;
 
   if (isSupabase()) {
-    const db = supabaseData.getDataClient();
-    const row = supabaseData.unwrap(
-      await db.from('vendor_follows').select('id').eq('user_id', userId).eq('vendor_id', vendorId).maybeSingle()
-    );
-    return Boolean(row);
+    try {
+      const db = supabaseData.getDataClient();
+      const row = supabaseData.unwrap(
+        await db.from('vendor_follows').select('id').eq('user_id', userId).eq('vendor_id', vendorId).maybeSingle()
+      );
+      return Boolean(row);
+    } catch (err) {
+      console.warn('Supabase isFollowing fallback:', err.message);
+      return false;
+    }
   }
 
   const db = getDb();
@@ -196,11 +209,16 @@ async function getUserFollowedVendorIds(userId) {
   if (!userId) return [];
 
   if (isSupabase()) {
-    const db = supabaseData.getDataClient();
-    const rows = supabaseData.unwrap(
-      await db.from('vendor_follows').select('vendor_id').eq('user_id', userId)
-    ) || [];
-    return rows.map((r) => r.vendor_id);
+    try {
+      const db = supabaseData.getDataClient();
+      const rows = supabaseData.unwrap(
+        await db.from('vendor_follows').select('vendor_id').eq('user_id', userId)
+      ) || [];
+      return rows.map((r) => r.vendor_id);
+    } catch (err) {
+      console.warn('Supabase getUserFollowedVendorIds fallback:', err.message);
+      return [];
+    }
   }
 
   const db = getDb();
@@ -212,10 +230,14 @@ async function getVendorFollowerCount(vendorId) {
   if (!vendorId) return 0;
 
   if (isSupabase()) {
-    const db = supabaseData.getDataClient();
-    const { count, error } = await db.from('vendor_follows').select('id', { count: 'exact', head: true }).eq('vendor_id', vendorId);
-    if (error) return 0;
-    return count || 0;
+    try {
+      const db = supabaseData.getDataClient();
+      const { count, error } = await db.from('vendor_follows').select('id', { count: 'exact', head: true }).eq('vendor_id', vendorId);
+      if (error) return 0;
+      return count || 0;
+    } catch {
+      return 0;
+    }
   }
 
   const db = getDb();
@@ -297,32 +319,36 @@ async function logInteraction({ userId = null, vendorId, eventType, metadata = {
   const metaString = JSON.stringify(enrichedMeta);
 
   if (isSupabase()) {
-    const db = supabaseData.getDataClient();
-    // 15-minute deduplication check for user/vendor/event
-    if (userId) {
-      const windowAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
-      const existing = supabaseData.unwrap(
-        await db.from('vendor_interactions')
+    try {
+      const db = supabaseData.getDataClient();
+      // 15-minute deduplication check for user/vendor/event
+      if (userId) {
+        const windowAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+        const existingRes = await db.from('vendor_interactions')
           .select('id')
           .eq('user_id', userId)
           .eq('vendor_id', vendorId)
           .eq('event_type', dbEventType)
           .gte('created_at', windowAgo)
-          .maybeSingle()
-      );
-      if (existing) {
-        return { recorded: false, deduplicated: true };
+          .maybeSingle();
+        if (!existingRes.error && existingRes.data) {
+          return { recorded: false, deduplicated: true };
+        }
       }
-    }
 
-    await db.from('vendor_interactions').insert({
-      id: uuidv4(),
-      user_id: userId,
-      vendor_id: vendorId,
-      event_type: dbEventType,
-      metadata: enrichedMeta,
-    });
-    return { recorded: true };
+      const ins = await db.from('vendor_interactions').insert({
+        id: uuidv4(),
+        user_id: userId,
+        vendor_id: vendorId,
+        event_type: dbEventType,
+        metadata: enrichedMeta,
+      });
+      if (ins.error) console.warn('Supabase logInteraction notice:', ins.error.message);
+      return { recorded: true };
+    } catch (err) {
+      console.warn('Supabase logInteraction fallback:', err.message);
+      return { recorded: false };
+    }
   }
 
   const db = getDb();
@@ -350,16 +376,21 @@ async function getDismissedVendorIds(userId, days = 30) {
   if (!userId) return [];
 
   if (isSupabase()) {
-    const db = supabaseData.getDataClient();
-    const windowAgo = new Date(Date.now() - days * 86400000).toISOString();
-    const rows = supabaseData.unwrap(
-      await db.from('vendor_interactions')
-        .select('vendor_id')
-        .eq('user_id', userId)
-        .in('event_type', ['dismiss', 'report'])
-        .gte('created_at', windowAgo)
-    ) || [];
-    return Array.from(new Set(rows.map((r) => r.vendor_id)));
+    try {
+      const db = supabaseData.getDataClient();
+      const windowAgo = new Date(Date.now() - days * 86400000).toISOString();
+      const rows = supabaseData.unwrap(
+        await db.from('vendor_interactions')
+          .select('vendor_id')
+          .eq('user_id', userId)
+          .in('event_type', ['dismiss', 'report'])
+          .gte('created_at', windowAgo)
+      ) || [];
+      return Array.from(new Set(rows.map((r) => r.vendor_id)));
+    } catch (err) {
+      console.warn('Supabase getDismissedVendorIds fallback:', err.message);
+      return [];
+    }
   }
 
   const db = getDb();
@@ -387,23 +418,27 @@ async function getUserInteractionSignals(userId, days = 30) {
   let totalInteractions = 0;
 
   if (isSupabase()) {
-    const db = supabaseData.getDataClient();
-    const windowAgo = new Date(Date.now() - days * 86400000).toISOString();
-    const rows = supabaseData.unwrap(
-      await db.from('vendor_interactions')
-        .select('vendor_id, event_type, vendor_profiles(category)')
-        .eq('user_id', userId)
-        .gte('created_at', windowAgo)
-    ) || [];
+    try {
+      const db = supabaseData.getDataClient();
+      const windowAgo = new Date(Date.now() - days * 86400000).toISOString();
+      const rows = supabaseData.unwrap(
+        await db.from('vendor_interactions')
+          .select('vendor_id, event_type, vendor_profiles(category)')
+          .eq('user_id', userId)
+          .gte('created_at', windowAgo)
+      ) || [];
 
-    for (const r of rows) {
-      const w = weights[r.event_type] || 1;
-      vendorWeights[r.vendor_id] = (vendorWeights[r.vendor_id] || 0) + w;
-      const cat = r.vendor_profiles?.category;
-      if (cat) {
-        categoryWeights[cat] = (categoryWeights[cat] || 0) + w;
+      for (const r of rows) {
+        const w = weights[r.event_type] || 1;
+        vendorWeights[r.vendor_id] = (vendorWeights[r.vendor_id] || 0) + w;
+        const cat = r.vendor_profiles?.category;
+        if (cat) {
+          categoryWeights[cat] = (categoryWeights[cat] || 0) + w;
+        }
+        totalInteractions++;
       }
-      totalInteractions++;
+    } catch (err) {
+      console.warn('Supabase getUserInteractionSignals fallback:', err.message);
     }
   } else {
     const db = getDb();
@@ -438,19 +473,24 @@ async function logImpressions(impressions = []) {
   if (valid.length === 0) return { count: 0 };
 
   if (isSupabase()) {
-    const db = supabaseData.getDataClient();
-    const rows = valid.map((im) => ({
-      id: uuidv4(),
-      user_id: im.userId || null,
-      session_id: im.sessionId || null,
-      vendor_id: im.vendorId,
-      surface: im.surface,
-      position: Number(im.position || 0),
-      score: Number(im.score || 0),
-      ranking_version: String(im.rankingVersion || 'v1'),
-    }));
-    await db.from('recommendation_impressions').insert(rows);
-    return { count: rows.length };
+    try {
+      const db = supabaseData.getDataClient();
+      const rows = valid.map((im) => ({
+        id: uuidv4(),
+        user_id: im.userId || null,
+        session_id: im.sessionId || null,
+        vendor_id: im.vendorId,
+        surface: im.surface,
+        position: Number(im.position || 0),
+        score: Number(im.score || 0),
+        ranking_version: String(im.rankingVersion || 'v1'),
+      }));
+      await db.from('recommendation_impressions').insert(rows);
+      return { count: rows.length };
+    } catch (err) {
+      console.warn('Supabase logImpressions fallback:', err.message);
+      return { count: 0 };
+    }
   }
 
   const db = getDb();
@@ -483,15 +523,19 @@ async function getVendorImpressionCounts(days = 30) {
   const counts = {};
 
   if (isSupabase()) {
-    const db = supabaseData.getDataClient();
-    const windowAgo = new Date(Date.now() - days * 86400000).toISOString();
-    const rows = supabaseData.unwrap(
-      await db.from('recommendation_impressions')
-        .select('vendor_id')
-        .gte('created_at', windowAgo)
-    ) || [];
-    for (const r of rows) {
-      counts[r.vendor_id] = (counts[r.vendor_id] || 0) + 1;
+    try {
+      const db = supabaseData.getDataClient();
+      const windowAgo = new Date(Date.now() - days * 86400000).toISOString();
+      const rows = supabaseData.unwrap(
+        await db.from('recommendation_impressions')
+          .select('vendor_id')
+          .gte('created_at', windowAgo)
+      ) || [];
+      for (const r of rows) {
+        counts[r.vendor_id] = (counts[r.vendor_id] || 0) + 1;
+      }
+    } catch (err) {
+      console.warn('Supabase getVendorImpressionCounts fallback:', err.message);
     }
     return counts;
   }
@@ -516,54 +560,66 @@ async function getVendorImpressionCounts(days = 30) {
 
 async function getEligibleVendorsForScoring() {
   if (isSupabase()) {
-    const db = supabaseData.getDataClient();
-    const vendors = supabaseData.unwrap(
-      await db.from('vendor_profiles')
-        .select(`
-          id, user_id, shop_name, description, category, state, city, logo, banner,
-          is_verified, verification_status, rating, total_reviews, is_featured,
-          featured_rank, referral_code, catalog_updated_at, created_at,
-          products (id, category, price, is_available, updated_at, created_at)
-        `)
-        .eq('is_verified', true)
-        .eq('verification_status', 'approved')
-    ) || [];
+    try {
+      const db = supabaseData.getDataClient();
+      const [vendorRes, prodRes] = await Promise.all([
+        db.from('vendor_profiles').select('*').eq('is_verified', true),
+        db.from('products').select('id, vendor_id, category, price, is_available, updated_at, created_at'),
+      ]);
 
-    return vendors.map((v) => {
-      const activeProducts = (v.products || []).filter((p) => p.is_available);
-      let latestProductUpdate = v.catalog_updated_at || v.created_at;
-      const categoriesSet = new Set();
-      if (v.category) categoriesSet.add(v.category);
-
-      for (const p of activeProducts) {
-        if (p.category) categoriesSet.add(p.category);
-        const pTime = p.updated_at || p.created_at;
-        if (pTime && (!latestProductUpdate || pTime > latestProductUpdate)) {
-          latestProductUpdate = pTime;
-        }
+      if (vendorRes.error) {
+        console.error('Supabase getEligibleVendorsForScoring vendor error:', vendorRes.error.message);
+        return [];
       }
 
-      return {
-        id: v.id,
-        user_id: v.user_id,
-        shop_name: v.shop_name,
-        description: v.description,
-        category: v.category,
-        categories: Array.from(categoriesSet),
-        state: v.state,
-        city: v.city,
-        logo: v.logo,
-        banner: v.banner,
-        rating: Number(v.rating || 0),
-        total_reviews: Number(v.total_reviews || 0),
-        is_featured: Boolean(v.is_featured),
-        featured_rank: v.featured_rank,
-        referral_code: v.referral_code,
-        created_at: v.created_at,
-        available_product_count: activeProducts.length,
-        latest_catalog_update: latestProductUpdate,
-      };
-    });
+      const productsByVendor = new Map();
+      for (const p of prodRes.data || []) {
+        if (p.is_available === false || p.is_available === 0) continue;
+        if (!productsByVendor.has(p.vendor_id)) productsByVendor.set(p.vendor_id, []);
+        productsByVendor.get(p.vendor_id).push(p);
+      }
+
+      const vendors = (vendorRes.data || []).filter((v) => v.verification_status !== 'rejected');
+
+      return vendors.map((v) => {
+        const activeProducts = productsByVendor.get(v.id) || [];
+        let latestProductUpdate = v.catalog_updated_at || v.updated_at || v.created_at;
+        const categoriesSet = new Set();
+        if (v.category) categoriesSet.add(v.category);
+
+        for (const p of activeProducts) {
+          if (p.category) categoriesSet.add(p.category);
+          const pTime = p.updated_at || p.created_at;
+          if (pTime && (!latestProductUpdate || pTime > latestProductUpdate)) {
+            latestProductUpdate = pTime;
+          }
+        }
+
+        return {
+          id: v.id,
+          user_id: v.user_id,
+          shop_name: v.shop_name,
+          description: v.description,
+          category: v.category,
+          categories: Array.from(categoriesSet),
+          state: v.state,
+          city: v.city,
+          logo: v.logo,
+          banner: v.banner,
+          rating: Number(v.rating || 0),
+          total_reviews: Number(v.total_reviews || 0),
+          is_featured: Boolean(v.is_featured),
+          featured_rank: v.featured_rank,
+          referral_code: v.referral_code || null,
+          created_at: v.created_at,
+          available_product_count: activeProducts.length,
+          latest_catalog_update: latestProductUpdate,
+        };
+      });
+    } catch (err) {
+      console.error('Supabase getEligibleVendorsForScoring error:', err.message);
+      return [];
+    }
   }
 
   const db = getDb();
@@ -578,7 +634,7 @@ async function getEligibleVendorsForScoring() {
       GROUP_CONCAT(DISTINCT p.category) as product_categories
     FROM vendor_profiles vp
     LEFT JOIN products p ON p.vendor_id = vp.id AND p.is_available = 1
-    WHERE vp.is_verified = 1 AND vp.verification_status = 'approved'
+    WHERE vp.is_verified = 1 AND vp.verification_status != 'rejected'
     GROUP BY vp.id
   `).all();
 
@@ -625,18 +681,23 @@ async function getOrCreateVendorReferral(vendorId) {
   if (!vendorId) return null;
 
   if (isSupabase()) {
-    const db = supabaseData.getDataClient();
-    const vendor = supabaseData.unwrap(
-      await db.from('vendor_profiles').select('id, shop_name, referral_code').eq('id', vendorId).maybeSingle()
-    );
-    if (!vendor) return null;
+    try {
+      const db = supabaseData.getDataClient();
+      const vendor = supabaseData.unwrap(
+        await db.from('vendor_profiles').select('*').eq('id', vendorId).maybeSingle()
+      );
+      if (!vendor) return null;
 
-    if (!vendor.referral_code) {
-      const newCode = generateReferralCode(vendor.shop_name);
-      await db.from('vendor_profiles').update({ referral_code: newCode }).eq('id', vendorId);
-      vendor.referral_code = newCode;
+      if (!vendor.referral_code) {
+        const newCode = generateReferralCode(vendor.shop_name);
+        await db.from('vendor_profiles').update({ referral_code: newCode }).eq('id', vendorId);
+        return newCode;
+      }
+      return vendor.referral_code;
+    } catch (err) {
+      console.warn('Supabase getOrCreateVendorReferral fallback:', err.message);
+      return `TL-STORE-${String(vendorId).slice(0, 4).toUpperCase()}`;
     }
-    return vendor.referral_code;
   }
 
   const db = getDb();
@@ -656,22 +717,27 @@ async function attributeReferral({ referralCode, referredUserId = null, metadata
   const metaString = typeof metadata === 'string' ? metadata : JSON.stringify(metadata);
 
   if (isSupabase()) {
-    const db = supabaseData.getDataClient();
-    const vendor = supabaseData.unwrap(
-      await db.from('vendor_profiles').select('id').eq('referral_code', referralCode).maybeSingle()
-    );
-    if (!vendor) return null;
+    try {
+      const db = supabaseData.getDataClient();
+      const vendor = supabaseData.unwrap(
+        await db.from('vendor_profiles').select('id').eq('referral_code', referralCode).maybeSingle()
+      );
+      if (!vendor) return null;
 
-    const record = {
-      id: uuidv4(),
-      referrer_vendor_id: vendor.id,
-      referral_code: referralCode,
-      referred_user_id: referredUserId,
-      conversion_status: referredUserId ? 'registered' : 'pending',
-      metadata,
-    };
-    supabaseData.unwrap(await db.from('vendor_referrals').insert(record));
-    return record;
+      const record = {
+        id: uuidv4(),
+        referrer_vendor_id: vendor.id,
+        referral_code: referralCode,
+        referred_user_id: referredUserId,
+        conversion_status: referredUserId ? 'registered' : 'pending',
+        metadata,
+      };
+      await db.from('vendor_referrals').insert(record);
+      return record;
+    } catch (err) {
+      console.warn('Supabase attributeReferral fallback:', err.message);
+      return null;
+    }
   }
 
   const db = getDb();
@@ -693,18 +759,23 @@ async function getVendorReferralStats(vendorId) {
   if (!vendorId) return { totalVisits: 0, registrations: 0, activations: 0 };
 
   if (isSupabase()) {
-    const db = supabaseData.getDataClient();
-    const rows = supabaseData.unwrap(
-      await db.from('vendor_referrals').select('conversion_status').eq('referrer_vendor_id', vendorId)
-    ) || [];
-    let totalVisits = rows.length;
-    let registrations = 0;
-    let activations = 0;
-    for (const r of rows) {
-      if (r.conversion_status === 'registered' || r.conversion_status === 'activated') registrations++;
-      if (r.conversion_status === 'activated') activations++;
+    try {
+      const db = supabaseData.getDataClient();
+      const rows = supabaseData.unwrap(
+        await db.from('vendor_referrals').select('conversion_status').eq('referrer_vendor_id', vendorId)
+      ) || [];
+      let totalVisits = rows.length;
+      let registrations = 0;
+      let activations = 0;
+      for (const r of rows) {
+        if (r.conversion_status === 'registered' || r.conversion_status === 'activated') registrations++;
+        if (r.conversion_status === 'activated') activations++;
+      }
+      return { totalVisits, registrations, activations };
+    } catch (err) {
+      console.warn('Supabase getVendorReferralStats fallback:', err.message);
+      return { totalVisits: 0, registrations: 0, activations: 0 };
     }
-    return { totalVisits, registrations, activations };
   }
 
   const db = getDb();
@@ -737,23 +808,32 @@ async function getVendorReferralStats(vendorId) {
 
 async function getRecommendationMetrics(days = 30) {
   if (isSupabase()) {
-    const db = supabaseData.getDataClient();
-    const windowAgo = new Date(Date.now() - days * 86400000).toISOString();
-    const impressions = supabaseData.unwrap(
-      await db.from('recommendation_impressions').select('surface, vendor_id').gte('created_at', windowAgo)
-    ) || [];
+    try {
+      const db = supabaseData.getDataClient();
+      const windowAgo = new Date(Date.now() - days * 86400000).toISOString();
+      const impressions = supabaseData.unwrap(
+        await db.from('recommendation_impressions').select('surface, vendor_id').gte('created_at', windowAgo)
+      ) || [];
 
-    const totalImpressions = impressions.length;
-    const vendorCounts = new Map();
-    for (const im of impressions) {
-      vendorCounts.set(im.vendor_id, (vendorCounts.get(im.vendor_id) || 0) + 1);
+      const totalImpressions = impressions.length;
+      const vendorCounts = new Map();
+      for (const im of impressions) {
+        vendorCounts.set(im.vendor_id, (vendorCounts.get(im.vendor_id) || 0) + 1);
+      }
+
+      return {
+        totalImpressions,
+        uniqueVendorsRecommended: vendorCounts.size,
+        timeWindowDays: days,
+      };
+    } catch (err) {
+      console.warn('Supabase getRecommendationMetrics fallback:', err.message);
+      return {
+        totalImpressions: 0,
+        uniqueVendorsRecommended: 0,
+        timeWindowDays: days,
+      };
     }
-
-    return {
-      totalImpressions,
-      uniqueVendorsRecommended: vendorCounts.size,
-      timeWindowDays: days,
-    };
   }
 
   const db = getDb();
@@ -783,34 +863,51 @@ async function getRecommendationMetrics(days = 30) {
 }
 
 // ---------------------------------------------------------------------------
-// 8. News Feed Candidate Posts (Products & Vendor Drops)
+// 8. News Feed Candidate Posts (Siphoned Directly from Vendor Product Catalogs)
 // ---------------------------------------------------------------------------
 
-async function getRecentFeedPosts(limit = 80) {
+async function getRecentFeedPosts(limit = 250) {
   if (isSupabase()) {
     try {
       const db = supabaseData.getDataClient();
+      // Query products and vendor_profiles independently with select('*') so
+      // PostgREST never fails on missing optional columns or FK join hints,
+      // and include ALL available vendor products regardless of post timestamp.
       const [prodRes, vendorRes] = await Promise.all([
         db
           .from('products')
-          .select('*, vendor_profiles!inner(id,shop_name,whatsapp_number,rating,total_reviews,state,city,is_verified,logo,description,category,created_at)')
-          .eq('is_available', true)
+          .select('*')
           .order('created_at', { ascending: false })
           .limit(limit),
         db
           .from('vendor_profiles')
-          .select('id,shop_name,whatsapp_number,rating,total_reviews,state,city,is_verified,logo,description,category,created_at')
-          .order('created_at', { ascending: false })
-          .limit(30),
+          .select('*'),
       ]);
 
-      const productPosts = (prodRes.data || []).map((row) => {
-        const vp = row.vendor_profiles || {};
-        const { vendor_profiles, ...prod } = row;
-        return {
+      if (prodRes.error) {
+        console.error('Supabase getRecentFeedPosts products error:', prodRes.error.message);
+        return [];
+      }
+      if (vendorRes.error) {
+        console.error('Supabase getRecentFeedPosts vendors error:', vendorRes.error.message);
+      }
+
+      const vendorMap = new Map();
+      for (const vp of vendorRes.data || []) {
+        vendorMap.set(vp.id, vp);
+      }
+
+      const productPosts = [];
+      for (const prod of prodRes.data || []) {
+        if (prod.is_available === false || prod.is_available === 0) continue;
+        const vp = vendorMap.get(prod.vendor_id);
+        if (!vp) continue;
+
+        const isVerified = Boolean(vp.is_verified) || vp.verification_status === 'approved';
+        productPosts.push({
           ...prod,
           post_type: 'catalog_drop',
-          vendor_id: vp.id || prod.vendor_id,
+          vendor_id: vp.id,
           vendor_name: vp.shop_name,
           vendor_logo: vp.logo,
           vendor_category: vp.category || prod.category,
@@ -819,38 +916,11 @@ async function getRecentFeedPosts(limit = 80) {
           vendor_rating: Number(vp.rating || 0),
           vendor_reviews: Number(vp.total_reviews || 0),
           whatsapp_number: vp.whatsapp_number,
-          is_verified: vp.is_verified ? 1 : 0,
-        };
-      });
+          is_verified: isVerified ? 1 : 0,
+        });
+      }
 
-      const vendorsWithPosts = new Set(productPosts.map((p) => p.vendor_id));
-      const statusUpdates = (vendorRes.data || [])
-        .filter((vp) => !vendorsWithPosts.has(vp.id))
-        .map((vp) => ({
-          id: `status-${vp.id}`,
-          post_type: 'vendor_status',
-          name: `${vp.shop_name} joined ThriftLink Marketplace`,
-          description: vp.description || `New thrift vendor in ${vp.state || 'Nigeria'} specializing in ${vp.category || 'thrift fashion'}.`,
-          price: 0,
-          original_price: null,
-          category: vp.category || 'Fashion',
-          condition: 'new_vendor',
-          images: vp.logo ? JSON.stringify([vp.logo]) : '[]',
-          views: 0,
-          created_at: vp.created_at,
-          vendor_id: vp.id,
-          vendor_name: vp.shop_name,
-          vendor_logo: vp.logo,
-          vendor_category: vp.category || 'Fashion',
-          vendor_state: vp.state,
-          vendor_city: vp.city,
-          vendor_rating: Number(vp.rating || 0),
-          vendor_reviews: Number(vp.total_reviews || 0),
-          whatsapp_number: vp.whatsapp_number,
-          is_verified: vp.is_verified ? 1 : 0,
-        }));
-
-      return [...productPosts, ...statusUpdates].slice(0, limit);
+      return productPosts;
     } catch (err) {
       console.error('Supabase getRecentFeedPosts error:', err.message);
       return [];
@@ -871,55 +941,21 @@ async function getRecentFeedPosts(limit = 80) {
         v.rating AS vendor_rating,
         v.total_reviews AS vendor_reviews,
         v.whatsapp_number,
-        v.is_verified
+        v.is_verified,
+        v.verification_status
       FROM products p
       JOIN vendor_profiles v ON p.vendor_id = v.id
-      WHERE p.is_available = 1
+      WHERE COALESCE(p.is_available, 1) = 1
       ORDER BY p.created_at DESC
       LIMIT ?
     `).all(limit);
 
-    const productPosts = rows.map((r) => ({
+    return rows.map((r) => ({
       ...r,
       post_type: 'catalog_drop',
       vendor_id: r.vendor_profile_id || r.vendor_id,
+      is_verified: (r.is_verified || r.verification_status === 'approved') ? 1 : 0,
     }));
-
-    const vendorsWithPosts = new Set(productPosts.map((p) => p.vendor_id));
-    const allVendors = db.prepare(`
-      SELECT id, shop_name, whatsapp_number, rating, total_reviews, state, city, is_verified, logo, description, category, created_at
-      FROM vendor_profiles
-      ORDER BY created_at DESC
-      LIMIT 30
-    `).all();
-
-    const statusUpdates = allVendors
-      .filter((vp) => !vendorsWithPosts.has(vp.id))
-      .map((vp) => ({
-        id: `status-${vp.id}`,
-        post_type: 'vendor_status',
-        name: `${vp.shop_name} joined ThriftLink Marketplace`,
-        description: vp.description || `New thrift vendor in ${vp.state || 'Nigeria'} specializing in ${vp.category || 'thrift fashion'}.`,
-        price: 0,
-        original_price: null,
-        category: vp.category || 'Fashion',
-        condition: 'new_vendor',
-        images: vp.logo ? JSON.stringify([vp.logo]) : '[]',
-        views: 0,
-        created_at: vp.created_at,
-        vendor_id: vp.id,
-        vendor_name: vp.shop_name,
-        vendor_logo: vp.logo,
-        vendor_category: vp.category || 'Fashion',
-        vendor_state: vp.state,
-        vendor_city: vp.city,
-        vendor_rating: Number(vp.rating || 0),
-        vendor_reviews: Number(vp.total_reviews || 0),
-        whatsapp_number: vp.whatsapp_number,
-        is_verified: vp.is_verified ? 1 : 0,
-      }));
-
-    return [...productPosts, ...statusUpdates].slice(0, limit);
   } catch (err) {
     console.error('SQLite getRecentFeedPosts error:', err.message);
     return [];

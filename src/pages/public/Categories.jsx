@@ -39,18 +39,18 @@ const Categories = () => {
       </style>
       <Navbar />
 
+      <header style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 55%, #16a34a 100%)', color: 'white', padding: '8rem 2rem 3.5rem', textAlign: 'center', boxShadow: '0 12px 32px -8px rgba(30, 58, 138, 0.35)' }}>
+        <h1 style={{ fontSize: 'var(--tl-text-h1)', fontWeight: 800, marginBottom: '0.8rem' }}>Browse by Category</h1>
+        <p style={{ fontSize: '1.1rem', opacity: 0.95, maxWidth: '600px', margin: '0 auto' }}>
+          Explore verified thrift vendors across Nigeria by specialty.
+        </p>
+      </header>
+
       <section className="section-container" style={{
         maxWidth: '1200px',
         margin: '0 auto',
-        padding: '7rem 2rem 4rem'
+        padding: '3rem 2rem 4rem'
       }}>
-        <h2 className="section-title" style={{
-          textAlign: 'center',
-          fontSize: 'var(--tl-text-h1)',
-          fontWeight: 700,
-          color: 'var(--tl-ink)',
-          marginBottom: '2.5rem'
-        }}>Browse by Category</h2>
         
         <div className="categories-grid" style={{
           display: 'grid',

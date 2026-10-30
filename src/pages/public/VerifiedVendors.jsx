@@ -55,30 +55,30 @@ const VerifiedVendors = () => {
     <div style={{ fontFamily: "'Inter', sans-serif", background: 'var(--tl-bg)', color: 'var(--tl-ink)', minHeight: '100vh' }}>
       <Navbar />
 
-      <header style={{ background: 'linear-gradient(135deg, #25D366, #128C7E)', color: 'white', padding: '8rem 2rem 3rem', textAlign: 'center' }}>
+      <header style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 55%, #16a34a 100%)', color: 'white', padding: '8rem 2rem 3rem', textAlign: 'center', boxShadow: '0 12px 32px -8px rgba(30, 58, 138, 0.35)' }}>
         <h1 style={{ fontSize: 'var(--tl-text-h1)', fontWeight: 800, marginBottom: '1rem' }}>Verified Vendors</h1>
-        <p style={{ fontSize: '1.1rem', opacity: 0.9, maxWidth: '600px', margin: '0 auto 2rem' }}>
+        <p style={{ fontSize: '1.1rem', opacity: 0.95, maxWidth: '600px', margin: '0 auto 2rem' }}>
           Connect with trusted and verified sellers across Nigeria.
         </p>
         <div style={{ display: 'flex', justifyContent: 'center', gap: '3rem', flexWrap: 'wrap' }}>
           <div style={{ textAlign: 'center' }}>
             <span style={{ display: 'block', fontSize: '2rem', fontWeight: '800', marginBottom: '0.3rem' }}>{total}</span>
-            <span style={{ fontSize: '0.9rem', opacity: 0.9 }}>Verified Vendors</span>
+            <span style={{ fontSize: '0.9rem', opacity: 0.95 }}>Verified Vendors</span>
           </div>
           <div style={{ textAlign: 'center' }}>
             <span style={{ display: 'block', fontSize: '2rem', fontWeight: '800', marginBottom: '0.3rem' }}>100%</span>
-            <span style={{ fontSize: '0.9rem', opacity: 0.9 }}>Verified IDs</span>
+            <span style={{ fontSize: '0.9rem', opacity: 0.95 }}>Verified IDs</span>
           </div>
           <div style={{ textAlign: 'center' }}>
             <span style={{ display: 'block', fontSize: '2rem', fontWeight: '800', marginBottom: '0.3rem' }}>24/7</span>
-            <span style={{ fontSize: '0.9rem', opacity: 0.9 }}>Support</span>
+            <span style={{ fontSize: '0.9rem', opacity: 0.95 }}>Support</span>
           </div>
         </div>
       </header>
 
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem' }}>
         {/* Filters */}
-        <div className="tl-card" style={{ padding: '2rem', margin: '-4rem 0 2rem', position: 'relative', zIndex: 10 }}>
+        <div className="tl-card" style={{ padding: '2rem', margin: '-4rem 0 2rem', position: 'relative', zIndex: 10, border: '1px solid #dbeafe', boxShadow: '0 12px 30px -10px rgba(30, 58, 138, 0.12)' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
             <input
               name="search"
@@ -152,7 +152,7 @@ const VerifiedVendors = () => {
 
                   {vendor.category && (
                     <div style={{ marginBottom: '0.75rem' }}>
-                      <span style={{ background: '#f3f4f6', color: '#4b5563', padding: '0.25rem 0.75rem', borderRadius: '6px', fontSize: '0.75rem' }}>{vendor.category}</span>
+                      <span style={{ background: '#eff6ff', color: '#1e3a8a', border: '1px solid #bfdbfe', padding: '0.25rem 0.75rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600 }}>{vendor.category}</span>
                     </div>
                   )}
 
@@ -166,9 +166,9 @@ const VerifiedVendors = () => {
                     {vendor.state && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><MapPin size={13} color="#9ca3af" /> {vendor.state}{vendor.city ? `, ${vendor.city}` : ''}</span>}
                   </div>
 
-                  <button className="tl-btn-press" style={{ width: '100%', padding: '0.75rem', background: 'white', border: '1px solid #25D366', color: '#25D366', borderRadius: 'var(--tl-radius-pill)', fontWeight: '600', cursor: 'pointer', boxShadow: 'var(--tl-shadow-1)', transition: 'transform var(--tl-fast) var(--tl-ease)' }}
-                    onMouseOver={e => { e.currentTarget.style.background = '#25D366'; e.currentTarget.style.color = 'white'; }}
-                    onMouseOut={e => { e.currentTarget.style.background = 'white'; e.currentTarget.style.color = '#25D366'; }}>
+                  <button className="tl-btn-press" style={{ width: '100%', padding: '0.75rem', background: '#eff6ff', border: '1.5px solid #1e3a8a', color: '#1e3a8a', borderRadius: 'var(--tl-radius-pill)', fontWeight: '700', cursor: 'pointer', boxShadow: 'var(--tl-shadow-1)', transition: 'all var(--tl-fast) var(--tl-ease)' }}
+                    onMouseOver={e => { e.currentTarget.style.background = '#1e3a8a'; e.currentTarget.style.color = 'white'; }}
+                    onMouseOut={e => { e.currentTarget.style.background = '#eff6ff'; e.currentTarget.style.color = '#1e3a8a'; }}>
                     Visit Shop
                   </button>
                 </div>
@@ -181,7 +181,7 @@ const VerifiedVendors = () => {
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', marginTop: '2rem' }}>
             <button onClick={() => load(page - 1)} disabled={page === 1} style={{ padding: '0.7rem 1rem', border: '1px solid #e5e7eb', background: 'white', color: page === 1 ? '#9ca3af' : '#374151', borderRadius: '6px', cursor: page === 1 ? 'not-allowed' : 'pointer' }}>Prev</button>
             {Array.from({ length: Math.min(pages, 5) }, (_, i) => i + 1).map(p => (
-              <button key={p} onClick={() => load(p)} style={{ padding: '0.7rem 1rem', border: '1px solid', borderColor: p === page ? '#25D366' : '#e5e7eb', background: p === page ? '#25D366' : 'white', color: p === page ? 'white' : '#374151', borderRadius: '6px', cursor: 'pointer' }}>{p}</button>
+              <button key={p} onClick={() => load(p)} style={{ padding: '0.7rem 1rem', border: '1px solid', borderColor: p === page ? '#1e3a8a' : '#e5e7eb', background: p === page ? '#1e3a8a' : 'white', color: p === page ? 'white' : '#374151', borderRadius: '6px', cursor: 'pointer', fontWeight: p === page ? 700 : 500 }}>{p}</button>
             ))}
             <button onClick={() => load(page + 1)} disabled={page === pages} style={{ padding: '0.7rem 1rem', border: '1px solid #e5e7eb', background: 'white', color: page === pages ? '#9ca3af' : '#374151', borderRadius: '6px', cursor: page === pages ? 'not-allowed' : 'pointer' }}>Next</button>
           </div>

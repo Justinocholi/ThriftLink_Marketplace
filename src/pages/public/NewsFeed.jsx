@@ -4,7 +4,9 @@ import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import FeedPostCard from '../../components/FeedPostCard';
 import InterestSelectorModal from '../../components/InterestSelectorModal';
-import { recommendations as recApi } from '../../services/api';
+import VendorQuickPostBox from '../../components/VendorQuickPostBox';
+import { recommendations as recApi, vendors as vendorsApi } from '../../services/api';
+import { fetchVendorSiphonedFeed } from '../../utils/feedSiphon';
 import { useAuth } from '../../context/AuthContext';
 import { getSocket } from '../../services/socket';
 import { cldUrl } from '../../utils/cloudinary';
@@ -39,12 +41,17 @@ const NewsFeed = () => {
   const loadFeed = useCallback(async (activeSurface = surface) => {
     setLoading(true);
     try {
-      const [feedRes, vendorRes] = await Promise.all([
-        recApi.getFeed({ surface: activeSurface, limit: 30 }).catch(() => ({ posts: [] })),
+      const [fetchedPosts, vendorRes] = await Promise.all([
+        fetchVendorSiphonedFeed({ surface: activeSurface, limit: 40, page: 1 }),
         recApi.getVendors({ surface: 'recommended_for_you', limit: 6 }).catch(() => ({ vendors: [] })),
       ]);
-      setPosts(Array.isArray(feedRes?.posts) ? feedRes.posts : []);
-      setSuggestedVendors(Array.isArray(vendorRes?.vendors) ? vendorRes.vendors : []);
+      let fetchedVendors = Array.isArray(vendorRes?.vendors) ? vendorRes.vendors : [];
+      if (fetchedVendors.length === 0) {
+        const directVendors = await vendorsApi.list({ limit: 6 }).catch(() => ({ vendors: [] }));
+        fetchedVendors = Array.isArray(directVendors?.vendors) ? directVendors.vendors : [];
+      }
+      setPosts(fetchedPosts);
+      setSuggestedVendors(fetchedVendors);
     } finally {
       setLoading(false);
     }
@@ -331,6 +338,19 @@ const NewsFeed = () => {
 
           {/* CENTER COLUMN: THE WALL (Single-Column Chronological & Ranked Vendor Stream) */}
           <main style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
+            {/* Live Vendor Quick-Post Composer when logged in as a vendor */}
+            {user?.role === 'vendor' && (
+              <VendorQuickPostBox
+                compact
+                onPostCreated={(newPost) => {
+                  setPosts((prev) => {
+                    if (prev.some((p) => p.id === newPost.id)) return prev;
+                    return [newPost, ...prev];
+                  });
+                }}
+              />
+            )}
+
             {/* Classic Status Update Composer Box */}
             <div
               style={{

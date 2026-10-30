@@ -94,7 +94,7 @@ const cspConfig = isProd ? {
     'script-src': ["'self'", "'unsafe-inline'", 'https://us-assets.i.posthog.com', 'https://us.i.posthog.com', 'https://*.sentry.io', 'https://browser.sentry-cdn.com'],
     'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
     'font-src': ["'self'", 'data:', 'https://fonts.gstatic.com'],
-    'img-src': ["'self'", 'data:', 'blob:', 'https://res.cloudinary.com', 'https://api.dicebear.com'],
+    'img-src': ["'self'", 'data:', 'blob:', 'https:', 'https://res.cloudinary.com', 'https://api.dicebear.com'],
     'connect-src': ["'self'", 'https://*.supabase.co', 'wss://*.supabase.co', 'https://us.i.posthog.com', 'https://*.sentry.io', 'https://res.cloudinary.com'],
     'frame-ancestors': ["'none'"],
   },
@@ -225,8 +225,17 @@ if (Sentry && typeof Sentry.setupExpressErrorHandler === 'function') {
 
 // Global error handler
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  if (err.message === 'Only image files are allowed') {
+  console.error(err.stack || err.message);
+  if (err.name === 'MulterError') {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ error: 'Image file is too large (maximum 15MB per image).' });
+    }
+    if (err.code === 'LIMIT_FILE_COUNT' || err.code === 'LIMIT_UNEXPECTED_FILE') {
+      return res.status(400).json({ error: 'Maximum 5 images allowed per item.' });
+    }
+    return res.status(400).json({ error: err.message || 'File upload error' });
+  }
+  if (err.message && err.message.startsWith('Only image')) {
     return res.status(400).json({ error: err.message });
   }
   res.status(500).json({ error: 'Internal server error' });

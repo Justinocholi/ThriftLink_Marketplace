@@ -8,6 +8,8 @@ import { vendors as vendorsApi, reviews as reviewsApi, userMe, recommendations a
 import { useAuth } from '../../context/AuthContext';
 import { useAuthGate } from '../../context/UIContext';
 import { Flag, Share2, Heart, Check, Users, MapPin, Package, ShieldCheck, Clock, Info } from 'lucide-react';
+import { cldUrl } from '../../utils/cloudinary';
+import VendorQuickPostBox from '../../components/VendorQuickPostBox';
 import checklistIcon from '../../assets/checklist.png';
 import starIcon from '../../assets/star.png';
 import whatsappIcon from '../../assets/whatsapp (1).png';
@@ -185,11 +187,13 @@ const VendorPublicProfile = () => {
       <Navbar />
 
       {/* Vendor Header */}
-      <div className="vpp-header" style={{ background: 'white', borderBottom: '1px solid #e5e7eb', padding: '4rem 2rem 2rem' }}>
+      <div className="vpp-header" style={{ background: 'white', borderBottom: '1px solid #e5e7eb', padding: '4rem 2rem 2rem', position: 'relative' }}>
+        {/* Royal Blue + Green top accent strip */}
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 5, background: 'linear-gradient(90deg, #1e3a8a 0%, #1d4ed8 45%, #25D366 100%)' }} />
         <div className="vpp-header-inner" style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
-          <div className="vpp-avatar" style={{ width: '120px', height: '120px', borderRadius: '50%', overflow: 'hidden', flexShrink: 0, background: 'linear-gradient(135deg, #25D366, #128C7E)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '2.5rem', fontWeight: 'bold' }}>
+          <div className="vpp-avatar" style={{ width: '120px', height: '120px', borderRadius: '50%', overflow: 'hidden', flexShrink: 0, background: 'linear-gradient(135deg, #1e3a8a, #16a34a)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '2.5rem', fontWeight: 'bold', border: '3px solid #eff6ff', boxShadow: '0 8px 24px -6px rgba(30, 58, 138, 0.25)' }}>
             {vendor.logo
-              ? <img src={vendor.logo} alt={vendor.shop_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ? <img src={cldUrl(vendor.logo, 240)} alt={vendor.shop_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               : initials}
           </div>
 
@@ -203,8 +207,8 @@ const VendorPublicProfile = () => {
                 </span>
               )}
               {products.length > 0 && (
-                <span style={{ background: '#eff6ff', color: '#1d4ed8', padding: '0.3rem 0.75rem', borderRadius: '20px', fontSize: '0.78rem', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
-                  <Clock size={13} color="#1d4ed8" />
+                <span style={{ background: '#eff6ff', color: '#1e3a8a', border: '1px solid #bfdbfe', padding: '0.3rem 0.75rem', borderRadius: '20px', fontSize: '0.78rem', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <Clock size={13} color="#1e3a8a" />
                   Active Catalog • Typically responds to enquiries
                 </span>
               )}
@@ -309,6 +313,13 @@ const VendorPublicProfile = () => {
 
       {/* Products */}
       <div className="vpp-body" style={{ maxWidth: '1200px', margin: '0 auto', padding: '3rem 2rem' }}>
+        {/* If vendor is viewing their own profile, give them direct posting capability */}
+        {user?.role === 'vendor' && (user?.id === vendor?.user_id || user?.id === vendor?.id) && (
+          <div style={{ marginBottom: '2.5rem' }}>
+            <VendorQuickPostBox compact onPostCreated={() => vendorsApi.get(id).then(setData)} />
+          </div>
+        )}
+
         <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#1f2937', marginBottom: '1.5rem' }}>
           Products ({products.length})
         </h2>
@@ -333,7 +344,7 @@ const VendorPublicProfile = () => {
                 >
                   <div className="vpp-img" style={{ height: '200px', background: '#f3f4f6', overflow: 'hidden' }}>
                     {images[0]
-                      ? <img src={images[0]} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ? <img src={cldUrl(images[0], 500)} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       : <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af' }}><Package size={40} strokeWidth={1.5} /></div>}
                   </div>
                   <div style={{ padding: '1rem' }}>
@@ -343,7 +354,7 @@ const VendorPublicProfile = () => {
                       <div style={{ fontSize: '0.875rem', color: '#9ca3af', textDecoration: 'line-through' }}>₦{Number(product.original_price).toLocaleString()}</div>
                     )}
                     <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: '#6b7280' }}>
-                      {product.condition?.replace('_', ' ')} • {product.views || 0} views
+                      {product.condition?.replace(/[-_]/g, ' ')} • {product.views || 0} views
                     </div>
                   </div>
                 </div>

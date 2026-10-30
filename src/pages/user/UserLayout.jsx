@@ -137,13 +137,13 @@ const UserLayout = () => {
           display: 'flex', alignItems: 'center', gap: '8px',
           margin: '0 1rem 1rem',
           padding: '0.625rem 0.875rem',
-          color: '#16b865',
-          background: '#ecfdf5',
-          border: '1px solid #d1fae5',
+          color: '#1e3a8a',
+          background: '#eff6ff',
+          border: '1px solid #bfdbfe',
           borderRadius: '8px',
           textDecoration: 'none',
           fontSize: '0.875rem',
-          fontWeight: 600
+          fontWeight: 700
         }}>
           <ArrowLeft size={16} />
           <span>Back to ThriftLink</span>
@@ -153,13 +153,13 @@ const UserLayout = () => {
           {navItems.map((item) => (
             <Link key={item.path} to={item.path} onClick={() => setIsSidebarOpen(false)} style={{
               display: 'flex', alignItems: 'center', gap: '10px',
-              color: isActive(item.path) ? '#3b82f6' : '#64748b',
+              color: isActive(item.path) ? '#1e3a8a' : '#64748b',
               background: isActive(item.path) ? '#eff6ff' : 'transparent',
               textDecoration: 'none',
               padding: '0.875rem 1.5rem',
-              borderRight: `3px solid ${isActive(item.path) ? '#3b82f6' : 'transparent'}`,
+              borderRight: `3px solid ${isActive(item.path) ? '#1e3a8a' : 'transparent'}`,
               transition: 'all 0.2s',
-              fontWeight: isActive(item.path) ? '600' : '500'
+              fontWeight: isActive(item.path) ? '700' : '500'
             }}>
               {item.icon}
               <span>{item.label}</span>
@@ -216,14 +216,14 @@ const UserLayout = () => {
             </div>
             <h1 className="user-header-mobile-title" style={{ fontSize: '1.15rem', color: '#0f172a', fontWeight: 700, margin: 0 }}>ThriftLink</h1>
           </div>
-          <ProfileDropdown role="user" accent="#3b82f6" />
+          <ProfileDropdown role="user" accent="#1e3a8a" />
         </header>
 
         <Outlet />
       </main>
 
       <MobileTabBar
-        accent="#25D366"
+        accent="#1e3a8a"
         primary={[
           { path: '/', icon: <Home size={22} />, label: 'Marketplace' },
           { path: '/user', icon: <LayoutDashboard size={22} />, label: 'Dashboard' },

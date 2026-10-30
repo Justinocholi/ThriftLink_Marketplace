@@ -73,18 +73,80 @@ router.get('/', async (req, res) => {
   res.json({ vendors, total, page: parseInt(page), pages: Math.ceil(total / parseInt(limit)) });
 });
 
+// ---- Helpers for resilient vendor profile & product creation ----
+const VALID_CONDITIONS = new Set(['new', 'like-new', 'good', 'fair']);
+
+function normalizeCondition(raw) {
+  if (!raw || typeof raw !== 'string') return 'good';
+  const cleaned = raw.trim().toLowerCase().replace(/[_\s]+/g, '-');
+  return VALID_CONDITIONS.has(cleaned) ? cleaned : 'good';
+}
+
+function parsePriceInput(raw) {
+  if (raw === undefined || raw === null || raw === '') return null;
+  if (typeof raw === 'number') return Number.isFinite(raw) ? raw : null;
+  const cleaned = String(raw).replace(/[^0-9.]/g, '');
+  if (!cleaned) return null;
+  const num = parseFloat(cleaned);
+  return Number.isFinite(num) ? num : null;
+}
+
+async function ensureVendorProfileForUser(reqUser) {
+  if (!reqUser?.id) return null;
+  if (useSupabase()) {
+    let vendor = await vendorsRepo.getByUserId(reqUser.id);
+    if (!vendor) {
+      let fullUser = null;
+      try {
+        fullUser = await usersRepo.getById(reqUser.id);
+      } catch {}
+      const ownerName = fullUser?.name || reqUser.name || (reqUser.email ? reqUser.email.split('@')[0] : 'Vendor');
+      vendor = await vendorsRepo.create({
+        id: uuidv4(),
+        user_id: reqUser.id,
+        shop_name: `${ownerName}'s Thrift Store`,
+        description: 'Quality curated thrift items on ThriftLink.',
+        whatsapp_number: fullUser?.phone || '08000000000',
+        category: 'Fashion & Clothing',
+        state: fullUser?.state || reqUser.state || 'Lagos',
+        city: fullUser?.city || reqUser.city || '',
+        is_verified: 0,
+        verification_status: 'unsubmitted',
+      });
+    }
+    return vendor;
+  }
+
+  const db = getDb();
+  let vendor = db.prepare('SELECT * FROM vendor_profiles WHERE user_id = ?').get(reqUser.id);
+  if (!vendor) {
+    const fullUser = db.prepare('SELECT * FROM users WHERE id = ?').get(reqUser.id);
+    const ownerName = fullUser?.name || reqUser.name || (reqUser.email ? reqUser.email.split('@')[0] : 'Vendor');
+    const newId = uuidv4();
+    db.prepare(`
+      INSERT INTO vendor_profiles (id, user_id, shop_name, description, whatsapp_number, category, state, city, is_verified, verification_status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 'unsubmitted')
+    `).run(
+      newId,
+      reqUser.id,
+      `${ownerName}'s Thrift Store`,
+      'Quality curated thrift items on ThriftLink.',
+      fullUser?.phone || '08000000000',
+      'Fashion & Clothing',
+      fullUser?.state || reqUser.state || 'Lagos',
+      fullUser?.city || reqUser.city || ''
+    );
+    vendor = db.prepare('SELECT * FROM vendor_profiles WHERE id = ?').get(newId);
+  }
+  return vendor;
+}
+
 // ---- Authenticated /me routes (must come BEFORE /:id) ----
 
 // GET /api/vendors/me/profile
 router.get('/me/profile', authenticate, requireRole('vendor'), async (req, res) => {
   try {
-    if (useSupabase()) {
-      const vendor = await vendorsRepo.getByUserId(req.user.id);
-      if (!vendor) return res.status(404).json({ error: 'Vendor profile not found' });
-      return res.json(vendor);
-    }
-    const db = getDb();
-    const vendor = db.prepare('SELECT * FROM vendor_profiles WHERE user_id = ?').get(req.user.id);
+    const vendor = await ensureVendorProfileForUser(req.user);
     if (!vendor) return res.status(404).json({ error: 'Vendor profile not found' });
     res.json(vendor);
   } catch (err) {
@@ -97,9 +159,10 @@ router.get('/me/profile', authenticate, requireRole('vendor'), async (req, res) 
 router.put('/me/profile', authenticate, requireRole('vendor'), async (req, res) => {
   const { shop_name, description, whatsapp_number, instagram_handle, category, state, city } = req.body;
   try {
+    const profile = await ensureVendorProfileForUser(req.user);
+    if (!profile) return res.status(404).json({ error: 'Vendor profile not found' });
+
     if (useSupabase()) {
-      const profile = await vendorsRepo.getByUserId(req.user.id);
-      if (!profile) return res.status(404).json({ error: 'Vendor profile not found' });
       const patch = {};
       for (const [k, v] of Object.entries({ shop_name, description, whatsapp_number, instagram_handle, category, state, city })) {
         if (v != null) patch[k] = v;
@@ -130,10 +193,10 @@ router.put('/me/profile', authenticate, requireRole('vendor'), async (req, res) 
 router.post('/me/logo', authenticate, requireRole('vendor'), upload.single('logo'), upload.verifyMime('image'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+    const profile = await ensureVendorProfileForUser(req.user);
     const uploaded = await storeUploadedFile(req.file, { folder: 'thriftlink/vendors/logos' });
     const url = uploaded.url;
     if (useSupabase()) {
-      const profile = await vendorsRepo.getByUserId(req.user.id);
       if (profile) await vendorsRepo.updateLogo(profile.id, url);
     } else {
       getDb().prepare("UPDATE vendor_profiles SET logo = ?, updated_at = datetime('now') WHERE user_id = ?").run(url, req.user.id);
@@ -148,14 +211,12 @@ router.post('/me/logo', authenticate, requireRole('vendor'), upload.single('logo
 // GET /api/vendors/me/products
 router.get('/me/products', authenticate, requireRole('vendor'), async (req, res) => {
   try {
+    const vendor = await ensureVendorProfileForUser(req.user);
+    if (!vendor) return res.status(404).json({ error: 'Vendor profile not found' });
     if (useSupabase()) {
-      const vendor = await vendorsRepo.getByUserId(req.user.id);
-      if (!vendor) return res.status(404).json({ error: 'Vendor profile not found' });
       return res.json(await productsRepo.listByVendor(vendor.id));
     }
     const db = getDb();
-    const vendor = db.prepare('SELECT id FROM vendor_profiles WHERE user_id = ?').get(req.user.id);
-    if (!vendor) return res.status(404).json({ error: 'Vendor profile not found' });
     res.json(db.prepare('SELECT * FROM products WHERE vendor_id = ? ORDER BY created_at DESC').all(vendor.id));
   } catch (err) {
     console.error('me/products error:', err);
@@ -167,19 +228,26 @@ router.get('/me/products', authenticate, requireRole('vendor'), async (req, res)
 router.post('/me/products', authenticate, requireRole('vendor'), upload.array('images', 5), upload.verifyMime('image'), async (req, res) => {
   try {
     const { name, description, price, original_price, category, condition, stock_quantity } = req.body;
-    if (!name || !price || !category) {
-      return res.status(400).json({ error: 'name, price, and category are required' });
+    const cleanName = typeof name === 'string' ? name.trim() : '';
+    const cleanCategory = typeof category === 'string' && category.trim() ? category.trim() : null;
+    const parsedPrice = parsePriceInput(price);
+    const parsedOriginalPrice = parsePriceInput(original_price);
+
+    if (!cleanName || parsedPrice === null || parsedPrice < 0) {
+      return res.status(400).json({ error: 'Item name and a valid price are required' });
     }
 
     const onSupabase = useSupabase();
     const db = onSupabase ? null : getDb();
-    const vendor = onSupabase
-      ? await vendorsRepo.getByUserId(req.user.id)
-      : db.prepare('SELECT * FROM vendor_profiles WHERE user_id = ?').get(req.user.id);
+    const vendor = await ensureVendorProfileForUser(req.user);
     if (!vendor) return res.status(404).json({ error: 'Vendor profile not found' });
 
+    const finalCategory = cleanCategory || vendor.category || 'Fashion & Clothing';
+    const finalCondition = normalizeCondition(condition);
+    const isVerified = Boolean(vendor.is_verified) || vendor.verification_status === 'approved';
+
     // Cap unverified vendors at 3 product listings. Editing/deleting still allowed.
-    if (vendor.verification_status !== 'approved') {
+    if (!isVerified) {
       const existing = onSupabase
         ? (await productsRepo.listByVendor(vendor.id)) || []
         : db.prepare('SELECT COUNT(*) as c FROM products WHERE vendor_id = ?').get(vendor.id);
@@ -193,15 +261,23 @@ router.post('/me/products', authenticate, requireRole('vendor'), upload.array('i
       }
     }
 
-    const images = req.files?.length
+    const uploadedUrls = req.files?.length
       ? (await storeUploadedFiles(req.files, () => ({ folder: 'thriftlink/products' }))).map((file) => file.url)
       : [];
+
     const id = uuidv4();
     const row = {
-      id, vendor_id: vendor.id, name, description: description || null,
-      price: parseFloat(price), original_price: original_price ? parseFloat(original_price) : null,
-      category, condition: condition || 'good', images: JSON.stringify(images),
-      stock_quantity: stock_quantity ? parseInt(stock_quantity) : 1,
+      id,
+      vendor_id: vendor.id,
+      name: cleanName,
+      description: description ? String(description).trim() : null,
+      price: parsedPrice,
+      original_price: parsedOriginalPrice,
+      category: finalCategory,
+      condition: finalCondition,
+      images: JSON.stringify(uploadedUrls),
+      is_available: 1,
+      stock_quantity: stock_quantity ? Math.max(1, parseInt(stock_quantity, 10) || 1) : 1,
     };
 
     let created;
@@ -210,15 +286,16 @@ router.post('/me/products', authenticate, requireRole('vendor'), upload.array('i
       await vendorsRepo.update(vendor.id, { catalog_updated_at: new Date().toISOString() }).catch(() => {});
     } else {
       db.prepare(`
-        INSERT INTO products (id, vendor_id, name, description, price, original_price, category, condition, images, stock_quantity)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO products (id, vendor_id, name, description, price, original_price, category, condition, images, is_available, stock_quantity)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
       `).run(row.id, row.vendor_id, row.name, row.description, row.price, row.original_price, row.category, row.condition, row.images, row.stock_quantity);
-      db.prepare("UPDATE vendor_profiles SET catalog_updated_at = datetime('now') WHERE id = ?").run(vendor.id);
+      try {
+        db.prepare("UPDATE vendor_profiles SET catalog_updated_at = datetime('now') WHERE id = ?").run(vendor.id);
+      } catch {}
       created = db.prepare('SELECT * FROM products WHERE id = ?').get(id);
     }
 
     // Broadcast enriched post to the News Feed in real time
-    const isVerified = Boolean(vendor.is_verified);
     let parsedImages = [];
     try {
       parsedImages = typeof created.images === 'string' ? JSON.parse(created.images) : (created.images || []);
@@ -247,10 +324,10 @@ router.post('/me/products', authenticate, requireRole('vendor'), upload.array('i
     };
 
     realtime.emit('*', 'product:created', feedPostPayload);
-    res.status(201).json(created);
+    res.status(201).json({ ...created, product: created });
   } catch (error) {
     console.error('Vendor product upload error:', error);
-    res.status(500).json({ error: 'Failed to create product' });
+    res.status(500).json({ error: error.message || 'Failed to create product' });
   }
 });
 
@@ -260,20 +337,21 @@ router.put('/me/products/:productId', authenticate, requireRole('vendor'), async
   try {
     const onSupabase = useSupabase();
     const db = onSupabase ? null : getDb();
-    const vendor = onSupabase
-      ? await vendorsRepo.getByUserId(req.user.id)
-      : db.prepare('SELECT id FROM vendor_profiles WHERE user_id = ?').get(req.user.id);
+    const vendor = await ensureVendorProfileForUser(req.user);
+    const normalizedCond = condition != null ? normalizeCondition(condition) : null;
+    const parsedPrice = price != null ? parsePriceInput(price) : null;
+    const parsedOriginalPrice = original_price != null ? parsePriceInput(original_price) : null;
 
     if (onSupabase) {
       const patch = {};
       if (name != null) patch.name = name;
       if (description != null) patch.description = description;
-      if (price != null) patch.price = parseFloat(price);
-      if (original_price != null) patch.original_price = parseFloat(original_price);
+      if (parsedPrice != null) patch.price = parsedPrice;
+      if (parsedOriginalPrice != null) patch.original_price = parsedOriginalPrice;
       if (category != null) patch.category = category;
-      if (condition != null) patch.condition = condition;
+      if (normalizedCond != null) patch.condition = normalizedCond;
       if (is_available !== undefined) patch.is_available = is_available ? 1 : 0;
-      if (stock_quantity != null) patch.stock_quantity = parseInt(stock_quantity);
+      if (stock_quantity != null) patch.stock_quantity = parseInt(stock_quantity, 10) || 1;
       const updated = await productsRepo.update(req.params.productId, vendor?.id, patch);
       if (!updated) return res.status(404).json({ error: 'Product not found' });
       await vendorsRepo.update(vendor.id, { catalog_updated_at: new Date().toISOString() }).catch(() => {});
@@ -291,11 +369,13 @@ router.put('/me/products/:productId', authenticate, requireRole('vendor'), async
         is_available = COALESCE(?, is_available), stock_quantity = COALESCE(?, stock_quantity),
         updated_at = datetime('now')
       WHERE id = ?
-    `).run(name, description, price ? parseFloat(price) : null,
-      original_price ? parseFloat(original_price) : null, category, condition,
+    `).run(name, description, parsedPrice,
+      parsedOriginalPrice, category, normalizedCond,
       is_available !== undefined ? (is_available ? 1 : 0) : null,
-      stock_quantity ? parseInt(stock_quantity) : null, req.params.productId);
-    db.prepare("UPDATE vendor_profiles SET catalog_updated_at = datetime('now') WHERE id = ?").run(vendor.id);
+      stock_quantity ? parseInt(stock_quantity, 10) : null, req.params.productId);
+    try {
+      db.prepare("UPDATE vendor_profiles SET catalog_updated_at = datetime('now') WHERE id = ?").run(vendor.id);
+    } catch {}
     const updated = db.prepare('SELECT * FROM products WHERE id = ?').get(req.params.productId);
     realtime.emit('*', 'product:updated', updated);
     res.json(updated);

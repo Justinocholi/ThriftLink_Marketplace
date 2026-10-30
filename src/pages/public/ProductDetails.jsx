@@ -463,9 +463,10 @@ const ProductDetails = () => {
               <div
                 style={{
                   marginTop: 20,
-                  borderTop: '1px solid #e2e8f0',
-                  borderBottom: '1px solid #e2e8f0',
-                  padding: '1.1rem 0',
+                  border: '1.5px solid #dbeafe',
+                  background: '#f8fafc',
+                  borderRadius: '16px',
+                  padding: '1.25rem',
                   display: 'flex',
                   flexWrap: 'wrap',
                   gap: 12,
@@ -527,8 +528,8 @@ const ProductDetails = () => {
                 </div>
                 <button
                   onClick={() => navigate(`/vendor/${product.vendor_id}`)}
-                  className="tl-btn tl-btn-secondary"
-                  style={{ padding: '0.55rem 0.9rem', fontSize: '0.82rem' }}
+                  className="tl-btn"
+                  style={{ background: '#eff6ff', border: '1px solid #bfdbfe', color: '#1e3a8a', padding: '0.55rem 0.9rem', fontSize: '0.82rem', fontWeight: 700 }}
                 >
                   View Profile
                 </button>
@@ -559,8 +560,9 @@ const ProductDetails = () => {
                     padding: '1rem',
                     fontSize: '1rem',
                     fontWeight: 700,
-                    background: '#0f172a',
+                    background: '#1e3a8a',
                     color: 'white',
+                    boxShadow: '0 8px 20px -6px rgba(30, 58, 138, 0.4)',
                   }}
                 >
                   <Phone size={18} />
@@ -624,7 +626,7 @@ const ProductDetails = () => {
           className="tl-btn"
           style={{
             flex: 1,
-            background: '#0f172a',
+            background: '#1e3a8a',
             color: 'white',
             fontWeight: 700,
           }}

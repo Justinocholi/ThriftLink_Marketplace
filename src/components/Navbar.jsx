@@ -7,6 +7,7 @@ import { ShoppingCart, User, LogOut, Settings, LayoutDashboard, MessageSquare, U
 import logo from '../assets/thriftlink-logo-.png';
 import gpsIcon from '../assets/gps.png';
 import LetterAvatar from './LetterAvatar';
+import { cldUrl } from '../utils/cloudinary';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -72,7 +73,9 @@ const Navbar = () => {
   };
 
   return (
-    <header className={`header tl-glass ${scrolled ? 'scrolled' : ''}`}>
+    <header className={`header tl-glass ${scrolled ? 'scrolled' : ''}`} style={{ position: 'sticky', top: 0, zIndex: 1000 }}>
+      {/* Royal Blue + Green top accent strip */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #1e3a8a 0%, #1d4ed8 45%, #25D366 100%)', zIndex: 1001 }} />
       <div className="nav-container">
         <Link to="/" className="logo">
           <img src={logo} alt="Thrift Link Logo" className="logo-img" />
@@ -90,7 +93,7 @@ const Navbar = () => {
 
         <nav>
           <ul className={`nav-links ${isMobileMenuOpen ? 'active' : ''}`}>
-            <li><Link to="/feed" style={{ fontWeight: 700, color: '#16b865' }}>News Feed</Link></li>
+            <li><Link to="/feed" style={{ fontWeight: 700, color: '#1e3a8a', background: '#eff6ff', border: '1px solid #bfdbfe', padding: '0.35rem 0.85rem', borderRadius: 999, display: 'inline-flex', alignItems: 'center' }}>News Feed</Link></li>
             <li><Link to="/categories">Categories</Link></li>
             <li><Link to="/verified-vendors">Verified Vendors</Link></li>
             <li><Link to="/how-it-works">How It Works</Link></li>
@@ -253,7 +256,7 @@ const Navbar = () => {
                   overflow: 'hidden'
                 }}>
                   {user.avatar ? (
-                    <img src={user.avatar} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={cldUrl(user.avatar, 80)} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : (
                     user.name ? user.name.charAt(0).toUpperCase() : 'U'
                   )}

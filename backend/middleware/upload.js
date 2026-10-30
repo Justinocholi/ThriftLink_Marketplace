@@ -11,30 +11,65 @@ try {
   console.warn('[upload] file-type not installed; skipping MIME sniff');
 }
 
+const UPLOAD_DIR = path.join(__dirname, '../uploads');
+try {
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+} catch {}
+
+const MIME_TO_EXT = {
+  'image/jpeg': '.jpg',
+  'image/jpg': '.jpg',
+  'image/pjpeg': '.jpg',
+  'image/png': '.png',
+  'image/webp': '.webp',
+  'image/gif': '.gif',
+  'image/avif': '.avif',
+  'image/heic': '.heic',
+  'image/heif': '.heif',
+  'image/bmp': '.bmp',
+  'application/pdf': '.pdf',
+};
+
 const storage = multer.diskStorage({
   destination(req, file, cb) {
-    cb(null, path.join(__dirname, '../uploads'));
+    try {
+      fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+    } catch {}
+    cb(null, UPLOAD_DIR);
   },
   filename(req, file, cb) {
-    const ext = path.extname(file.originalname).toLowerCase();
+    let ext = path.extname(file.originalname || '').toLowerCase();
+    if (!ext && file.mimetype && MIME_TO_EXT[file.mimetype.toLowerCase()]) {
+      ext = MIME_TO_EXT[file.mimetype.toLowerCase()];
+    }
+    if (!ext) ext = '.jpg';
     cb(null, `${uuidv4()}${ext}`);
   },
 });
 
+const ALLOWED_EXTS = new Set([
+  '.jpg', '.jpeg', '.jfif', '.png', '.webp', '.gif', '.avif', '.heic', '.heif', '.bmp', '.pdf',
+]);
+
 const fileFilter = (req, file, cb) => {
-  const allowed = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.pdf'];
-  const ext = path.extname(file.originalname).toLowerCase();
-  if (allowed.includes(ext)) {
+  const ext = path.extname(file.originalname || '').toLowerCase();
+  const mime = (file.mimetype || '').toLowerCase();
+  if (ALLOWED_EXTS.has(ext) || mime.startsWith('image/') || mime === 'application/pdf') {
     cb(null, true);
   } else {
     cb(new Error('Only image or PDF files are allowed'), false);
   }
 };
 
-const upload = multer({ storage, fileFilter, limits: { fileSize: 5 * 1024 * 1024 } });
+const upload = multer({ storage, fileFilter, limits: { fileSize: 15 * 1024 * 1024 } });
 
-const ALLOWED_IMAGE_MIMES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
-const ALLOWED_DOC_MIMES = new Set(['application/pdf', 'image/jpeg', 'image/png']);
+const ALLOWED_IMAGE_MIMES = new Set([
+  'image/jpeg', 'image/jpg', 'image/pjpeg', 'image/png', 'image/webp',
+  'image/gif', 'image/avif', 'image/heic', 'image/heif', 'image/bmp',
+]);
+const ALLOWED_DOC_MIMES = new Set([
+  'application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic', 'image/heif',
+]);
 
 async function sniffOne(file, allowed) {
   if (!file || !fileType || typeof fileType.fromFile !== 'function') return true;

@@ -4,6 +4,7 @@ import { Eye, MessageSquare, TrendingUp, Star, Package, ShoppingCart, ArrowUpRig
 import { Link } from 'react-router-dom';
 import { useFetch, useFocusRefetch } from '../../hooks/useFetch';
 import ErrorState from '../../components/ErrorState';
+import VendorQuickPostBox from '../../components/VendorQuickPostBox';
 
 const VendorDashboard = () => {
   const [copied, setCopied] = useState(false);
@@ -249,14 +250,19 @@ const VendorDashboard = () => {
       )}
 
       {/* Page Header — glossy brand hero with CTA */}
-      <div className="tl-glossy-hero vd-hero-banner" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '2.5rem' }}>
+      <div className="tl-glossy-hero vd-hero-banner" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
         <div>
           <h2 className="vd-hero-title" style={{ fontSize: '2rem', fontWeight: 800, color: 'white', marginBottom: '0.4rem' }}>Store Overview</h2>
           <p style={{ color: 'rgba(255,255,255,0.92)', fontSize: '1rem', margin: 0 }}>Manage your thrift business and track your performance.</p>
         </div>
-        <Link to="/vendor/products" className="tl-glass-pill vd-hero-btn" style={{ background: 'rgba(255,255,255,0.95)', color: '#0e9a52', padding: '0.85rem 1.6rem', fontWeight: '700', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem', boxShadow: '0 8px 24px -6px rgba(0,0,0,0.15)', position: 'relative', zIndex: 1, fontSize: '0.9rem' }}>
+        <Link to="/vendor/products" className="tl-glass-pill vd-hero-btn" style={{ background: 'rgba(255,255,255,0.95)', color: '#1e3a8a', padding: '0.85rem 1.6rem', fontWeight: '700', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem', boxShadow: '0 8px 24px -6px rgba(0,0,0,0.15)', position: 'relative', zIndex: 1, fontSize: '0.9rem' }}>
           <Package size={20} /> Add New Product
         </Link>
+      </div>
+
+      {/* Quick Post Box directly in dashboard */}
+      <div style={{ marginBottom: '2.5rem' }}>
+        <VendorQuickPostBox compact onPostCreated={() => retry()} />
       </div>
 
       {/* Stats Grid */}
@@ -338,7 +344,7 @@ const VendorDashboard = () => {
                     setTimeout(() => setCopied(false), 2000);
                   }}
                   style={{
-                    background: copied ? '#16b865' : '#0f172a',
+                    background: copied ? '#16a34a' : '#1e3a8a',
                     color: 'white',
                     border: 'none',
                     borderRadius: '8px',
@@ -386,12 +392,12 @@ const VendorDashboard = () => {
             </div>
           </div>
 
-          <div style={{ background: 'linear-gradient(135deg, #25D366, #128C7E)', borderRadius: '24px', padding: '2rem', color: 'white' }}>
+          <div style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #16a34a 100%)', borderRadius: '24px', padding: '2rem', color: 'white', boxShadow: '0 12px 32px -8px rgba(30, 58, 138, 0.35)' }}>
             <h4 style={{ fontWeight: '800', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <TrendingUp size={18} /> Pro Tip
             </h4>
-            <p style={{ fontSize: '0.9rem', opacity: 0.9, lineHeight: '1.5' }}>Verified vendors receive 3x more clicks than unverified ones. Submit your ID for verification today.</p>
-            <button style={{ marginTop: '1.25rem', width: '100%', padding: '0.8rem', background: 'white', border: 'none', borderRadius: '10px', color: '#128C7E', fontWeight: '700', cursor: 'pointer' }}>Verify Now</button>
+            <p style={{ fontSize: '0.9rem', opacity: 0.95, lineHeight: '1.5' }}>Verified vendors receive 3x more clicks than unverified ones. Submit your ID for verification today.</p>
+            <Link to="/vendor/profile" style={{ display: 'block', textAlign: 'center', textDecoration: 'none', marginTop: '1.25rem', width: '100%', padding: '0.8rem', background: 'white', borderRadius: '10px', color: '#1e3a8a', fontWeight: '700', boxSizing: 'border-box' }}>Verify Now</Link>
           </div>
         </div>
       </div>
