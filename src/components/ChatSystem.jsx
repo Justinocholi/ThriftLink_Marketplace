@@ -36,7 +36,7 @@ const formatTime = (iso) => {
 
 const MessageBubble = ({ msg, isMe }) => {
   const isImage = !!msg.image_url;
-  const isRead = msg.is_read === 1 || !!msg.read_at;
+  const isRead = Boolean(msg.is_read) || !!msg.read_at;
   return (
     <div
       className="tl-gpu"

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { LayoutDashboard, User, Package, BarChart2, ShoppingCart, MessageCircle, Settings, Crown, LogOut, Menu, X, Home, ArrowLeft } from 'lucide-react';
+import { LayoutDashboard, User, Package, BarChart2, ShoppingCart, MessageCircle, Settings, Crown, LogOut, Menu, X, Home, ArrowLeft, Sparkles } from 'lucide-react';
 import logo from '../../assets/thriftlink-logo-.png';
 import MobileTabBar from '../../components/MobileTabBar';
 import ProfileDropdown from '../../components/ProfileDropdown';
@@ -35,6 +35,7 @@ const VendorLayout = () => {
 
   const navItems = [
     { path: '/vendor', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
+    { path: '/feed', icon: <Sparkles size={20} />, label: 'News Feed' },
     { path: '/vendor/profile', icon: <User size={20} />, label: 'Vendor Profile' },
     { path: '/vendor/products', icon: <Package size={20} />, label: 'Product Listing' },
     { path: '/vendor/analytics', icon: <BarChart2 size={20} />, label: 'Click Analytics' },
@@ -210,6 +211,7 @@ const VendorLayout = () => {
           { path: '/vendor/orders', icon: <ShoppingCart size={22} />, label: 'Orders' },
         ]}
         more={[
+          { path: '/feed', icon: <Sparkles size={20} />, label: 'News Feed' },
           { path: '/vendor/messages', icon: <MessageCircle size={20} />, label: 'Messages' },
           { path: '/vendor/profile', icon: <User size={20} />, label: 'Vendor Profile' },
           { path: '/vendor/analytics', icon: <BarChart2 size={20} />, label: 'Click Analytics' },

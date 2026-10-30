@@ -499,7 +499,7 @@ const ProductDetails = () => {
                     <h3 style={{ fontWeight: 700, color: '#0f172a', margin: 0, fontSize: '0.98rem' }}>
                       {product.vendor_name}
                     </h3>
-                    {product.is_verified === 1 && (
+                    {Boolean(product.is_verified) && (
                       <span className="tl-badge tl-badge-verified">
                         <CheckCircle2 size={12} /> Verified
                       </span>

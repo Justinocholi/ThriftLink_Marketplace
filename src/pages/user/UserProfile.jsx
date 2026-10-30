@@ -444,7 +444,11 @@ const UserProfile = () => {
         <InterestSelectorModal
           isOpen={interestModalOpen}
           onClose={() => setInterestModalOpen(false)}
-          onSaved={() => loadInterests()}
+          onSaved={(updated) => {
+            if (Array.isArray(updated)) setInterests(updated);
+            loadInterests();
+          }}
+          initialInterests={interests}
         />
 
       </div>

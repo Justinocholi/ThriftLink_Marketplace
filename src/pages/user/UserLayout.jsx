@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Home, ShoppingBag, Heart, User, LifeBuoy, LogOut, Menu, X, MessageSquare, ShoppingCart, ArrowLeft, Sparkles } from 'lucide-react';
+import { Home, ShoppingBag, Heart, User, LifeBuoy, LogOut, Menu, X, MessageSquare, ShoppingCart, ArrowLeft, Sparkles, LayoutDashboard } from 'lucide-react';
 import logo from '../../assets/thriftlink-logo-.png';
 import MobileTabBar from '../../components/MobileTabBar';
 import ProfileDropdown from '../../components/ProfileDropdown';
@@ -226,11 +226,12 @@ const UserLayout = () => {
         accent="#25D366"
         primary={[
           { path: '/', icon: <Home size={22} />, label: 'Marketplace' },
-          { path: '/user', icon: <ShoppingBag size={22} />, label: 'Dashboard' },
+          { path: '/user', icon: <LayoutDashboard size={22} />, label: 'Dashboard' },
           { path: '/user/orders', icon: <ShoppingBag size={22} />, label: 'Orders' },
           { path: '/user/messages', icon: <MessageSquare size={22} />, label: 'Messages' },
         ]}
         more={[
+          { path: '/feed', icon: <Sparkles size={20} />, label: 'News Feed' },
           { path: '/cart', icon: <ShoppingCart size={20} />, label: 'My Cart' },
           { path: '/user/saved', icon: <Heart size={20} />, label: 'Saved Items' },
           { path: '/user/profile', icon: <User size={20} />, label: 'Profile & Settings' },

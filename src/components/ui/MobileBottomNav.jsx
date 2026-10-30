@@ -9,6 +9,16 @@ const MobileBottomNav = () => {
   const { user } = useAuth();
   const { requireAuth } = useAuthGate();
 
+  // Role dashboards (/user, /vendor, /admin) manage their own dedicated navigation;
+  // yield to role-specific layouts to prevent double bottom bars on mobile.
+  if (
+    location.pathname.startsWith('/user') ||
+    location.pathname.startsWith('/vendor') ||
+    location.pathname.startsWith('/admin')
+  ) {
+    return null;
+  }
+
   const is = (path) => location.pathname === path || location.pathname.startsWith(path + '/');
 
   const handleProtected = (e, label, to) => {

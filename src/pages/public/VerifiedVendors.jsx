@@ -143,7 +143,7 @@ const VerifiedVendors = () => {
                     </div>
                   </div>
 
-                  {vendor.is_verified === 1 && (
+                  {Boolean(vendor.is_verified) && (
                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: '#dcfce7', color: '#166534', padding: '0.25rem 0.75rem', borderRadius: 'var(--tl-radius-pill)', fontSize: '0.75rem', fontWeight: '600', marginBottom: '0.75rem' }}>
                       <img src={checklistIcon} alt="Verified" style={{ width: '12px', height: '12px' }} />
                       Verified Vendor
