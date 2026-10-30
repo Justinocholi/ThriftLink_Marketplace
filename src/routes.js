@@ -1,5 +1,6 @@
 export const ROUTES = {
   home: '/',
+  feed: '/feed',
   login: '/login',
   vendorRegister: '/login?tab=signup&role=vendor',
   categories: '/categories',

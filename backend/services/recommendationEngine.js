@@ -491,8 +491,139 @@ async function getRecommendations({
   };
 }
 
+/**
+ * Personalized News Feed of Vendor Posts & New Catalog Arrivals
+ * Combines vendor recommendation scoring with post freshness and vendor diversity
+ */
+async function getPersonalizedFeed({
+  userId = null,
+  surface = 'recommended_for_you',
+  userLocation = null,
+  limit = 12,
+  page = 1,
+}) {
+  const [vendorRecs, rawPosts, followedIds, dismissedIds] = await Promise.all([
+    getRecommendations({
+      userId,
+      surface: surface === 'following' ? 'following' : 'recommended_for_you',
+      userLocation,
+      limit: 50,
+      page: 1,
+      excludeFollowed: false,
+    }),
+    repo.getRecentFeedPosts(80),
+    userId ? repo.getUserFollowedVendorIds(userId) : Promise.resolve([]),
+    userId ? repo.getDismissedVendorIds(userId, 30) : Promise.resolve(new Set()),
+  ]);
+
+  const followedSet = new Set(followedIds);
+  const vendorScoreMap = new Map();
+  for (const v of vendorRecs.vendors || []) {
+    vendorScoreMap.set(v.id, v);
+  }
+
+  let candidatePosts = (rawPosts || []).filter((p) => !dismissedIds.has(p.vendor_id));
+  if (surface === 'following') {
+    candidatePosts = candidatePosts.filter((p) => followedSet.has(p.vendor_id));
+  }
+
+  const scoredPosts = candidatePosts.map((post) => {
+    const scoredVendor = vendorScoreMap.get(post.vendor_id);
+    const vendorScore = scoredVendor ? scoredVendor.score : 65;
+    const postFreshness = calculateFreshness(post.created_at, 14);
+    const isFollowed = followedSet.has(post.vendor_id);
+
+    // Combine vendor relevance + post recency
+    const feedScore = surface === 'new_arrivals'
+      ? Math.round((postFreshness * 70) + (vendorScore * 0.3))
+      : Math.round((vendorScore * 0.65) + (postFreshness * 35));
+
+    const reasons = [];
+    if (isFollowed) {
+      reasons.push('From a vendor you follow');
+    }
+    if (scoredVendor && Array.isArray(scoredVendor.reasons)) {
+      for (const r of scoredVendor.reasons) {
+        if (!reasons.includes(r)) reasons.push(r);
+      }
+    }
+    if (reasons.length === 0) {
+      reasons.push('Recently added by a verified vendor');
+    }
+
+    let images = [];
+    try {
+      images = typeof post.images === 'string' ? JSON.parse(post.images || '[]') : (Array.isArray(post.images) ? post.images : []);
+    } catch {
+      images = [];
+    }
+
+    return {
+      id: post.id,
+      name: post.name,
+      description: post.description,
+      price: Number(post.price || 0),
+      original_price: post.original_price ? Number(post.original_price) : null,
+      category: post.category,
+      condition: post.condition,
+      images,
+      views: Number(post.views || 0),
+      created_at: post.created_at,
+      vendor_id: post.vendor_id,
+      vendor_name: post.vendor_name,
+      vendor_logo: post.vendor_logo,
+      vendor_category: post.vendor_category,
+      vendor_state: post.vendor_state,
+      vendor_city: post.vendor_city,
+      vendor_rating: Number(post.vendor_rating || 0),
+      vendor_reviews: Number(post.vendor_reviews || 0),
+      whatsapp_number: post.whatsapp_number,
+      is_verified: Boolean(post.is_verified),
+      isFollowed,
+      score: Math.min(99, Math.max(50, feedScore)),
+      reasons,
+      rankingVersion: RANKING_VERSION,
+    };
+  });
+
+  // Sort by feedScore (or created_at for new_arrivals)
+  if (surface === 'new_arrivals') {
+    scoredPosts.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+  } else {
+    scoredPosts.sort((a, b) => b.score - a.score || (new Date(b.created_at || 0) - new Date(a.created_at || 0)));
+  }
+
+  // Interleave so the same vendor doesn't appear more than twice in a row
+  const diversified = [];
+  const pool = [...scoredPosts];
+  while (pool.length > 0) {
+    let pickIdx = 0;
+    if (diversified.length >= 1) {
+      const lastVendor = diversified[diversified.length - 1].vendor_id;
+      const altIdx = pool.findIndex((p) => p.vendor_id !== lastVendor);
+      if (altIdx !== -1) pickIdx = altIdx;
+    }
+    const [picked] = pool.splice(pickIdx, 1);
+    diversified.push(picked);
+  }
+
+  const total = diversified.length;
+  const offset = (page - 1) * limit;
+  const posts = diversified.slice(offset, offset + limit);
+
+  return {
+    posts,
+    total,
+    page,
+    limit,
+    surface,
+    rankingVersion: RANKING_VERSION,
+  };
+}
+
 module.exports = {
   getRecommendations,
+  getPersonalizedFeed,
   scoreVendor,
   calculateFreshness,
   calculateExploration,

@@ -23,6 +23,7 @@ import { useFetch } from '../../hooks/useFetch';
 import ErrorState from '../../components/ErrorState';
 import { ROUTES } from '../../routes';
 import RecommendationCard from '../../components/RecommendationCard';
+import FeedPostCard from '../../components/FeedPostCard';
 import InterestSelectorModal, { CATEGORIES_LIST, STYLES_LIST, LOCATIONS_LIST } from '../../components/InterestSelectorModal';
 
 const STATUS_STYLE = {
@@ -57,6 +58,7 @@ const UserDashboard = () => {
   });
 
   const [recommendations, setRecommendations] = useState([]);
+  const [feedPosts, setFeedPosts] = useState([]);
   const [recSurface, setRecSurface] = useState('recommended_for_you');
   const [recLoading, setRecLoading] = useState(true);
   const [saveToast, setSaveToast] = useState('');
@@ -97,12 +99,16 @@ const UserDashboard = () => {
     }
   }, [data?.interests]);
 
-  // Load recommendations whenever interests or surface changes
+  // Load recommendations & news feed posts whenever interests or surface changes
   const loadRecommendations = async (surfaceToLoad = recSurface) => {
     setRecLoading(true);
     try {
-      const res = await recApi.getRecommendations({ surface: surfaceToLoad, limit: 4 });
-      setRecommendations(Array.isArray(res.vendors) ? res.vendors : []);
+      const [res, feedRes] = await Promise.all([
+        recApi.getRecommendations({ surface: surfaceToLoad, limit: 4 }).catch(() => ({ vendors: [] })),
+        recApi.getFeed({ surface: surfaceToLoad, limit: 6 }).catch(() => ({ posts: [] })),
+      ]);
+      setRecommendations(Array.isArray(res?.vendors) ? res.vendors : []);
+      setFeedPosts(Array.isArray(feedRes?.posts) ? feedRes.posts : []);
     } catch (err) {
       console.error('Failed to load personalized recommendations:', err);
     } finally {
@@ -526,6 +532,47 @@ const UserDashboard = () => {
             >
               {recSurface === 'following' ? 'Browse Recommended Vendors' : 'Select Your Interests'}
             </button>
+          </div>
+        )}
+
+        {/* Personalized News Feed Posts (Vendor Drops & New Arrivals) */}
+        {!recLoading && feedPosts.length > 0 && (
+          <div style={{ marginTop: '2.25rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <div>
+                <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>
+                  Your Personalized News Feed
+                </h4>
+                <p style={{ color: '#64748b', fontSize: '0.84rem', margin: '0.15rem 0 0' }}>
+                  Latest posts and catalog drops from verified thrift vendors matching your preferences.
+                </p>
+              </div>
+              <Link
+                to="/feed"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  color: '#059669',
+                  fontSize: '0.86rem',
+                  fontWeight: 700,
+                  textDecoration: 'none',
+                }}
+              >
+                Open Full News Feed <ArrowRight size={15} />
+              </Link>
+            </div>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))',
+                gap: '1.25rem',
+              }}
+            >
+              {feedPosts.map((post) => (
+                <FeedPostCard key={post.id} post={post} surface={recSurface} />
+              ))}
+            </div>
           </div>
         )}
       </div>

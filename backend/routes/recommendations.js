@@ -58,6 +58,33 @@ router.get('/vendors', optionalAuthenticate, async (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
+// 1b. Personalized News Feed of Vendor Posts & New Arrivals
+// GET /api/recommendations/feed?surface=recommended_for_you|following|new_arrivals&page=1&limit=12
+// ---------------------------------------------------------------------------
+router.get('/feed', optionalAuthenticate, async (req, res) => {
+  try {
+    const surface = ALLOWED_SURFACES.has(req.query.surface) ? req.query.surface : 'recommended_for_you';
+    const limit = Math.max(1, Math.min(48, parseInt(req.query.limit, 10) || 12));
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const userId = req.user?.id || null;
+    const userLocation = req.user ? { state: req.user.state, city: req.user.city } : null;
+
+    const result = await recommendationEngine.getPersonalizedFeed({
+      userId,
+      surface,
+      userLocation,
+      limit,
+      page,
+    });
+
+    res.json(result);
+  } catch (err) {
+    console.error('recommendations feed error:', err);
+    res.status(500).json({ error: 'Failed to generate personalized news feed' });
+  }
+});
+
+// ---------------------------------------------------------------------------
 // 2. User Interests
 // ---------------------------------------------------------------------------
 router.get('/user-interests', authenticate, async (req, res) => {

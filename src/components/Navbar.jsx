@@ -90,6 +90,7 @@ const Navbar = () => {
 
         <nav>
           <ul className={`nav-links ${isMobileMenuOpen ? 'active' : ''}`}>
+            <li><Link to="/feed" style={{ fontWeight: 700, color: '#16b865' }}>News Feed</Link></li>
             <li><Link to="/categories">Categories</Link></li>
             <li><Link to="/verified-vendors">Verified Vendors</Link></li>
             <li><Link to="/how-it-works">How It Works</Link></li>

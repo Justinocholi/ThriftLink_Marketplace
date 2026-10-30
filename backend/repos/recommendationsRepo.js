@@ -782,6 +782,76 @@ async function getRecommendationMetrics(days = 30) {
   };
 }
 
+// ---------------------------------------------------------------------------
+// 8. News Feed Candidate Posts (Products & Vendor Drops)
+// ---------------------------------------------------------------------------
+
+async function getRecentFeedPosts(limit = 60) {
+  if (isSupabase()) {
+    try {
+      const db = supabaseData.getDataClient();
+      const { data, error } = await db
+        .from('products')
+        .select('*, vendor_profiles!inner(id,shop_name,whatsapp_number,rating,total_reviews,state,city,is_verified,logo,description,category,created_at)')
+        .eq('is_available', true)
+        .eq('vendor_profiles.is_verified', true)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+      if (error) throw error;
+      return (data || []).map((row) => {
+        const vp = row.vendor_profiles || {};
+        const { vendor_profiles, ...prod } = row;
+        return {
+          ...prod,
+          vendor_id: vp.id || prod.vendor_id,
+          vendor_name: vp.shop_name,
+          vendor_logo: vp.logo,
+          vendor_category: vp.category || prod.category,
+          vendor_state: vp.state,
+          vendor_city: vp.city,
+          vendor_rating: Number(vp.rating || 0),
+          vendor_reviews: Number(vp.total_reviews || 0),
+          whatsapp_number: vp.whatsapp_number,
+          is_verified: vp.is_verified ? 1 : 0,
+        };
+      });
+    } catch (err) {
+      console.error('Supabase getRecentFeedPosts error:', err.message);
+      return [];
+    }
+  }
+
+  const db = getDb();
+  try {
+    const rows = db.prepare(`
+      SELECT
+        p.*,
+        v.id AS vendor_profile_id,
+        v.shop_name AS vendor_name,
+        v.logo AS vendor_logo,
+        v.category AS vendor_category,
+        v.state AS vendor_state,
+        v.city AS vendor_city,
+        v.rating AS vendor_rating,
+        v.total_reviews AS vendor_reviews,
+        v.whatsapp_number,
+        v.is_verified
+      FROM products p
+      JOIN vendor_profiles v ON p.vendor_id = v.id
+      WHERE p.is_available = 1 AND v.is_verified = 1
+      ORDER BY p.created_at DESC
+      LIMIT ?
+    `).all(limit);
+    return rows.map((r) => ({
+      ...r,
+      vendor_id: r.vendor_profile_id || r.vendor_id,
+    }));
+  } catch (err) {
+    console.error('SQLite getRecentFeedPosts error:', err.message);
+    return [];
+  }
+}
+
 module.exports = {
   getUserInterests,
   setUserInterests,
@@ -797,6 +867,7 @@ module.exports = {
   logImpressions,
   getVendorImpressionCounts,
   getEligibleVendorsForScoring,
+  getRecentFeedPosts,
   generateReferralCode,
   getOrCreateVendorReferral,
   attributeReferral,

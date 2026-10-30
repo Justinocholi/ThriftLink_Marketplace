@@ -6,6 +6,7 @@ import { vendors as vendorsApi, products as productsApi, recommendations as recA
 import { ShieldCheck, MessageCircle, Users, Flag, Star, Sparkles, Compass, Clock, SlidersHorizontal, Heart, Layers, ArrowRight, MapPin } from 'lucide-react';
 import ProductCard from '../../components/ProductCard';
 import RecommendationCard from '../../components/RecommendationCard';
+import FeedPostCard from '../../components/FeedPostCard';
 import InterestSelectorModal from '../../components/InterestSelectorModal';
 import { cldUrl } from '../../utils/cloudinary';
 import { useFetch } from '../../hooks/useFetch';
@@ -84,19 +85,23 @@ const Home = () => {
   const featuredVendors = vendors.slice(0, 8);
   const monthlyVendors = vendors.slice(0, 3);
 
-  // Recommendation Engine State
+  // Recommendation Engine & News Feed State
   const [recSurface, setRecSurface] = useState('recommended_for_you');
   const [recVendors, setRecVendors] = useState([]);
+  const [feedPosts, setFeedPosts] = useState([]);
   const [recLoading, setRecLoading] = useState(true);
   const [interestModalOpen, setInterestModalOpen] = useState(false);
 
   const fetchRecommendations = (surface = recSurface) => {
     setRecLoading(true);
-    recApi.getVendors({ surface, limit: 8 })
-      .then((res) => {
-        setRecVendors(Array.isArray(res?.vendors) ? res.vendors : []);
+    Promise.all([
+      recApi.getVendors({ surface, limit: 8 }).catch(() => ({ vendors: [] })),
+      recApi.getFeed({ surface, limit: 6 }).catch(() => ({ posts: [] })),
+    ])
+      .then(([vRes, fRes]) => {
+        setRecVendors(Array.isArray(vRes?.vendors) ? vRes.vendors : []);
+        setFeedPosts(Array.isArray(fRes?.posts) ? fRes.posts : []);
       })
-      .catch(() => setRecVendors([]))
       .finally(() => setRecLoading(false));
   };
 
@@ -591,6 +596,48 @@ const Home = () => {
                   onDismiss={handleDismissRecVendor}
                 />
               ))}
+            </div>
+          )}
+
+          {/* Personalized News Feed of Vendor Posts & New Arrivals */}
+          {!recLoading && feedPosts.length > 0 && (
+            <div style={{ marginTop: '3rem', paddingTop: '2.5rem', borderTop: '1px solid #e2e8f0' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                <div>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#059669', fontSize: '0.82rem', fontWeight: 700, marginBottom: 4 }}>
+                    <Sparkles size={15} /> Live News Feed
+                  </div>
+                  <h3 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>
+                    Vendor Posts & New Catalog Drops
+                  </h3>
+                  <p style={{ color: '#64748b', fontSize: '0.9rem', margin: '0.25rem 0 0' }}>
+                    Discover a post → Open the vendor → Browse their catalog → Save or follow → Enquire directly.
+                  </p>
+                </div>
+                <Link
+                  to="/feed"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '0.6rem 1.2rem',
+                    borderRadius: 999,
+                    background: '#16b865',
+                    color: 'white',
+                    fontWeight: 700,
+                    fontSize: '0.86rem',
+                    textDecoration: 'none',
+                  }}
+                >
+                  Open Full News Feed <ArrowRight size={15} />
+                </Link>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: '1.5rem' }}>
+                {feedPosts.map((post) => (
+                  <FeedPostCard key={post.id} post={post} surface={recSurface} />
+                ))}
+              </div>
             </div>
           )}
         </div>

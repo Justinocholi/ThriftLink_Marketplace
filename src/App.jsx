@@ -19,6 +19,7 @@ import Support from './pages/public/Support';
 import NotFound from './pages/NotFound';
 
 // Lazy: heavier public pages
+const NewsFeed = lazy(() => import('./pages/public/NewsFeed'));
 const ProductDetails = lazy(() => import('./pages/public/ProductDetails'));
 const VendorPublicProfile = lazy(() => import('./pages/public/VendorPublicProfile'));
 const CategoryDetails = lazy(() => import('./pages/public/CategoryDetails'));
@@ -99,6 +100,7 @@ function App() {
               <Suspense fallback={Fallback}>
               <Routes>
                 <Route path="/" element={<Home />} />
+                <Route path="/feed" element={<NewsFeed />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />

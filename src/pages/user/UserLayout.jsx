@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Home, ShoppingBag, Heart, User, LifeBuoy, LogOut, Menu, X, MessageSquare, ShoppingCart, ArrowLeft } from 'lucide-react';
+import { Home, ShoppingBag, Heart, User, LifeBuoy, LogOut, Menu, X, MessageSquare, ShoppingCart, ArrowLeft, Sparkles } from 'lucide-react';
 import logo from '../../assets/thriftlink-logo-.png';
 import MobileTabBar from '../../components/MobileTabBar';
 import ProfileDropdown from '../../components/ProfileDropdown';
@@ -35,6 +35,7 @@ const UserLayout = () => {
 
   const navItems = [
     { path: '/user', icon: <Home size={20} />, label: 'Dashboard' },
+    { path: '/feed', icon: <Sparkles size={20} />, label: 'News Feed' },
     { path: '/user/orders', icon: <ShoppingBag size={20} />, label: 'My Orders' },
     { path: '/user/messages', icon: <MessageSquare size={20} />, label: 'Messages' },
     { path: '/user/saved', icon: <Heart size={20} />, label: 'Saved Items' },

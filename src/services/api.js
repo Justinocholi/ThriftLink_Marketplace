@@ -215,6 +215,14 @@ export const recommendations = {
     const qs = new URLSearchParams(params).toString();
     return request('/recommendations/vendors' + (qs ? `?${qs}` : ''));
   },
+  getRecommendations: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request('/recommendations/vendors' + (qs ? `?${qs}` : ''));
+  },
+  getFeed: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request('/recommendations/feed' + (qs ? `?${qs}` : ''));
+  },
   getUserInterests: () => request('/recommendations/user-interests'),
   setUserInterests: (interests) =>
     request('/recommendations/user-interests', { method: 'PUT', body: JSON.stringify({ interests }) }),
