@@ -6,9 +6,8 @@ const LegalLayout = ({ title, children }) => (
   <div style={{ fontFamily: "'Inter', sans-serif", minHeight: '100vh', background: '#f8fafc', color: '#0f172a' }}>
     <div style={{ background: 'white', borderBottom: '1px solid #e2e8f0', padding: '1rem 1.25rem' }}>
       <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', textDecoration: 'none' }}>
-          <img src={logo} alt="ThriftLink" style={{ height: 36 }} />
-          <span style={{ fontWeight: 800, color: '#0f172a' }}>ThriftLink</span>
+        <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+          <img src={logo} alt="ThriftLink" style={{ height: 42, objectFit: 'contain' }} />
         </Link>
         <Link to="/" style={{ color: '#25D366', fontWeight: 700, textDecoration: 'none', fontSize: '0.9rem' }}>← Back to home</Link>
       </div>

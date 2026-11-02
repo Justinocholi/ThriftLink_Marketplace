@@ -41,10 +41,9 @@ const Footer = () => {
 
       <div className="tl-footer-grid">
         <div className="tl-footer-brand">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.85rem' }}>
-            <img src={logo} alt="ThriftLink" style={{ height: 56, objectFit: 'contain' }} />
-            <span style={{ fontWeight: 800, color: '#0f172a', fontSize: '1.15rem' }}>ThriftLink</span>
-          </div>
+          <Link to="/" style={{ display: 'inline-block', marginBottom: '0.85rem', textDecoration: 'none' }}>
+            <img src={logo} alt="ThriftLink" style={{ height: 52, objectFit: 'contain', display: 'block' }} />
+          </Link>
           <p style={{ color: '#64748b', fontSize: '0.95rem', lineHeight: 1.55, maxWidth: 360 }}>
             Verified WhatsApp thrift vendors · Nigeria
           </p>

@@ -123,11 +123,10 @@ const UserLayout = () => {
         zIndex: 20,
         transition: 'transform 0.3s ease-in-out'
       }}>
-        <div style={{ padding: '0 1.5rem 1.5rem', borderBottom: '1px solid #f1f5f9', marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <img src={logo} alt="ThriftLink" style={{ height: '72px', objectFit: 'contain', filter: 'drop-shadow(0 4px 12px rgba(22, 184, 101, 0.6)) brightness(1.1)' }} />
-            <h2 style={{ color: '#0f172a', fontSize: '1.25rem', fontWeight: 'bold' }}>ThriftLink</h2>
-          </div>
+        <div style={{ padding: '0 1.5rem 1.25rem', borderBottom: '1px solid #f1f5f9', marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Link to="/" onClick={() => setIsSidebarOpen(false)} style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}>
+            <img src={logo} alt="ThriftLink" style={{ height: '48px', objectFit: 'contain' }} />
+          </Link>
           <button onClick={() => setIsSidebarOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }} className="sidebar-close-btn">
             <X size={24} />
           </button>

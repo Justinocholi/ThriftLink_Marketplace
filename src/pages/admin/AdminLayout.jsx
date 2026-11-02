@@ -86,9 +86,23 @@ const AdminLayout = () => {
         >
           <X size={22} />
         </button>
-        <div style={{ padding: '0 1.5rem 2rem', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', marginBottom: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-          <img src={logo} alt="ThriftLink" style={{ height: '72px', objectFit: 'contain', filter: 'drop-shadow(0 4px 12px rgba(59, 130, 246, 0.55)) brightness(1.1)' }} />
-          <span style={{ color: '#60a5fa', fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' }}>Admin</span>
+        <div style={{ padding: '0 1.5rem 1.5rem', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.6rem' }}>
+          <Link
+            to="/admin"
+            onClick={() => setDrawerOpen(false)}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              background: 'white',
+              padding: '0.4rem 0.75rem',
+              borderRadius: '12px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+              textDecoration: 'none'
+            }}
+          >
+            <img src={logo} alt="ThriftLink" style={{ height: '38px', objectFit: 'contain', display: 'block' }} />
+          </Link>
+          <span style={{ color: '#60a5fa', fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' }}>Admin Portal</span>
         </div>
 
         <Link to="/" onClick={() => setDrawerOpen(false)} style={{

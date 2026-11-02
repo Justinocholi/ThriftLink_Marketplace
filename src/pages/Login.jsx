@@ -162,7 +162,9 @@ const Login = () => {
         <div className="login-section" style={{ flex: '0 0 450px', background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderRadius: '20px', padding: '3rem', boxShadow: '0 20px 50px rgba(15, 23, 42, 0.12), 0 1px 0 rgba(255,255,255,0.6) inset', border: '1px solid rgba(255,255,255,0.7)', position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: 'linear-gradient(90deg, #1e3a8a 0%, #1d4ed8 50%, #25D366 100%)' }} />
           <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-            <img src={thriftlinkLogo} alt="Thrift Link" style={{ height: '100px', objectFit: 'contain', marginBottom: '1.5rem', mixBlendMode: 'multiply' }} />
+            <Link to="/" style={{ display: 'inline-block', textDecoration: 'none' }}>
+              <img src={thriftlinkLogo} alt="Thrift Link" style={{ height: '72px', objectFit: 'contain', marginBottom: '1.25rem' }} />
+            </Link>
             <h2 style={{ fontSize: '1.8rem', fontWeight: '700', color: '#1f2937', marginBottom: '0.5rem' }}>
               {activeTab === 'signin' ? 'Welcome Back' : 'Create Account'}
             </h2>

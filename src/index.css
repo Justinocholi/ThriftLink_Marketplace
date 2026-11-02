@@ -1609,24 +1609,28 @@ h1, h2, h3, .section-title, .hero h1 {
    Polish pass 2: logo visibility + dashboard brand color
    ============================================================ */
 
-/* Logo: drop-shadow + subtle scale so it pops on glassmorphic header */
+/* Logo: subtle scale and clean rendering across pages */
 .logo-img {
-    height: 72px !important;
+    height: 62px !important;
     width: auto;
-    filter: drop-shadow(0 4px 12px rgba(22, 184, 101, 0.25));
-    transition: filter 0.3s ease, transform 0.3s ease;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 8px rgba(15, 23, 42, 0.08));
+    transition: filter 0.25s ease, transform 0.25s ease;
 }
 .logo:hover .logo-img {
-    filter: drop-shadow(0 6px 16px rgba(22, 184, 101, 0.4));
+    filter: drop-shadow(0 4px 12px rgba(22, 184, 101, 0.3));
     transform: scale(1.03);
 }
 .footer-logo img {
-    height: 64px !important;
+    height: 52px !important;
     width: auto;
-    filter: drop-shadow(0 2px 8px rgba(22, 184, 101, 0.2));
+    object-fit: contain;
 }
 @media (max-width: 768px) {
-    .logo-img { height: 56px !important; }
+    .logo-img { height: 48px !important; }
+}
+@media (max-width: 480px) {
+    .logo-img { height: 40px !important; }
 }
 
 /* Dashboard hero banner — applied via .tl-dash-hero wrapper */

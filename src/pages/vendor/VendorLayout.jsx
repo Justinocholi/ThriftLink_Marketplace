@@ -110,9 +110,21 @@ const VendorLayout = () => {
         transition: 'transform 0.3s ease-in-out'
       }}>
         <div style={{ padding: '0 1.5rem 1.5rem', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <img src={logo} alt="ThriftLink" style={{ height: '72px', objectFit: 'contain', filter: 'drop-shadow(0 4px 12px rgba(22, 184, 101, 0.6)) brightness(1.1)' }} />
-          </div>
+          <Link
+            to="/"
+            onClick={() => setIsSidebarOpen(false)}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              background: 'white',
+              padding: '0.4rem 0.75rem',
+              borderRadius: '12px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+              textDecoration: 'none'
+            }}
+          >
+            <img src={logo} alt="ThriftLink" style={{ height: '38px', objectFit: 'contain', display: 'block' }} />
+          </Link>
           <button onClick={() => setIsSidebarOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'white' }} className="mobile-header-btn">
             <X size={24} />
           </button>
